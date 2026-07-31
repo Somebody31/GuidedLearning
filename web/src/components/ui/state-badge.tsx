@@ -4,9 +4,8 @@ import type { LessonStatus } from "@/lib/types";
 
 /** Short labels for tight surfaces (map nodes). */
 const COMPACT_LABEL: Partial<Record<LessonStatus, string>> = {
-  in_progress: "Active",
   remediation: "Remed.",
-  available: "Ready",
+  deferred: "Defer",
 };
 
 export function StateBadge({

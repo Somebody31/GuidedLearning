@@ -178,7 +178,8 @@ export function AtlasView({ course }: { course: Course }) {
               <p className="text-[13px] font-medium text-[var(--text-secondary)]">
                 Select a lesson on the path
               </p>
-              <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+              <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-tertiary)]">
+                Click a node or list row.{" "}
                 <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
                   M
                 </kbd>{" "}
@@ -186,7 +187,11 @@ export function AtlasView({ course }: { course: Course }) {
                 <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
                   S
                 </kbd>{" "}
-                start session
+                session ·{" "}
+                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
+                  Enter
+                </kbd>{" "}
+                open
               </p>
               {pack.length > 0 && (
                 <div className="mt-6 border-t border-[var(--hairline)] pt-4">

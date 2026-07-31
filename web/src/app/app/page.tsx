@@ -39,7 +39,14 @@ export default function AppHomePage() {
         </p>
 
         <section className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6 shadow-[0_0_0_1px_rgba(45,212,191,0.06)] transition-shadow duration-[var(--duration-med)] hover:shadow-[0_0_0_1px_rgba(45,212,191,0.12),0_16px_48px_rgba(0,0,0,0.25)]">
-          <p className="text-[12px] font-medium text-[var(--accent)]">Continue</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[12px] font-medium text-[var(--accent)]">Continue</p>
+            {packReady ? (
+              <p className="text-[11px] text-[var(--text-tertiary)]">
+                Pack ready to run
+              </p>
+            ) : null}
+          </div>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-[22px] font-semibold tracking-tight">

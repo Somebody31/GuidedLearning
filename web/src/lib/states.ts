@@ -2,8 +2,8 @@ import type { LessonStatus } from "./types";
 
 export const STATUS_LABEL: Record<LessonStatus, string> = {
   locked: "Locked",
-  available: "Available",
-  in_progress: "In progress",
+  available: "Ready",
+  in_progress: "Active",
   due: "Due",
   weak: "Weak",
   mastered: "Mastered",
