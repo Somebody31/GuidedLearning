@@ -147,7 +147,7 @@ export default function NewCoursePage() {
           {files.map((f) => (
             <li
               key={f.id}
-              className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors"
+              className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors hover:border-[var(--hairline-strong)]"
             >
               <span
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"

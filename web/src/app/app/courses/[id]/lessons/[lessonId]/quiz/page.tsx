@@ -204,22 +204,24 @@ export default function QuizPage() {
 
   return (
     <div className="mx-auto min-h-full max-w-lg px-4 py-10">
-      <div className="flex items-center justify-between text-[13px] text-[var(--text-tertiary)]">
-        <span>
-          {lesson.title}
-        </span>
-        <span className="tabular">
-          Q {index + 1} of {questions.length}
-        </span>
-      </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
-        <div
-          className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)]"
-          style={{ width: `${((index + (revealed ? 1 : 0)) / questions.length) * 100}%` }}
-        />
+      <div className="sticky top-0 z-[var(--z-raised)] -mx-4 mb-6 border-b border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 backdrop-blur-md">
+        <div className="flex items-center justify-between text-[13px] text-[var(--text-tertiary)]">
+          <span className="min-w-0 truncate">{lesson.title}</span>
+          <span className="tabular shrink-0">
+            Q {index + 1} of {questions.length}
+          </span>
+        </div>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+          <div
+            className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
+            style={{
+              width: `${((index + (revealed ? 1 : 0)) / questions.length) * 100}%`,
+            }}
+          />
+        </div>
       </div>
 
-      <h1 className="mt-8 text-[20px] font-semibold leading-snug">{q.stem}</h1>
+      <h1 className="text-[20px] font-semibold leading-snug">{q.stem}</h1>
 
       <ul className="mt-6 space-y-2" role="listbox" aria-label="Answers">
         {q.options.map((opt, idx) => {
