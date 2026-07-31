@@ -18,6 +18,7 @@ export interface Citation {
   sourceName: string;
   page: number;
   excerpt?: string;
+  chunkId?: string;
 }
 
 export interface QuizOption {
@@ -40,6 +41,9 @@ export interface Lesson {
   estMinutes: number;
   status: LessonStatus;
   mastery: number;
+  difficulty: number;
+  packPriority: number;
+  nextReviewAt?: string;
   objectives: string[];
   sections: { heading: string; body: string }[];
   citations: Citation[];
@@ -47,6 +51,7 @@ export interface Lesson {
   quizReady: boolean;
   deferredUntil?: string;
   position?: { x: number; y: number };
+  contentVersion: number;
 }
 
 export interface Unit {
@@ -62,6 +67,9 @@ export interface SourceFile {
   pages: number;
   status: "queued" | "parsing" | "ready" | "failed";
   lastUsed?: string;
+  storageKey?: string;
+  bytes?: number;
+  error?: string;
 }
 
 export interface Course {
@@ -70,6 +78,8 @@ export interface Course {
   lifecycle: CourseLifecycle;
   lastStudiedAt: string | null;
   createdAt: string;
+  activatedAt?: string;
+  graphVersion: number;
   units: Unit[];
   lessons: Record<string, Lesson>;
   sources: SourceFile[];
@@ -88,6 +98,7 @@ export type JobType =
   | "draft_graph"
   | "generate_lesson"
   | "generate_quiz"
+  | "generate_course_content"
   | "reembed";
 
 export interface Job {
@@ -95,9 +106,61 @@ export interface Job {
   type: JobType;
   courseId: string;
   sourceId?: string;
+  lessonId?: string;
   status: JobStatus;
   progress: number;
   error?: string;
+  result?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SourcePage {
+  sourceId: string;
+  page: number;
+  text: string;
+}
+
+export interface Chunk {
+  id: string;
+  courseId: string;
+  sourceId: string;
+  sourceName: string;
+  pageStart: number;
+  pageEnd: number;
+  text: string;
+  embedding: number[];
+}
+
+export interface StudySession {
+  id: string;
+  courseId: string;
+  budgetMinutes: number;
+  pack: SessionPackItem[];
+  skips: number;
+  deferredIds: string[];
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface QuizAttemptRecord {
+  id: string;
+  courseId: string;
+  lessonId: string;
+  sessionId?: string;
+  attemptIndex: number;
+  score: number;
+  answers: Record<string, string>;
+  masteryBefore: number;
+  masteryAfter: number;
+  createdAt: string;
+}
+
+export interface EvalSample {
+  id: string;
+  courseId: string;
+  claim: string;
+  chunkId?: string;
+  faithful: boolean | null;
+  createdAt: string;
 }

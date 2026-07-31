@@ -1,4 +1,4 @@
-import { env } from "../env";
+import { env, liveLlmEnabled } from "../env";
 import { LLM } from "./models";
 
 export type ChatMessage = {
@@ -7,17 +7,17 @@ export type ChatMessage = {
 };
 
 /**
- * DeepSeek OpenAI-compatible chat completions.
- * No-op until DEEPSEEK_API_KEY is set (B2+ jobs call this).
+ * DeepSeek chat — only when USE_LIVE_AI=true and DEEPSEEK_API_KEY set.
+ * Default path uses mock generators (no credits).
  */
 export async function chatCompletion(opts: {
   messages: ChatMessage[];
   temperature?: number;
   json?: boolean;
 }): Promise<string> {
-  if (!env.DEEPSEEK_API_KEY) {
+  if (!liveLlmEnabled()) {
     throw new Error(
-      "DEEPSEEK_API_KEY is not set — cannot call DeepSeek V4 Flash",
+      "Live LLM disabled (USE_LIVE_AI=false). Use mock generators.",
     );
   }
 
@@ -31,9 +31,7 @@ export async function chatCompletion(opts: {
       model: LLM.model,
       messages: opts.messages,
       temperature: opts.temperature ?? 0.3,
-      ...(opts.json
-        ? { response_format: { type: "json_object" } }
-        : {}),
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
 
@@ -48,4 +46,8 @@ export async function chatCompletion(opts: {
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("DeepSeek returned empty content");
   return content;
+}
+
+export function llmMode(): "mock" | "live" {
+  return liveLlmEnabled() ? "live" : "mock";
 }

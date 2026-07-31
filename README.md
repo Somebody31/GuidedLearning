@@ -40,14 +40,14 @@ cd server && bun test
 | HTTP | Hono |
 | LLM | DeepSeek V4 Flash 0731 |
 | Embeddings | Qwen3 Embedding |
-| Store (now) | In-memory seed (`cn-kurose`) |
+| Store (now) | In-memory + local uploads (`cn-kurose` seed) |
 | Store (next) | Postgres + pgvector · S3 for PDFs |
 
-Set `DEEPSEEK_API_KEY` and embedding credentials in `server/.env` when wiring generation (Phase B2+). Optional `AUTH_TOKEN` enables Bearer auth.
+**Offline by default:** `USE_LIVE_AI=false` in `server/.env` — full pipeline uses mock embed/LLM so demos cost **zero** API credits. Set `USE_LIVE_AI=true` and keys only when you want live generation. Optional `AUTH_TOKEN` enables Bearer auth.
 
 ## Status
 
 - **UI:** P0–P1 mock surfaces (library, upload, confirm, atlas, lesson, quiz, session, sources, insights, settings, diagnostic, light/dark).
-- **API:** B0 scaffold live — health, course CRUD list/get, session pack, lesson/quiz read, packer tests. Upload/RAG/LLM jobs next.
+- **API:** B0–B5 offline pipeline — upload/parse/chunk, draft graph, activate, mock lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI`.
 
 Design specs stay **local** under `docs/` (gitignores all `.md` except this README).

@@ -1,6 +1,5 @@
-import type { Course } from "../types";
+import type { Course, Lesson, LessonStatus } from "../types";
 
-/** Demo Computer Networks course — structure + learning state for API smoke without LLM. */
 export const CN_COURSE_ID = "cn-kurose";
 
 export function createCnSeedCourse(): Course {
@@ -10,6 +9,8 @@ export function createCnSeedCourse(): Course {
     lifecycle: "activated",
     lastStudiedAt: "2026-07-30T18:40:00.000Z",
     createdAt: "2026-07-01T10:00:00.000Z",
+    activatedAt: "2026-07-01T12:00:00.000Z",
+    graphVersion: 1,
     sessionDefaultMinutes: 25,
     sources: [
       {
@@ -66,37 +67,37 @@ export function createCnSeedCourse(): Course {
       },
     ],
     lessons: {
-      "l-internet": lesson("l-internet", "u-intro", "What is the Internet?", 10, "mastered", 0.92, 40, 40, true),
-      "l-delay": lesson("l-delay", "u-intro", "Delay, loss, throughput", 12, "mastered", 0.88, 280, 40, true),
-      "l-layers": lesson("l-layers", "u-intro", "Protocol layers", 12, "available", 0.35, 520, 40, true),
-      "l-http": lesson("l-http", "u-app", "HTTP", 14, "due", 0.55, 40, 220, true),
-      "l-dns": lesson("l-dns", "u-app", "DNS", 12, "in_progress", 0.4, 280, 220, true),
-      "l-smtp": lesson("l-smtp", "u-app", "SMTP / IMAP overview", 10, "locked", 0, 520, 220, false),
-      "l-udp": lesson("l-udp", "u-transport", "UDP", 10, "available", 0.2, 40, 400, true),
-      "l-tcp": lesson("l-tcp", "u-transport", "TCP basics", 15, "weak", 0.42, 280, 400, true),
-      "l-rdt": lesson("l-rdt", "u-transport", "Reliable data transfer", 16, "locked", 0, 520, 400, false),
-      "l-congestion": lesson("l-congestion", "u-transport", "TCP congestion control", 18, "due", 0.38, 760, 400, true),
-      "l-ip": lesson("l-ip", "u-network", "IP addressing", 12, "locked", 0, 40, 580, false),
-      "l-forward": lesson("l-forward", "u-network", "Forwarding vs routing", 12, "locked", 0, 280, 580, false),
-      "l-routing": lesson("l-routing", "u-network", "Routing ideas", 14, "locked", 0, 520, 580, false),
-      "l-mac": lesson("l-mac", "u-link", "Multiple access", 12, "locked", 0, 40, 760, false),
-      "l-ethernet": lesson("l-ethernet", "u-link", "Ethernet / MAC", 12, "locked", 0, 280, 760, false),
-      "l-switch": lesson("l-switch", "u-link", "Switches", 10, "locked", 0, 520, 760, false),
+      "l-internet": L("l-internet", "u-intro", "What is the Internet?", 10, "mastered", 0.92, 40, 40),
+      "l-delay": L("l-delay", "u-intro", "Delay, loss, throughput", 12, "mastered", 0.88, 280, 40),
+      "l-layers": L("l-layers", "u-intro", "Protocol layers", 12, "available", 0.35, 520, 40),
+      "l-http": L("l-http", "u-app", "HTTP", 14, "due", 0.55, 40, 220),
+      "l-dns": L("l-dns", "u-app", "DNS", 12, "in_progress", 0.4, 280, 220),
+      "l-smtp": L("l-smtp", "u-app", "SMTP / IMAP overview", 10, "locked", 0, 520, 220, false),
+      "l-udp": L("l-udp", "u-transport", "UDP", 10, "available", 0.2, 40, 400),
+      "l-tcp": L("l-tcp", "u-transport", "TCP basics", 15, "weak", 0.42, 280, 400),
+      "l-rdt": L("l-rdt", "u-transport", "Reliable data transfer", 16, "locked", 0, 520, 400, false),
+      "l-congestion": L("l-congestion", "u-transport", "TCP congestion control", 18, "due", 0.38, 760, 400),
+      "l-ip": L("l-ip", "u-network", "IP addressing", 12, "locked", 0, 40, 580, false),
+      "l-forward": L("l-forward", "u-network", "Forwarding vs routing", 12, "locked", 0, 280, 580, false),
+      "l-routing": L("l-routing", "u-network", "Routing ideas", 14, "locked", 0, 520, 580, false),
+      "l-mac": L("l-mac", "u-link", "Multiple access", 12, "locked", 0, 40, 760, false),
+      "l-ethernet": L("l-ethernet", "u-link", "Ethernet / MAC", 12, "locked", 0, 280, 760, false),
+      "l-switch": L("l-switch", "u-link", "Switches", 10, "locked", 0, 520, 760, false),
     },
   };
 }
 
-function lesson(
+function L(
   id: string,
   unitId: string,
   title: string,
   estMinutes: number,
-  status: Course["lessons"][string]["status"],
+  status: LessonStatus,
   mastery: number,
   x: number,
   y: number,
-  quizReady: boolean,
-): Course["lessons"][string] {
+  quizReady = true,
+): Lesson {
   return {
     id,
     unitId,
@@ -104,12 +105,14 @@ function lesson(
     estMinutes,
     status,
     mastery,
+    difficulty: 0,
+    packPriority: status === "available" && mastery > 0 ? 10 : 0,
     objectives: [`Explain core ideas of ${title}`],
     sections: quizReady
       ? [
           {
             heading: "Overview",
-            body: `${title} — demo seed content. Real RAG generation lands in Phase B3.`,
+            body: `${title} — seed content (offline). Live RAG uses DeepSeek only when USE_LIVE_AI=true.`,
           },
         ]
       : [],
@@ -120,7 +123,7 @@ function lesson(
             sourceId: "src-1",
             sourceName: "Kurose-Ross-ch3-transport.pdf",
             page: 1,
-            excerpt: "Seed citation placeholder for API smoke tests.",
+            excerpt: "Seed citation for API smoke tests.",
           },
         ]
       : [],
@@ -130,17 +133,30 @@ function lesson(
             id: `${id}-q1`,
             stem: `Which statement best matches ${title}?`,
             options: [
-              { id: "a", text: "Unrelated transport trivia" },
+              { id: "a", text: "Unrelated trivia" },
               { id: "b", text: "A grounded core concept from the sources" },
               { id: "c", text: "A link-layer only claim" },
               { id: "d", text: "An application-layer only claim" },
             ],
             correctOptionId: "b",
-            explanation: "Demo quiz — real items generated by DeepSeek V4 Flash in B3.",
+            explanation: "Demo quiz item (mock generator).",
+          },
+          {
+            id: `${id}-q2`,
+            stem: `A common exam pitfall for ${title} is…`,
+            options: [
+              { id: "a", text: "Confusing related but distinct concepts" },
+              { id: "b", text: "Never reading the problem" },
+              { id: "c", text: "Using only layer-1 terms" },
+              { id: "d", text: "Ignoring units entirely" },
+            ],
+            correctOptionId: "a",
+            explanation: "Pitfall items keep difficulty signal without live LLM.",
           },
         ]
       : [],
     quizReady,
     position: { x, y },
+    contentVersion: 1,
   };
 }

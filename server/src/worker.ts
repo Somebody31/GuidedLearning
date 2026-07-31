@@ -1,22 +1,18 @@
 /**
- * Job worker stub (Phase B1+).
- * Polls Postgres jobs table / memory queue and runs parse → embed → generate.
+ * Optional separate worker process. API also runs jobs in-process via kickJobs().
  * Run: bun run worker
  */
 import { env } from "./env";
-import { LLM, EMBEDDING } from "./llm/models";
+import { llmMode } from "./llm/client";
+import { embeddingMode } from "./embed/qwen";
+import { kickJobs } from "./jobs/runner";
 
 console.log(
-  [
-    "GuidedLearning worker (stub)",
-    `store=${env.DATA_STORE}`,
-    `llm=${LLM.model}`,
-    `embed=${EMBEDDING.model}`,
-    "No job loop yet — implement in B1 (parse_source) / B2 (draft_graph).",
-  ].join(" · "),
+  `GuidedLearning worker · AI=${llmMode()}/${embeddingMode()} · USE_LIVE_AI=${env.USE_LIVE_AI}`,
 );
 
-// Keep process alive for future polling loop
 setInterval(() => {
-  /* idle */
-}, 60_000);
+  kickJobs();
+}, 2000);
+
+kickJobs();

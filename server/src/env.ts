@@ -11,18 +11,29 @@ const envSchema = z.object({
   EMBEDDING_API_KEY: z.string().optional(),
   EMBEDDING_BASE_URL: z.string().optional(),
   EMBEDDING_MODEL: z.string().default("qwen3-embedding-8b"),
-  EMBEDDING_DIMS: z.coerce.number().optional(),
+  EMBEDDING_DIMS: z.coerce.number().default(64),
   S3_ENDPOINT: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
   S3_REGION: z.string().default("auto"),
   DATA_STORE: z.enum(["memory", "postgres"]).default("memory"),
+  DATA_DIR: z.string().default("data"),
+  /**
+   * Live AI is OFF by default to avoid spending credits.
+   * Set USE_LIVE_AI=true AND provide keys to call DeepSeek / Qwen3.
+   */
+  USE_LIVE_AI: z
+    .enum(["true", "false", "1", "0"])
+    .default("false")
+    .transform((v) => v === "true" || v === "1"),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
-export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
+export function loadEnv(
+  source: Record<string, string | undefined> = process.env,
+): Env {
   const parsed = envSchema.safeParse(source);
   if (!parsed.success) {
     console.error(parsed.error.flatten().fieldErrors);
@@ -32,3 +43,15 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
 }
 
 export const env = loadEnv();
+
+export function liveLlmEnabled(): boolean {
+  return env.USE_LIVE_AI && Boolean(env.DEEPSEEK_API_KEY);
+}
+
+export function liveEmbedEnabled(): boolean {
+  return (
+    env.USE_LIVE_AI &&
+    Boolean(env.EMBEDDING_API_KEY) &&
+    Boolean(env.EMBEDDING_BASE_URL)
+  );
+}

@@ -1,21 +1,36 @@
-import { env } from "../env";
+import { env, liveEmbedEnabled } from "../env";
 import { EMBEDDING } from "../llm/models";
 
 /**
- * Qwen3 Embedding client.
- * Provider URL is env-specific (DashScope / OpenRouter / Ollama / other OpenAI-compatible).
- * B1+ wiring; B0 only validates config shape.
+ * Deterministic offline embedding — free, stable for cosine retrieval demos.
+ * Live Qwen3 only when USE_LIVE_AI=true and keys are set.
  */
+export function mockEmbed(text: string, dims = env.EMBEDDING_DIMS): number[] {
+  const v = new Array<number>(dims).fill(0);
+  const s = text.toLowerCase();
+  for (let i = 0; i < s.length; i++) {
+    const code = s.charCodeAt(i);
+    v[i % dims]! += ((code * (i + 1)) % 97) / 97;
+  }
+  // bag-of-tokenish signal
+  for (const tok of s.split(/[^a-z0-9]+/).filter(Boolean)) {
+    let h = 0;
+    for (let i = 0; i < tok.length; i++) h = (h * 31 + tok.charCodeAt(i)) >>> 0;
+    v[h % dims]! += 1;
+  }
+  const norm = Math.sqrt(v.reduce((a, b) => a + b * b, 0)) || 1;
+  return v.map((x) => x / norm);
+}
+
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  if (!env.EMBEDDING_API_KEY || !env.EMBEDDING_BASE_URL) {
-    throw new Error(
-      "EMBEDDING_API_KEY and EMBEDDING_BASE_URL required for Qwen3 embeddings",
-    );
+
+  if (!liveEmbedEnabled()) {
+    return texts.map((t) => mockEmbed(t));
   }
 
   const res = await fetch(
-    `${env.EMBEDDING_BASE_URL.replace(/\/$/, "")}/embeddings`,
+    `${env.EMBEDDING_BASE_URL!.replace(/\/$/, "")}/embeddings`,
     {
       method: "POST",
       headers: {
@@ -46,5 +61,9 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
 }
 
 export function embeddingConfigured(): boolean {
-  return Boolean(env.EMBEDDING_API_KEY && env.EMBEDDING_BASE_URL);
+  return liveEmbedEnabled();
+}
+
+export function embeddingMode(): "mock" | "live" {
+  return liveEmbedEnabled() ? "live" : "mock";
 }
