@@ -1,6 +1,6 @@
-# Markdown stays local — only README.md is committed/pushed
+# Markdown stays local — only the root README is committed/pushed
 *.md
-!README.md
+!/README.md
 
 # Dependencies & build
 node_modules/
