@@ -7,7 +7,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
 import { getCourse, unitForLesson } from "@/lib/mock-data";
-import { applyMotionAttr, readPrefs } from "@/lib/prefs";
+import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
 import { cn } from "@/lib/cn";
 
 export default function LessonPage() {
@@ -25,7 +25,7 @@ export default function LessonPage() {
 
   useEffect(() => {
     const p = readPrefs();
-    applyMotionAttr(p.motion);
+    applyPrefsAttrs(p);
     setPaper(p.paperDefault);
   }, []);
 
@@ -344,10 +344,10 @@ export default function LessonPage() {
           <button
             type="button"
             aria-label="Dismiss source preview"
-            className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-[1px]"
             onClick={() => setSourceOpen(null)}
           />
-          <div className="animate-sheet-in relative z-10 flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5 shadow-[-16px_0_48px_rgba(0,0,0,0.35)]">
+          <div className="animate-sheet-in relative z-10 flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-sheet)]">
             <div className="flex items-center justify-between gap-3">
               <h3 id="source-preview-title" className="text-[15px] font-medium">
                 Source preview

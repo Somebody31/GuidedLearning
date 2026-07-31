@@ -10,7 +10,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StateBadge } from "@/components/ui/state-badge";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { buildSessionPack, unitForLesson } from "@/lib/mock-data";
-import { applyMotionAttr, readPrefs } from "@/lib/prefs";
+import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
 import type { Course } from "@/lib/types";
 
 export function AtlasView({ course }: { course: Course }) {
@@ -21,7 +21,7 @@ export function AtlasView({ course }: { course: Course }) {
 
   useEffect(() => {
     const p = readPrefs();
-    applyMotionAttr(p.motion);
+    applyPrefsAttrs(p);
     setBudget(p.sessionMinutes);
   }, []);
 

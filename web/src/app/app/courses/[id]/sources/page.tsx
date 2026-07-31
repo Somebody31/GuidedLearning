@@ -61,7 +61,7 @@ export default async function SourcesPage({
             {course.sources.map((s) => (
               <li
                 key={s.id}
-                className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-all duration-[var(--duration-fast)] hover:-translate-y-px hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.22)]"
+                className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-all duration-[var(--duration-fast)] hover:-translate-y-px hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)]"
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"

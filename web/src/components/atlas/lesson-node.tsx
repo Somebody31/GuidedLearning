@@ -30,8 +30,8 @@ function LessonNodeComponent({ data }: NodeProps) {
         borderStyle: locked ? "dashed" : "solid",
         opacity: locked ? 0.72 : 1,
         boxShadow: d.selected
-          ? "0 0 0 2px var(--accent-ring), 0 12px 40px rgba(0,0,0,0.35)"
-          : "0 12px 40px rgba(0,0,0,0.35)",
+          ? "0 0 0 2px var(--accent-ring), var(--shadow-card)"
+          : "var(--shadow-card)",
         cursor: locked ? "not-allowed" : "pointer",
       }}
     >

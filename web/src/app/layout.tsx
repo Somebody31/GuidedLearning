@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { THEME_BOOT_SCRIPT } from "@/lib/prefs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,13 +34,16 @@ export const metadata: Metadata = {
     type: "website",
   },
   other: {
-    "color-scheme": "dark",
+    "color-scheme": "dark light",
   },
 };
 
 export const viewport = {
-  themeColor: "#07070a",
-  colorScheme: "dark" as const,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f4f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#07070a" },
+  ],
+  colorScheme: "dark light" as const,
 };
 
 export default function RootLayout({
@@ -49,9 +54,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Script
+          id="gl-theme-boot"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

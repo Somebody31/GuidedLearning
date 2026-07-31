@@ -17,13 +17,7 @@ export default function MarketingPage() {
       >
         Skip to content
       </a>
-      <div
-        className="pointer-events-none absolute inset-0 opacity-100"
-        style={{
-          background:
-            "radial-gradient(800px 400px at 70% 0%, rgba(45,212,191,0.08), transparent 55%), radial-gradient(500px 300px at 15% 80%, rgba(56,189,248,0.04), transparent 50%)",
-        }}
-      />
+      <div className="hero-wash pointer-events-none absolute inset-0 opacity-100" />
       <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-6 animate-fade-up">
         <span className="text-[15px] font-semibold tracking-tight">
           Guided<span className="text-[var(--accent)]">Learning</span>
@@ -62,7 +56,7 @@ export default function MarketingPage() {
         <div className="animate-fade-up mt-10 flex flex-wrap gap-3 [animation-delay:220ms]">
           <Link
             href={`/app/courses/${CN_COURSE_ID}`}
-            className="cta-primary h-11 px-6 text-[15px] hover:shadow-[0_0_24px_rgba(45,212,191,0.25)]"
+            className="cta-primary h-11 px-6 text-[15px] hover:shadow-[0_0_24px_var(--accent-muted)]"
           >
             Open demo · Computer Networks
           </Link>
@@ -113,7 +107,7 @@ export default function MarketingPage() {
           ].map(([t, d], i) => (
             <div
               key={t}
-              className="animate-fade-up group rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5 transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)] hover:-translate-y-0.5 hover:border-[var(--accent)]/25 hover:bg-[var(--surface-2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+              className="animate-fade-up group rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5 transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)] hover:-translate-y-0.5 hover:border-[var(--accent)]/25 hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)]"
               style={{ animationDelay: `${340 + i * 70}ms` }}
             >
               <dt className="text-[13px] font-medium text-[var(--accent)] transition-colors group-hover:text-[var(--accent-hover)]">

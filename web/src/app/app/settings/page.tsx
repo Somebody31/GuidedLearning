@@ -5,12 +5,13 @@ import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
 import {
-  applyMotionAttr,
+  applyPrefsAttrs,
   DEFAULT_PREFS,
   readPrefs,
   resetPrefs,
   writePrefs,
   type GlPrefs,
+  type GlTheme,
 } from "@/lib/prefs";
 
 function Toggle({
@@ -48,6 +49,7 @@ function Toggle({
 
 function prefsDirty(p: GlPrefs): boolean {
   return (
+    p.theme !== DEFAULT_PREFS.theme ||
     p.motion !== DEFAULT_PREFS.motion ||
     p.paperDefault !== DEFAULT_PREFS.paperDefault ||
     p.sessionMinutes !== DEFAULT_PREFS.sessionMinutes
@@ -62,7 +64,7 @@ export default function SettingsPage() {
     document.title = "Settings · GuidedLearning";
     const p = readPrefs();
     setPrefs(p);
-    applyMotionAttr(p.motion);
+    applyPrefsAttrs(p);
   }, []);
 
   function update(partial: Partial<GlPrefs>) {
@@ -114,6 +116,27 @@ export default function SettingsPage() {
         </div>
 
         <section className="surface-card mt-8 space-y-5 p-5">
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
+            Appearance
+          </p>
+          <div>
+            <p className="text-[14px] text-[var(--text-primary)]">Theme</p>
+            <p className="mb-3 text-[12px] text-[var(--text-tertiary)]">
+              Atlas Noir by default, or a cool daylight palette
+            </p>
+            <SegmentedControl
+              ariaLabel="Color theme"
+              value={prefs.theme}
+              onChange={(v) => update({ theme: v as GlTheme })}
+              options={[
+                { value: "dark", label: "Dark" },
+                { value: "light", label: "Light" },
+              ]}
+            />
+          </div>
+        </section>
+
+        <section className="surface-card mt-4 space-y-5 p-5">
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
             Experience
           </p>

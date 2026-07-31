@@ -39,7 +39,7 @@ export default function AppHomePage() {
         </p>
 
         <section
-          className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6 shadow-[0_0_0_1px_rgba(45,212,191,0.06)] transition-shadow duration-[var(--duration-med)] hover:shadow-[0_0_0_1px_rgba(45,212,191,0.12),0_16px_48px_rgba(0,0,0,0.25)]"
+          className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6 shadow-[0_0_0_1px_var(--accent-muted)] transition-shadow duration-[var(--duration-med)] hover:shadow-[0_0_0_1px_var(--accent-muted),var(--shadow-card)]"
           aria-labelledby="continue-heading"
         >
           <p
@@ -122,8 +122,8 @@ export default function AppHomePage() {
                     href={`/app/courses/${c.id}`}
                     className={
                       isActive
-                        ? "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--accent)]/25 bg-[var(--surface-1)] p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.06)] transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
-                        : "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
+                        ? "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--accent)]/25 bg-[var(--surface-1)] p-4 shadow-[0_0_0_1px_var(--accent-muted)] transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)] active:scale-[0.995]"
+                        : "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)] active:scale-[0.995]"
                     }
                   >
                     <MasteryRing value={t ? m / t : 0} size={36} />

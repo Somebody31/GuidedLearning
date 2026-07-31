@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import { applyMotionAttr, readPrefs } from "@/lib/prefs";
+import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
 
 export function AppShell({
   children,
@@ -21,7 +21,7 @@ export function AppShell({
   className?: string;
 }) {
   useEffect(() => {
-    applyMotionAttr(readPrefs().motion);
+    applyPrefsAttrs(readPrefs());
   }, []);
 
   const courseLinks = courseId

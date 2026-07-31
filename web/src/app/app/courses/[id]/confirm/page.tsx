@@ -258,10 +258,10 @@ export default function ConfirmCoursePage() {
           <button
             type="button"
             aria-label="Dismiss"
-            className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[var(--overlay-strong)] backdrop-blur-[2px]"
             onClick={() => setShowActivate(false)}
           />
-          <div className="animate-fade-up relative z-10 w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--hairline-strong)] bg-[var(--surface-1)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+          <div className="animate-fade-up relative z-10 w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--hairline-strong)] bg-[var(--surface-1)] p-6 shadow-[var(--shadow-modal)]">
             <h2 id="activate-title" className="text-[18px] font-semibold">
               Activate course and start tracking mastery?
             </h2>

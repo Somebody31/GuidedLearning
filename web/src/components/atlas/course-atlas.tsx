@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Background,
   Controls,
@@ -18,6 +18,47 @@ const nodeTypes: NodeTypes = {
   lesson: LessonNode,
 };
 
+/** Canvas fillStyle does not resolve CSS custom properties. */
+function useThemeCanvasColors() {
+  const [colors, setColors] = useState({
+    gridDot: "rgba(255,255,255,0.04)",
+    minimapMask: "rgba(7,7,10,0.72)",
+    accent: "#2dd4bf",
+    due: "#fbbf24",
+    weak: "#fb7185",
+    mastered: "#34d399",
+    locked: "#6b6b76",
+    progress: "#38bdf8",
+  });
+
+  useEffect(() => {
+    const read = () => {
+      const s = getComputedStyle(document.documentElement);
+      const get = (name: string, fallback: string) =>
+        s.getPropertyValue(name).trim() || fallback;
+      setColors({
+        gridDot: get("--grid-dot", "rgba(255,255,255,0.04)"),
+        minimapMask: get("--minimap-mask", "rgba(7,7,10,0.72)"),
+        accent: get("--accent", "#2dd4bf"),
+        due: get("--state-due", "#fbbf24"),
+        weak: get("--state-weak", "#fb7185"),
+        mastered: get("--state-mastered", "#34d399"),
+        locked: get("--state-locked", "#6b6b76"),
+        progress: get("--state-progress", "#38bdf8"),
+      });
+    };
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => obs.disconnect();
+  }, []);
+
+  return colors;
+}
+
 export function CourseAtlas({
   course,
   selectedId,
@@ -27,6 +68,8 @@ export function CourseAtlas({
   selectedId: string | null;
   onSelect: (lessonId: string | null) => void;
 }) {
+  const canvas = useThemeCanvasColors();
+
   const { nodes, edges } = useMemo(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
@@ -120,7 +163,7 @@ export function CourseAtlas({
         nodesConnectable={false}
         elementsSelectable
       >
-        <Background gap={24} size={1} color="rgba(255,255,255,0.04)" />
+        <Background gap={24} size={1} color={canvas.gridDot} />
         <Controls
           showInteractive={false}
           position="bottom-left"
@@ -130,14 +173,14 @@ export function CourseAtlas({
           className="!m-3 !hidden !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-0)] md:!block"
           nodeColor={(n) => {
             const status = (n.data as LessonNodeData | undefined)?.status;
-            if (status === "due") return "var(--state-due)";
-            if (status === "weak") return "var(--state-weak)";
-            if (status === "mastered") return "var(--state-mastered)";
-            if (status === "locked") return "var(--state-locked)";
-            if (status === "in_progress") return "var(--state-progress)";
-            return "var(--accent)";
+            if (status === "due") return canvas.due;
+            if (status === "weak") return canvas.weak;
+            if (status === "mastered") return canvas.mastered;
+            if (status === "locked") return canvas.locked;
+            if (status === "in_progress") return canvas.progress;
+            return canvas.accent;
           }}
-          maskColor="rgba(7,7,10,0.7)"
+          maskColor={canvas.minimapMask}
         />
       </ReactFlow>
     </div>
