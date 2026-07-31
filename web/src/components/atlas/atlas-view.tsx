@@ -186,16 +186,23 @@ export function AtlasView({ course }: { course: Course }) {
                               ? "Revisit lesson"
                               : "Start lesson"}
                     </Link>
-                    <p className="hidden text-center text-[11px] text-[var(--text-tertiary)] lg:block">
-                      <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                        Enter
-                      </kbd>{" "}
-                      opens ·{" "}
-                      <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                        Esc
-                      </kbd>{" "}
-                      clears
-                    </p>
+                    <ul
+                      className="hidden items-center justify-center gap-3 text-[11px] text-[var(--text-tertiary)] lg:flex"
+                      aria-label="Selection shortcuts"
+                    >
+                      <li className="flex items-center gap-1.5">
+                        <kbd className="rounded border border-[var(--hairline)] bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-secondary)]">
+                          Enter
+                        </kbd>
+                        <span>open</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <kbd className="rounded border border-[var(--hairline)] bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-secondary)]">
+                          Esc
+                        </kbd>
+                        <span>clear</span>
+                      </li>
+                    </ul>
                   </div>
                 )}
               </div>
@@ -206,20 +213,27 @@ export function AtlasView({ course }: { course: Course }) {
                 Select a lesson on the path
               </p>
               <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-tertiary)]">
-                Click a node or list row.{" "}
-                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
-                  M
-                </kbd>{" "}
-                map/list ·{" "}
-                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
-                  S
-                </kbd>{" "}
-                session ·{" "}
-                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
-                  Enter
-                </kbd>{" "}
-                open
+                Click a node or list row to open details.
               </p>
+              <ul className="mt-4 space-y-2" aria-label="Keyboard shortcuts">
+                {(
+                  [
+                    ["M", "Toggle map / list"],
+                    ["S", "Start session"],
+                    ["Enter", "Open selected"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <li
+                    key={key}
+                    className="flex items-center gap-2.5 text-[12px] text-[var(--text-tertiary)]"
+                  >
+                    <kbd className="inline-flex min-w-[2.25rem] shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[11px] font-medium text-[var(--text-secondary)]">
+                      {key}
+                    </kbd>
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
               {pack.length > 0 && (
                 <div className="mt-6 border-t border-[var(--hairline)] pt-4">
                   <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
