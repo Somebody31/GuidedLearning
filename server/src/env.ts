@@ -27,6 +27,18 @@ const envSchema = z.object({
     .enum(["true", "false", "1", "0"])
     .default("false")
     .transform((v) => v === "true" || v === "1"),
+  /** Cap DeepSeek output tokens per request (keep low to save cost). */
+  LIVE_AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().min(64).max(2048).default(400),
+  /** Hard stop: max live chat calls per server process, then fall back to mock. */
+  LIVE_AI_MAX_CALLS: z.coerce.number().int().min(0).max(500).default(8),
+  /**
+   * When true (default), never bulk-generate a whole course with live AI.
+   * Lessons/quizzes only call the API when a user opens that lesson.
+   */
+  LIVE_AI_LAZY_ONLY: z
+    .enum(["true", "false", "1", "0"])
+    .default("true")
+    .transform((v) => v === "true" || v === "1"),
 });
 
 export type Env = z.infer<typeof envSchema>;

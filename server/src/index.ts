@@ -8,6 +8,7 @@ import { sessionsRoutes } from "./routes/sessions";
 import { LLM, EMBEDDING } from "./llm/models";
 import { embeddingMode } from "./embed/qwen";
 import { llmMode } from "./llm/client";
+import { liveBudgetSnapshot } from "./llm/budget";
 import { CN_COURSE_ID } from "./db/store";
 
 const app = new Hono();
@@ -43,8 +44,11 @@ app.get("/health", (c) =>
       live: liveEmbedEnabled(),
     },
     seedCourseId: CN_COURSE_ID,
+    liveBudget: liveBudgetSnapshot(),
     note: env.USE_LIVE_AI
-      ? "Live AI enabled — calls spend credits when keys present"
+      ? liveLlmEnabled()
+        ? "Live AI on — lazy lesson/quiz only, hard call+token caps (see liveBudget)"
+        : "USE_LIVE_AI=true but DEEPSEEK_API_KEY missing — still mock"
       : "Offline mock AI (default) — no paid API calls",
   }),
 );

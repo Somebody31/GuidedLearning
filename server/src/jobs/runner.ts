@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { env } from "../env";
+import { env, liveLlmEnabled } from "../env";
 import { store } from "../db/store";
 import { parseDocument } from "../pdf/parse";
 import { chunkAndEmbedPages } from "../rag/chunk";
@@ -11,6 +11,8 @@ import {
   mockGenerateLesson,
   mockGenerateQuiz,
 } from "../llm/mock";
+import { liveGenerateLesson, liveGenerateQuiz } from "../llm/live";
+import { canSpendLiveCall, liveBudgetSnapshot } from "../llm/budget";
 import type { Job, SourcePage } from "../types";
 
 const processing = new Set<string>();
@@ -173,20 +175,50 @@ async function runGenerateLesson(job: Job) {
     return;
   }
 
+  // Prefer regenerating only missing half if partial.
+  if (lesson.sections.length > 0 && !lesson.quizReady) {
+    store.updateJob(job.id, {
+      status: "succeeded",
+      progress: 1,
+      result: { skipped: true, reason: "sections_ready_queue_quiz" },
+    });
+    store.enqueueJob({
+      type: "generate_quiz",
+      courseId: course.id,
+      lessonId: lesson.id,
+    });
+    kickJobs();
+    return;
+  }
+
   const chunks = store.getChunks(course.id);
   const retrieved = await retrieveChunks(
     `${lesson.title} ${lesson.objectives.join(" ")}`,
     chunks,
-    4,
+    2, // keep retrieval tiny for live prompts
   );
-  const gen = mockGenerateLesson({ title: lesson.title, retrieved });
+
+  let mode: "mock" | "live" = "mock";
+  let gen;
+  if (liveLlmEnabled() && canSpendLiveCall()) {
+    try {
+      gen = await liveGenerateLesson({ title: lesson.title, retrieved });
+      mode = "live";
+    } catch (err) {
+      console.warn("live lesson failed, using mock:", err);
+      gen = mockGenerateLesson({ title: lesson.title, retrieved });
+    }
+  } else {
+    gen = mockGenerateLesson({ title: lesson.title, retrieved });
+  }
+
   lesson.objectives = gen.objectives;
   lesson.sections = gen.sections;
   lesson.citations = gen.citations;
   lesson.contentVersion += 1;
   lesson.quizReady = false;
 
-  // faithfulness samples
+  // faithfulness samples (local, free)
   for (const c of gen.citations.slice(0, 1)) {
     const body = gen.sections[0]?.body ?? "";
     const chunk = retrieved.find((r) => r.chunk.id === c.chunkId)?.chunk;
@@ -205,7 +237,11 @@ async function runGenerateLesson(job: Job) {
   store.updateJob(job.id, {
     status: "succeeded",
     progress: 1,
-    result: { citations: gen.citations.length, mode: "mock" },
+    result: {
+      citations: gen.citations.length,
+      mode,
+      budget: liveBudgetSnapshot(),
+    },
   });
 
   store.enqueueJob({
@@ -222,22 +258,68 @@ async function runGenerateQuiz(job: Job) {
   const lesson = course.lessons[job.lessonId];
   if (!lesson) throw new Error("lesson not found");
 
-  lesson.quiz = mockGenerateQuiz({
-    title: lesson.title,
-    sections: lesson.sections,
-  });
+  if (lesson.quizReady && lesson.quiz.length > 0) {
+    store.updateJob(job.id, {
+      status: "succeeded",
+      progress: 1,
+      result: { skipped: true, reason: "quiz_ready" },
+    });
+    return;
+  }
+
+  let mode: "mock" | "live" = "mock";
+  if (liveLlmEnabled() && canSpendLiveCall()) {
+    try {
+      lesson.quiz = await liveGenerateQuiz({
+        title: lesson.title,
+        sections: lesson.sections,
+      });
+      mode = "live";
+    } catch (err) {
+      console.warn("live quiz failed, using mock:", err);
+      lesson.quiz = mockGenerateQuiz({
+        title: lesson.title,
+        sections: lesson.sections,
+      });
+    }
+  } else {
+    lesson.quiz = mockGenerateQuiz({
+      title: lesson.title,
+      sections: lesson.sections,
+    });
+  }
   lesson.quizReady = true;
 
   store.updateJob(job.id, {
     status: "succeeded",
     progress: 1,
-    result: { questions: lesson.quiz.length, mode: "mock" },
+    result: {
+      questions: lesson.quiz.length,
+      mode,
+      budget: liveBudgetSnapshot(),
+    },
   });
 }
 
 async function runGenerateCourseContent(job: Job) {
   const course = store.getCourseMutable(job.courseId);
   if (!course) throw new Error("missing course");
+
+  // Live path: never fan-out N lesson API calls on activate.
+  if (liveLlmEnabled() && env.LIVE_AI_LAZY_ONLY) {
+    store.updateJob(job.id, {
+      status: "succeeded",
+      progress: 1,
+      result: {
+        enqueued: 0,
+        lazy: true,
+        note: "Live AI lazy mode — content generates when a lesson is opened (saves tokens).",
+        budget: liveBudgetSnapshot(),
+      },
+    });
+    return;
+  }
+
   let enqueued = 0;
   for (const lid of Object.keys(course.lessons)) {
     const lesson = course.lessons[lid];
@@ -252,7 +334,7 @@ async function runGenerateCourseContent(job: Job) {
   store.updateJob(job.id, {
     status: "succeeded",
     progress: 1,
-    result: { enqueued },
+    result: { enqueued, lazy: false },
   });
   kickJobs();
 }
