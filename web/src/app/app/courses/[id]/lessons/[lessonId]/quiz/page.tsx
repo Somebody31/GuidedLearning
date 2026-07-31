@@ -79,25 +79,43 @@ export default function QuizPage() {
 
   if (!course || !lesson) {
     return (
-      <div className="p-8 text-[var(--text-secondary)]">Lesson missing.</div>
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+          404
+        </p>
+        <h1 className="text-[22px] font-semibold tracking-tight">
+          Lesson missing
+        </h1>
+        <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
+          This quiz has no matching lesson in the course map.
+        </p>
+        <Link href={`/app/courses/${courseId}`} className="cta-primary mt-2">
+          Back to atlas
+        </Link>
+      </div>
     );
   }
 
   if (!quizReady) {
     return (
       <div className="mx-auto flex min-h-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
-        <h1 className="text-[20px] font-semibold">Quiz not ready</h1>
-        <p className="text-[14px] text-[var(--text-secondary)]">
+        <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
+          Not ready
+        </p>
+        <h1 className="text-[22px] font-semibold tracking-tight">
+          Quiz not ready
+        </h1>
+        <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
           We couldn&apos;t generate this quiz yet. Retry later or return to the
           lesson.
         </p>
-        <div className="flex gap-3">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <Button variant="secondary" onClick={() => window.location.reload()}>
             Retry
           </Button>
           <Link
             href={`/app/courses/${courseId}/lessons/${lessonId}`}
-            className="cta-primary h-9 px-4 text-[14px]"
+            className="cta-primary"
           >
             Back to lesson
           </Link>

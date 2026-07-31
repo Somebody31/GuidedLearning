@@ -63,7 +63,21 @@ export default function DiagnosticPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance closes over sel/i
   }, [done, sel, i]);
 
-  if (!course) return <p className="p-8">Not found</p>;
+  if (!course) {
+    return (
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 py-20 text-center">
+        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+          404
+        </p>
+        <h1 className="text-[22px] font-semibold tracking-tight">
+          Course not found
+        </h1>
+        <Link href="/app" className="cta-primary mt-2">
+          Library
+        </Link>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -77,7 +91,7 @@ export default function DiagnosticPage() {
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
           Strong areas stay{" "}
           <strong className="font-medium text-[var(--text-primary)]">
-            available
+            Ready
           </strong>{" "}
           with low pack priority — never auto-mastered. Weak areas join the weak
           queue. SRS reviews start only after real quizzes.
@@ -139,11 +153,13 @@ export default function DiagnosticPage() {
         Optional placement · never auto-masters strong topics
       </p>
       <h1 className="mt-4 text-[20px] font-semibold leading-snug">{q.stem}</h1>
-      <ul className="mt-6 space-y-2">
+      <ul className="mt-6 space-y-2" role="listbox" aria-label="Answers">
         {q.options.map((o, idx) => (
           <li key={o}>
             <button
               type="button"
+              role="option"
+              aria-selected={sel === idx}
               onClick={() => setSel(idx)}
               className={
                 sel === idx
@@ -174,6 +190,9 @@ export default function DiagnosticPage() {
           Skip diagnostic
         </button>
         <div className="flex items-center gap-2">
+          <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] sm:inline">
+            1–{q.options.length}
+          </kbd>
           {sel !== null && (
             <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] sm:inline">
               Enter

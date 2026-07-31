@@ -7,6 +7,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
 import { getCourse, unitForLesson } from "@/lib/mock-data";
+import { applyMotionAttr, readPrefs } from "@/lib/prefs";
 import { cn } from "@/lib/cn";
 
 export default function LessonPage() {
@@ -20,6 +21,12 @@ export default function LessonPage() {
   const [sourceOpen, setSourceOpen] = useState<string | null>(null);
   const [flipping, setFlipping] = useState(false);
   const [readPct, setReadPct] = useState(0);
+
+  useEffect(() => {
+    const p = readPrefs();
+    applyMotionAttr(p.motion);
+    setPaper(p.paperDefault);
+  }, []);
 
   const citation = useMemo(() => {
     if (!lesson || !sourceOpen) return null;

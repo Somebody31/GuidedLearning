@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
+import {
+  applyMotionAttr,
+  readPrefs,
+  writePrefs,
+  type GlPrefs,
+} from "@/lib/prefs";
 
 function Toggle({
   checked,
@@ -39,21 +45,56 @@ function Toggle({
 }
 
 export default function SettingsPage() {
-  const [motion, setMotion] = useState(true);
-  const [paperDefault, setPaperDefault] = useState(false);
-  const [session, setSession] = useState("25");
+  const [prefs, setPrefs] = useState<GlPrefs | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     document.title = "Settings · GuidedLearning";
+    const p = readPrefs();
+    setPrefs(p);
+    applyMotionAttr(p.motion);
   }, []);
+
+  function update(partial: Partial<GlPrefs>) {
+    const next = writePrefs(partial);
+    setPrefs(next);
+    setSavedFlash(true);
+    window.setTimeout(() => setSavedFlash(false), 1400);
+  }
+
+  if (!prefs) {
+    return (
+      <AppShell settingsActive>
+        <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
+          <div className="h-8 w-36 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-2)]" />
+          <div className="mt-8 h-40 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-1)]" />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell settingsActive>
       <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
-        <h1 className="text-[28px] font-semibold tracking-tight">Settings</h1>
-        <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-          Preferences apply to this browser for the demo.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h1 className="text-[28px] font-semibold tracking-tight">Settings</h1>
+            <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
+              Preferences apply to this browser for the demo.
+            </p>
+          </div>
+          <p
+            className={cn(
+              "text-[12px] transition-opacity duration-[var(--duration-fast)]",
+              savedFlash
+                ? "text-[var(--accent)] opacity-100"
+                : "text-[var(--text-tertiary)] opacity-0",
+            )}
+            aria-live="polite"
+          >
+            Saved
+          </p>
+        </div>
 
         <section className="surface-card mt-8 space-y-5 p-5">
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
@@ -67,8 +108,8 @@ export default function SettingsPage() {
               </p>
             </div>
             <Toggle
-              checked={motion}
-              onChange={setMotion}
+              checked={prefs.motion}
+              onChange={(v) => update({ motion: v })}
               label="Motion"
             />
           </label>
@@ -82,8 +123,8 @@ export default function SettingsPage() {
               </p>
             </div>
             <Toggle
-              checked={paperDefault}
-              onChange={setPaperDefault}
+              checked={prefs.paperDefault}
+              onChange={(v) => update({ paperDefault: v })}
               label="Paper lesson default"
             />
           </label>
@@ -101,8 +142,8 @@ export default function SettingsPage() {
           </p>
           <SegmentedControl
             ariaLabel="Default session minutes"
-            value={session}
-            onChange={setSession}
+            value={String(prefs.sessionMinutes)}
+            onChange={(v) => update({ sessionMinutes: Number(v) })}
             options={[
               { value: "15", label: "15" },
               { value: "25", label: "25" },
@@ -113,14 +154,14 @@ export default function SettingsPage() {
           <p className="mt-3 text-[12px] text-[var(--text-tertiary)]">
             Current:{" "}
             <span className="tabular text-[var(--text-secondary)]">
-              {session} min
+              {prefs.sessionMinutes} min
             </span>{" "}
             packs
           </p>
         </section>
 
         <p className="mt-8 text-[12px] text-[var(--text-tertiary)]">
-          Demo preferences stay in this tab only — nothing is synced yet.
+          Demo preferences stay in this browser — nothing is synced yet.
         </p>
       </div>
     </AppShell>

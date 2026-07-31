@@ -64,9 +64,9 @@ export default async function InsightsPage({
           ))}
         </section>
 
-        {needsPack && (
-          <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
-            <h2 className="text-[15px] font-medium">Needs attention</h2>
+        <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+          <h2 className="text-[15px] font-medium">Needs attention</h2>
+          {needsPack ? (
             <ul className="mt-3 space-y-2">
               {lessons
                 .filter((l) => l.status === "due" || l.status === "weak")
@@ -84,8 +84,13 @@ export default async function InsightsPage({
                   </li>
                 ))}
             </ul>
-          </section>
-        )}
+          ) : (
+            <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
+              All clear — nothing due or weak right now. Keep studying new
+              lessons; reviews will land here after quizzes.
+            </p>
+          )}
+        </section>
 
         <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
           <h2 className="text-[15px] font-medium">Mastery by unit</h2>

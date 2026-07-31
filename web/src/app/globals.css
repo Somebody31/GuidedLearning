@@ -189,6 +189,15 @@ body {
   }
 }
 
+/* Settings toggle: Motion off (demo prefs) */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
 @keyframes paper-fade {
   from {
     opacity: 1;

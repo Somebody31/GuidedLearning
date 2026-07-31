@@ -10,6 +10,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StateBadge } from "@/components/ui/state-badge";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { buildSessionPack, unitForLesson } from "@/lib/mock-data";
+import { applyMotionAttr, readPrefs } from "@/lib/prefs";
 import type { Course } from "@/lib/types";
 
 export function AtlasView({ course }: { course: Course }) {
@@ -17,6 +18,12 @@ export function AtlasView({ course }: { course: Course }) {
   const [view, setView] = useState<"map" | "list">("map");
   const [budget, setBudget] = useState(course.sessionDefaultMinutes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const p = readPrefs();
+    applyMotionAttr(p.motion);
+    setBudget(p.sessionMinutes);
+  }, []);
 
   const pack = useMemo(
     () => buildSessionPack(course, budget),
