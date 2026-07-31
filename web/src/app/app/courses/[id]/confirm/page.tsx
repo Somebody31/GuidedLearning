@@ -85,13 +85,15 @@ export default function ConfirmCoursePage() {
             <span
               className={
                 saveState === "error"
-                  ? "text-[13px] text-[var(--danger)]"
-                  : "text-[13px] text-[var(--text-tertiary)]"
+                  ? "inline-flex items-center rounded-full border border-[var(--danger)]/30 bg-[rgba(248,113,113,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--danger)]"
+                  : saveState === "saving"
+                    ? "inline-flex items-center rounded-full border border-[var(--info)]/30 bg-[rgba(56,189,248,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--info)]"
+                    : "inline-flex items-center rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--text-tertiary)]"
               }
             >
               {saveState === "saving" && "Draft · saving…"}
               {saveState === "saved" && "Draft · saved"}
-              {saveState === "error" && "Couldn't save draft · retry"}
+              {saveState === "error" && "Couldn't save · retry"}
             </span>
             <Button
               size="lg"

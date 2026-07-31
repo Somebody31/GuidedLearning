@@ -38,6 +38,9 @@ export function MasteryRing({
           strokeDasharray={c}
           strokeDashoffset={offset}
           strokeLinecap="round"
+          style={{
+            transition: `stroke-dashoffset var(--duration-med) var(--ease-out-soft)`,
+          }}
         />
       </svg>
       {showLabel && (

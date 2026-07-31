@@ -110,7 +110,7 @@ export default function QuizPage() {
     const score = Math.round((correctCount / questions.length) * 100);
     return (
       <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-16">
-        <p className="text-[12px] font-medium text-[var(--accent)]">
+        <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
           What changed
         </p>
         <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
@@ -120,36 +120,46 @@ export default function QuizPage() {
           Score {score}% · attempt {attempt}/3
         </p>
         <div className="mt-8 space-y-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-[14px] text-[var(--text-secondary)]">Mastery</span>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[14px] text-[var(--text-secondary)]">
+              Mastery
+            </span>
             <div className="flex items-center gap-3">
               <MasteryRing value={masteryBefore} />
-              <span className="text-[var(--text-tertiary)]">→</span>
+              <span className="text-[var(--text-tertiary)]" aria-hidden>
+                →
+              </span>
               <MasteryRing value={masteryAfter} />
             </div>
           </div>
-          <p className="text-[14px] text-[var(--text-secondary)]">
-            Next review scheduled for{" "}
-            <span className="text-[var(--text-primary)]">
-              {attempt === 1 && score >= 70 ? "in 3 days" : "tomorrow"}
-            </span>
-          </p>
-          <p className="text-[14px] text-[var(--text-secondary)]">
-            Difficulty:{" "}
-            <span className="text-[var(--text-primary)]">
-              {score >= 80 ? "Harder items next time" : score < 50 ? "Easier items next time" : "Same"}
-            </span>
-          </p>
-          {attempt > 1 && (
-            <p className="text-[13px] text-[var(--text-tertiary)]">
-              Retries update difficulty and queue — not upward mastery.
+          <div className="border-t border-[var(--hairline)] pt-4">
+            <p className="text-[14px] text-[var(--text-secondary)]">
+              Next review{" "}
+              <span className="text-[var(--text-primary)]">
+                {attempt === 1 && score >= 70 ? "in 3 days" : "tomorrow"}
+              </span>
             </p>
-          )}
+            <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+              Difficulty:{" "}
+              <span className="text-[var(--text-primary)]">
+                {score >= 80
+                  ? "Harder items next time"
+                  : score < 50
+                    ? "Easier items next time"
+                    : "Same"}
+              </span>
+            </p>
+            {attempt > 1 && (
+              <p className="mt-2 text-[13px] text-[var(--text-tertiary)]">
+                Retries update difficulty and queue — not upward mastery.
+              </p>
+            )}
+          </div>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={`/app/courses/${courseId}`}
-            className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)]"
+            className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
           >
             Back to path
           </Link>
@@ -170,7 +180,7 @@ export default function QuizPage() {
           )}
           <Link
             href={`/app/courses/${courseId}/session`}
-            className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-secondary)]"
+            className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
           >
             Next in session
           </Link>
