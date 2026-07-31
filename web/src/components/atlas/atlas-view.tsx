@@ -196,14 +196,20 @@ export function AtlasView({ course }: { course: Course }) {
                   <ul className="mt-2 space-y-1.5">
                     {pack.slice(0, 4).map((item) => {
                       const l = course.lessons[item.lessonId];
+                      const kindColor =
+                        item.kind === "review"
+                          ? "text-[var(--state-due)]"
+                          : item.kind === "weak"
+                            ? "text-[var(--state-weak)]"
+                            : "text-[var(--accent)]";
                       return (
                         <li key={item.lessonId}>
                           <button
                             type="button"
                             onClick={() => setSelectedId(item.lessonId)}
-                            className="w-full truncate rounded-[var(--radius-md)] px-2 py-1.5 text-left text-[13px] text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                            className="w-full truncate rounded-[var(--radius-md)] px-2 py-1.5 text-left text-[13px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                           >
-                            <span className="capitalize text-[var(--text-tertiary)]">
+                            <span className={`capitalize ${kindColor}`}>
                               {item.kind}
                             </span>
                             {" · "}

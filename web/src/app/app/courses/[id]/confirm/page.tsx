@@ -55,10 +55,15 @@ export default function ConfirmCoursePage() {
     if (!showActivate) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setShowActivate(false);
+      if (e.key === "Enter") {
+        e.preventDefault();
+        setShowActivate(false);
+        router.push(`/app/courses/${id}`);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showActivate]);
+  }, [showActivate, router, id]);
 
   if (!course) {
     return (
@@ -230,7 +235,17 @@ export default function ConfirmCoursePage() {
               Spaced review will use this structure. Lesson IDs freeze after
               activate.
             </p>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <span className="mr-auto hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                  Esc
+                </kbd>{" "}
+                cancel ·{" "}
+                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                  Enter
+                </kbd>{" "}
+                activate
+              </span>
               <Button variant="ghost" onClick={() => setShowActivate(false)}>
                 Keep editing
               </Button>

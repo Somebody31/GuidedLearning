@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, FileUp, X } from "lucide-react";
@@ -38,6 +38,10 @@ export default function NewCoursePage() {
     },
   ]);
   const [dropHot, setDropHot] = useState(false);
+
+  useEffect(() => {
+    document.title = "New course · GuidedLearning";
+  }, []);
 
   const readyCount = files.filter((f) => f.status === "ready").length;
   const parsing = files.some((f) => f.status === "parsing");
@@ -78,7 +82,9 @@ export default function NewCoursePage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent)]"
+            placeholder="e.g. Computer Networks"
+            autoComplete="off"
+            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)]"
           />
         </label>
 
