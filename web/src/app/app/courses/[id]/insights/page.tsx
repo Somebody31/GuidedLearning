@@ -106,7 +106,7 @@ export default async function InsightsPage({
                     <div
                       className="bar-fill h-full rounded-full bg-[var(--accent)]"
                       style={{
-                        width: `${avg * 100}%`,
+                        width: avg > 0 ? `${Math.max(avg * 100, 2)}%` : "0%",
                         animationDelay: `${i * 60}ms`,
                       }}
                     />

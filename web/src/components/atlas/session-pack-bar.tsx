@@ -88,8 +88,11 @@ export function SessionPackBar({
           ]}
         />
         {pack.length === 0 ? (
-          <span className="inline-flex h-10 cursor-not-allowed items-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)]">
-            Start session
+          <span
+            className="inline-flex h-10 cursor-not-allowed items-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)]"
+            title="Nothing in today's pack"
+          >
+            All clear
           </span>
         ) : (
           <div className="flex items-center gap-2">
