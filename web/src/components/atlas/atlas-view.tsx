@@ -51,7 +51,7 @@ export function AtlasView({ course }: { course: Course }) {
   }, [pack.length, course.id, router]);
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] max-w-[1440px] flex-col gap-4 p-4 md:p-6">
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem-3.5rem)] max-w-[1440px] flex-col gap-4 p-4 sm:h-[calc(100dvh-3.5rem)] md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-[22px] font-semibold tracking-tight md:text-[28px]">

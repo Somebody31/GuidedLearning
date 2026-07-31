@@ -51,6 +51,15 @@ export default function ConfirmCoursePage() {
     return () => clearTimeout(t);
   }, [titles, course, id]);
 
+  useEffect(() => {
+    if (!showActivate) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowActivate(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showActivate]);
+
   if (!course) {
     return (
       <AppShell>

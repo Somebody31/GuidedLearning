@@ -53,8 +53,13 @@ export default function SessionPage() {
     return (
       <AppShell courseId={course.id} courseTitle={course.title}>
         <div className="mx-auto max-w-lg px-4 py-16">
-          <h1 className="text-[28px] font-semibold">Session complete</h1>
-          <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+          <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+            Pack finished
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            Session complete
+          </h1>
+          <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
             Skips used: <span className="tabular">{skips}/2</span>
             {deferred.length > 0 && (
               <>
@@ -63,12 +68,20 @@ export default function SessionPage() {
               </>
             )}
           </p>
-          <Link
-            href={`/app/courses/${course.id}`}
-            className="mt-8 inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)]"
-          >
-            Back to atlas
-          </Link>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href={`/app/courses/${course.id}`}
+              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              Back to atlas
+            </Link>
+            <Link
+              href={`/app/courses/${course.id}/insights`}
+              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
+            >
+              View insights
+            </Link>
+          </div>
         </div>
       </AppShell>
     );

@@ -27,10 +27,22 @@ export default function LessonPage() {
 
   if (!course || !lesson || !unit) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-3 p-8">
-        <p className="text-[var(--text-secondary)]">Lesson missing · back to atlas</p>
-        <Link href={`/app/courses/${courseId}`} className="text-[var(--accent)]">
-          Atlas
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+          404
+        </p>
+        <h1 className="text-[22px] font-semibold tracking-tight">
+          Lesson missing
+        </h1>
+        <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
+          This lesson is not in the course map. It may have been renamed or not
+          yet activated.
+        </p>
+        <Link
+          href={`/app/courses/${courseId}`}
+          className="mt-2 inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+        >
+          Back to atlas
         </Link>
       </div>
     );
@@ -91,9 +103,12 @@ export default function LessonPage() {
             <button
               type="button"
               onClick={togglePaper}
+              aria-pressed={paper}
               className={cn(
-                "text-[12px]",
-                paper ? "text-[var(--paper-accent)]" : "text-[var(--text-tertiary)]",
+                "rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors",
+                paper
+                  ? "border-[var(--paper-line)] bg-[var(--paper-surface)] text-[var(--paper-accent)]"
+                  : "border-[var(--hairline)] text-[var(--text-tertiary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-secondary)]",
               )}
             >
               {paper ? "Dark" : "Paper"}

@@ -123,7 +123,8 @@ export function CourseAtlas({
         <Background gap={24} size={1} color="rgba(255,255,255,0.04)" />
         <Controls
           showInteractive={false}
-          className="!m-3 !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-1)] !shadow-none [&>button]:!border-[var(--hairline)] [&>button]:!bg-[var(--surface-1)] [&>button]:!fill-[var(--text-secondary)]"
+          position="bottom-left"
+          className="!mb-16 !ml-3 sm:!mb-3 !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-1)] !shadow-none [&>button]:!border-[var(--hairline)] [&>button]:!bg-[var(--surface-1)] [&>button]:!fill-[var(--text-secondary)]"
         />
         <MiniMap
           className="!m-3 !hidden !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-0)] md:!block"
