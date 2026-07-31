@@ -2,7 +2,7 @@
 
 export const LLM = {
   provider: "deepseek",
-  model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash-0731",
+  model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
   baseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
 } as const;
 

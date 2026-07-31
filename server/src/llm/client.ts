@@ -44,6 +44,8 @@ export async function chatCompletion(opts: {
       messages: opts.messages,
       temperature: opts.temperature ?? 0.2,
       max_tokens: maxTokens,
+      // V4 thinks by default; disable to keep completion tokens cheap.
+      thinking: { type: "disabled" },
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });

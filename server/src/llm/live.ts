@@ -131,17 +131,21 @@ export async function liveGenerateQuiz(opts: {
 
   const qs = (parsed.questions ?? []).slice(0, 2).map((q, i) => {
     const options = (q.options ?? [])
-      .filter((o) => o.id && o.text)
+      .filter((o) => o.id != null && o.text != null)
       .slice(0, 4)
-      .map((o) => ({ id: String(o.id), text: clip(String(o.text), 100) }));
+      .map((o) => ({
+        id: String(o.id).trim() || String.fromCharCode(97),
+        text: clip(String(o.text), 100),
+      }));
     while (options.length < 4) {
       const id = String.fromCharCode(97 + options.length);
       options.push({ id, text: `Option ${id}` });
     }
+    const want = q.correctOptionId != null ? String(q.correctOptionId) : "";
     const correct =
-      options.find((o) => o.id === q.correctOptionId)?.id ?? options[0]!.id;
+      options.find((o) => o.id === want)?.id ?? options[0]!.id;
     return {
-      id: q.id?.trim() || `q${i + 1}`,
+      id: (q.id != null && String(q.id).trim()) || `q${i + 1}`,
       stem: clip(String(q.stem ?? `Question about ${opts.title}`), 200),
       options,
       correctOptionId: correct,

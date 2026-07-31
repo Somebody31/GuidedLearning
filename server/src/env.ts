@@ -7,7 +7,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DEEPSEEK_API_KEY: z.string().optional(),
   DEEPSEEK_BASE_URL: z.string().default("https://api.deepseek.com"),
-  DEEPSEEK_MODEL: z.string().default("deepseek-v4-flash-0731"),
+  DEEPSEEK_MODEL: z.string().default("deepseek-v4-flash"),
   EMBEDDING_API_KEY: z.string().optional(),
   EMBEDDING_BASE_URL: z.string().optional(),
   EMBEDDING_MODEL: z.string().default("qwen3-embedding-8b"),
