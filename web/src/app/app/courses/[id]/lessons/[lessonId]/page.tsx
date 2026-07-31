@@ -173,7 +173,7 @@ export default function LessonPage() {
         </div>
       </header>
 
-      <article className="mx-auto max-w-[42rem] px-4 py-10">
+      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-28">
         <p
           className={cn(
             "text-[12px] uppercase tracking-[0.08em]",
@@ -240,20 +240,20 @@ export default function LessonPage() {
             </div>
           </section>
         )}
+      </article>
 
-        <footer
-          className={cn(
-            "sticky bottom-0 mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-4 pb-4 backdrop-blur-md",
-            paper
-              ? "border-[var(--paper-line)] bg-[var(--paper)]/95"
-              : "border-[var(--hairline)] bg-[var(--canvas)]/95",
-          )}
-        >
+      <footer
+        className={cn(
+          "sticky bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md",
+          paper
+            ? "border-[var(--paper-line)] bg-[var(--paper)]/95"
+            : "border-[var(--hairline)] bg-[var(--canvas)]/95",
+        )}
+      >
+        <div className="mx-auto flex w-full max-w-[42rem] flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() =>
-              setSourceOpen(lesson.citations[0]?.id ?? null)
-            }
+            onClick={() => setSourceOpen(lesson.citations[0]?.id ?? null)}
             className={cn(
               "inline-flex items-center gap-2 text-[13px] transition-colors",
               paper
@@ -280,8 +280,8 @@ export default function LessonPage() {
               Quiz not ready · retry later
             </button>
           )}
-        </footer>
-      </article>
+        </div>
+      </footer>
 
       {citation && (
         <div

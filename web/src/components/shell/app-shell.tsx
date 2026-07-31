@@ -123,7 +123,7 @@ export function AppShell({
 
       {courseId && (
         <nav
-          className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 backdrop-blur-md sm:hidden"
+          className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
           aria-label="Course mobile"
         >
           <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-2">

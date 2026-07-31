@@ -204,6 +204,10 @@ body {
   color: var(--paper-ink);
 }
 
+.paper-mode .mastery-ring-fill {
+  stroke: var(--paper-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

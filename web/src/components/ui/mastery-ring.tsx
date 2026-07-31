@@ -38,6 +38,7 @@ export function MasteryRing({
           strokeWidth={stroke}
         />
         <circle
+          className="mastery-ring-fill"
           cx={size / 2}
           cy={size / 2}
           r={r}
