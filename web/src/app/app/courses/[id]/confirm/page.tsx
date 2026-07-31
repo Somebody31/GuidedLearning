@@ -68,9 +68,16 @@ export default function ConfirmCoursePage() {
     );
   }
 
+  const lessonCount = Object.keys(course.lessons).length;
+  const unitCount = course.units.length;
+  const totalMin = Object.values(course.lessons).reduce(
+    (s, l) => s + (l.estMinutes ?? 0),
+    0,
+  );
+
   return (
     <AppShell courseId={course.id} courseTitle={course.title} activeNav="confirm">
-      <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-8 pb-36 sm:pb-8 md:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-semibold tracking-tight">
@@ -79,6 +86,12 @@ export default function ConfirmCoursePage() {
             <p className="mt-1 max-w-xl text-[14px] text-[var(--text-tertiary)]">
               Edit until this matches how you want to study. Draft autosaves
               locally — spaced review starts only after activate.
+            </p>
+            <p className="mt-2 tabular text-[12px] text-[var(--text-tertiary)]">
+              <span className="text-[var(--text-secondary)]">{unitCount}</span>{" "}
+              units ·{" "}
+              <span className="text-[var(--text-secondary)]">{lessonCount}</span>{" "}
+              lessons · ~{totalMin} min
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -97,6 +110,7 @@ export default function ConfirmCoursePage() {
             </span>
             <Button
               size="lg"
+              className="hidden sm:inline-flex"
               disabled={saveState === "error"}
               onClick={() => setShowActivate(true)}
             >
@@ -108,7 +122,7 @@ export default function ConfirmCoursePage() {
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-full border border-[var(--hairline)] bg-[var(--accent-muted)] px-3 py-1 text-[12px] text-[var(--accent)]"
+            className="rounded-full border border-[var(--hairline)] bg-[var(--accent-muted)] px-3 py-1 text-[12px] text-[var(--accent)] transition-colors hover:border-[var(--accent)]/40"
             onClick={() => {
               /* demo merge suggestion */
               const a = "l-delay";
@@ -130,11 +144,20 @@ export default function ConfirmCoursePage() {
               key={unit.id}
               className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5"
             >
-              <h2 className="text-[16px] font-semibold">{unit.title}</h2>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-[16px] font-semibold">{unit.title}</h2>
+                <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+                  {unit.lessonIds.length} lessons
+                </span>
+              </div>
               <ul className="mt-4 space-y-3">
                 {unit.lessonIds.map((lid) => (
                   <li key={lid} className="flex items-center gap-3">
+                    <label className="sr-only" htmlFor={`lesson-title-${lid}`}>
+                      Lesson title
+                    </label>
                     <input
+                      id={`lesson-title-${lid}`}
                       value={titles[lid] ?? course.lessons[lid]?.title ?? ""}
                       onChange={(e) =>
                         setTitles((prev) => ({
@@ -142,7 +165,7 @@ export default function ConfirmCoursePage() {
                           [lid]: e.target.value,
                         }))
                       }
-                      className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none focus:border-[var(--accent)]"
+                      className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--accent)]"
                     />
                     <span className="tabular shrink-0 text-[12px] text-[var(--text-tertiary)]">
                       {course.lessons[lid]?.estMinutes ?? "—"} min
@@ -155,12 +178,35 @@ export default function ConfirmCoursePage() {
         </div>
 
         <p className="mt-6 text-[13px] text-[var(--text-tertiary)]">
-          <Link href={`/app/courses/${id}`} className="text-[var(--accent)]">
+          <Link
+            href={`/app/courses/${id}`}
+            className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+          >
             Back to atlas
           </Link>
           {" · "}
           You can still add sources later.
         </p>
+      </div>
+
+      {/* Sit above mobile course nav (h-14) */}
+      <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 backdrop-blur-md sm:hidden">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+          <span className="text-[12px] text-[var(--text-tertiary)]">
+            {saveState === "saved"
+              ? "Draft saved"
+              : saveState === "saving"
+                ? "Saving…"
+                : "Save error"}
+          </span>
+          <Button
+            size="lg"
+            disabled={saveState === "error"}
+            onClick={() => setShowActivate(true)}
+          >
+            Activate course
+          </Button>
+        </div>
       </div>
 
       {showActivate && (

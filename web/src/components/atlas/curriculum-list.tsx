@@ -51,16 +51,17 @@ export function CurriculumList({
                   <li key={lesson.id}>
                     <div
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border px-3 py-2.5 transition-colors",
+                        "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border px-3 py-2.5 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
                         selected
-                          ? "border-[var(--accent)] bg-[var(--surface-2)]"
-                          : "border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]",
+                          ? "border-[var(--accent)] bg-[var(--surface-2)] shadow-[0_0_0_1px_var(--accent-ring)]"
+                          : "border-[var(--hairline)] bg-[var(--surface-1)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]",
                         locked && "opacity-75",
                       )}
                     >
                       <button
                         type="button"
                         onClick={() => onSelect(lesson.id)}
+                        aria-pressed={selected}
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
                         <MasteryRing value={lesson.mastery} size={26} />
@@ -77,7 +78,7 @@ export function CurriculumList({
                       {!locked && (
                         <Link
                           href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-                          className="shrink-0 rounded-full border border-[var(--hairline)] px-2.5 py-1 text-[12px] text-[var(--accent)] transition-colors hover:border-[var(--accent)]/40 hover:bg-[var(--accent-muted)]"
+                          className="shrink-0 rounded-full border border-[var(--hairline)] px-2.5 py-1 text-[12px] font-medium text-[var(--accent)] transition-colors hover:border-[var(--accent)]/40 hover:bg-[var(--accent-muted)] active:scale-[0.98]"
                         >
                           Open
                         </Link>

@@ -18,8 +18,17 @@ export function MasteryRing({
   const offset = c - (pct / 100) * c;
 
   return (
-    <div className={cn("inline-flex items-center gap-1.5", className)}>
-      <svg width={size} height={size} className="shrink-0 -rotate-90">
+    <div
+      className={cn("inline-flex items-center gap-1.5", className)}
+      role="img"
+      aria-label={`${pct}% mastery`}
+    >
+      <svg
+        width={size}
+        height={size}
+        className="shrink-0 -rotate-90"
+        aria-hidden
+      >
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -44,7 +53,7 @@ export function MasteryRing({
         />
       </svg>
       {showLabel && (
-        <span className="tabular text-[12px] text-[var(--text-secondary)]">
+        <span className="tabular text-[12px] text-[var(--text-secondary)]" aria-hidden>
           {pct}%
         </span>
       )}

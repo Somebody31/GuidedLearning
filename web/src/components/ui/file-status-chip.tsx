@@ -37,7 +37,7 @@ export function FileStatusChip({
     >
       {status === "parsing" ? (
         <span
-          className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-current"
+          className="spin-soft box-border h-2.5 w-2.5 shrink-0 rounded-full border border-current border-t-transparent opacity-90"
           aria-hidden
         />
       ) : (

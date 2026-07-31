@@ -171,6 +171,27 @@ export default function SessionPage() {
         </aside>
 
         <div className="surface-card flex flex-col p-6 md:p-8">
+          <div
+            className="mb-5 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={initialPack.length}
+            aria-valuenow={initialPack.length - queue.length}
+            aria-label="Session progress"
+          >
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
+              style={{
+                width: `${
+                  initialPack.length
+                    ? ((initialPack.length - queue.length) /
+                        initialPack.length) *
+                      100
+                    : 0
+                }%`,
+              }}
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <StateBadge status={lesson.status} />
             <span className="tabular text-[12px] text-[var(--text-tertiary)]">
@@ -178,6 +199,9 @@ export default function SessionPage() {
             </span>
             <span className="tabular text-[12px] text-[var(--text-tertiary)]">
               Skips {skips}/2
+            </span>
+            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+              {initialPack.length - queue.length + 1}/{initialPack.length}
             </span>
           </div>
           <h1 className="mt-3 text-[24px] font-semibold tracking-tight md:text-[28px]">
