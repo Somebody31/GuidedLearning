@@ -208,8 +208,8 @@ export default function ConfirmCoursePage() {
         </p>
       </div>
 
-      {/* Sit above mobile course nav (h-14) */}
-      <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 backdrop-blur-md sm:hidden">
+      {/* Sit above mobile course nav (h-14 + safe area) */}
+      <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <span className="text-[12px] text-[var(--text-tertiary)]">
             {saveState === "saved"

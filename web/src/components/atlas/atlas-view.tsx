@@ -139,8 +139,24 @@ export function AtlasView({ course }: { course: Course }) {
                 ))}
               </ul>
               <p className="mt-4 text-[12px] text-[var(--text-tertiary)]">
-                {selected.citations.length} citation
+                <span className="tabular text-[var(--text-secondary)]">
+                  {selected.citations.length}
+                </span>{" "}
+                citation
                 {selected.citations.length === 1 ? "" : "s"}
+                {selected.quizReady ? (
+                  <>
+                    {" · "}
+                    <span className="text-[var(--accent)]">quiz ready</span>
+                  </>
+                ) : (
+                  <>
+                    {" · "}
+                    <span className="text-[var(--text-disabled)]">
+                      quiz pending
+                    </span>
+                  </>
+                )}
               </p>
               <div className="mt-auto flex gap-2 pt-6">
                 <button

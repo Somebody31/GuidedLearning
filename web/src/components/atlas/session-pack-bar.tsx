@@ -75,7 +75,7 @@ export function SessionPackBar({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 sm:justify-end">
         <SegmentedControl
           ariaLabel="Session duration"
           value={String(budget)}
@@ -89,19 +89,19 @@ export function SessionPackBar({
         />
         {pack.length === 0 ? (
           <span
-            className="inline-flex h-10 cursor-not-allowed items-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)]"
+            className="inline-flex h-10 w-full cursor-not-allowed items-center justify-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)] sm:w-auto"
             title="Nothing in today's pack"
           >
             All clear
           </span>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] md:inline">
               S
             </kbd>
             <Link
               href={`/app/courses/${course.id}/session`}
-              className="cta-primary text-[15px]"
+              className="cta-primary w-full text-[15px] sm:w-auto"
             >
               Start session
             </Link>

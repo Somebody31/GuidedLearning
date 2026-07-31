@@ -111,7 +111,7 @@ export default function AppHomePage() {
                 <li key={c.id}>
                   <Link
                     href={`/app/courses/${c.id}`}
-                    className="group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] active:scale-[0.995]"
+                    className="group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
                   >
                     <MasteryRing value={t ? m / t : 0} size={36} />
                     <div className="min-w-0 flex-1">
