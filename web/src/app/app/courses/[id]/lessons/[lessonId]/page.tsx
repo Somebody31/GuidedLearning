@@ -19,6 +19,7 @@ export default function LessonPage() {
   const [paper, setPaper] = useState(false);
   const [sourceOpen, setSourceOpen] = useState<string | null>(null);
   const [flipping, setFlipping] = useState(false);
+  const [readPct, setReadPct] = useState(0);
 
   const citation = useMemo(() => {
     if (!lesson || !sourceOpen) return null;
@@ -33,6 +34,17 @@ export default function LessonPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [sourceOpen]);
+
+  useEffect(() => {
+    function onScroll() {
+      const el = document.documentElement;
+      const max = el.scrollHeight - el.clientHeight;
+      setReadPct(max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lessonId]);
 
   if (!course || !lesson || !unit) {
     return (
@@ -100,8 +112,10 @@ export default function LessonPage() {
           <Link
             href={`/app/courses/${courseId}`}
             className={cn(
-              "inline-flex items-center gap-1.5 text-[13px]",
-              paper ? "text-[var(--paper-muted)]" : "text-[var(--text-tertiary)]",
+              "inline-flex items-center gap-1.5 text-[13px] transition-colors",
+              paper
+                ? "text-[var(--paper-muted)] hover:text-[var(--paper-ink)]"
+                : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
             )}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -124,6 +138,25 @@ export default function LessonPage() {
               {paper ? "Dark" : "Paper"}
             </button>
           </div>
+        </div>
+        <div
+          className={cn(
+            "h-0.5 w-full",
+            paper ? "bg-[var(--paper-line)]" : "bg-[var(--surface-3)]",
+          )}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(readPct)}
+          aria-label="Reading progress"
+        >
+          <div
+            className={cn(
+              "h-full transition-[width] duration-100 ease-out",
+              paper ? "bg-[var(--paper-accent)]" : "bg-[var(--accent)]",
+            )}
+            style={{ width: `${readPct}%` }}
+          />
         </div>
       </header>
 
@@ -179,10 +212,10 @@ export default function LessonPage() {
                   onClick={() => setSourceOpen(c.id)}
                   title={`${c.sourceName} · p.${c.page}`}
                   className={cn(
-                    "inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1 font-mono text-[12px] tabular",
+                    "inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1 font-mono text-[12px] tabular transition-colors",
                     paper
-                      ? "border-[var(--paper-line)] text-[var(--paper-accent)]"
-                      : "border-[var(--hairline)] bg-[var(--accent-muted)] text-[var(--accent)]",
+                      ? "border-[var(--paper-line)] text-[var(--paper-accent)] hover:bg-[var(--paper-surface)]"
+                      : "border-[var(--hairline)] bg-[var(--accent-muted)] text-[var(--accent)] hover:border-[var(--accent)]/40",
                   )}
                 >
                   <span className="min-w-0 max-w-[11rem] truncate sm:max-w-[18rem]">

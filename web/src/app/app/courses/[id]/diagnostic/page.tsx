@@ -33,6 +33,10 @@ export default function DiagnosticPage() {
   const [sel, setSel] = useState<number | null>(null);
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    document.title = "Diagnostic · GuidedLearning";
+  }, []);
+
   function advance() {
     if (sel === null) return;
     if (i + 1 >= QUESTIONS.length) setDone(true);
