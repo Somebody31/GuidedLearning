@@ -78,13 +78,16 @@ export default function AppHomePage() {
                 <li key={c.id}>
                   <Link
                     href={`/app/courses/${c.id}`}
-                    className="flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-colors hover:bg-[var(--surface-2)]"
+                    className="flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
                   >
                     <MasteryRing value={t ? m / t : 0} size={36} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{c.title}</p>
                       <p className="text-[13px] text-[var(--text-tertiary)]">
-                        <span className="tabular">{due}</span> due ·{" "}
+                        <span className="tabular text-[var(--state-due)]">
+                          {due}
+                        </span>{" "}
+                        due ·{" "}
                         {c.lifecycle === "activated" ? "Active path" : "Draft"}
                       </p>
                     </div>
@@ -92,6 +95,14 @@ export default function AppHomePage() {
                 </li>
               );
             })}
+            <li>
+              <Link
+                href="/app/courses/new"
+                className="flex h-full min-h-[76px] items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-transparent p-4 text-[14px] text-[var(--text-tertiary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
+              >
+                + New course from PDFs
+              </Link>
+            </li>
           </ul>
         </section>
       </div>
