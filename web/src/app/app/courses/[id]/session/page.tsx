@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { StateBadge } from "@/components/ui/state-badge";
@@ -11,6 +11,7 @@ import type { SessionPackItem } from "@/lib/types";
 
 export default function SessionPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = String(params.id);
   const course = getCourse(courseId);
   // Prefer a full pack for the runner so skip-cap (2) is reachable with queue left.
@@ -29,6 +30,49 @@ export default function SessionPage() {
   const [deferred, setDeferred] = useState<string[]>([]);
   const [done, setDone] = useState(false);
 
+  const current = queue[0];
+  const lesson = current && course ? course.lessons[current.lessonId] : null;
+  const skipDisabled = skips >= 2;
+
+  useEffect(() => {
+    if (done || !course || !current || !lesson) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        router.push(
+          `/app/courses/${course!.id}/lessons/${current!.lessonId}`,
+        );
+      }
+      if ((e.key === "j" || e.key === "J") && lesson?.quizReady) {
+        e.preventDefault();
+        router.push(
+          `/app/courses/${course!.id}/lessons/${current!.lessonId}/quiz`,
+        );
+      }
+      if ((e.key === "k" || e.key === "K") && !skipDisabled) {
+        e.preventDefault();
+        setSkips((s) => s + 1);
+        setDeferred((d) => [...d, current!.lessonId]);
+        setQueue((q) => {
+          const next = q.slice(1);
+          if (next.length === 0) setDone(true);
+          return next;
+        });
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [done, course, current, lesson, skipDisabled, router]);
+
   if (!course) {
     return (
       <AppShell>
@@ -36,10 +80,6 @@ export default function SessionPage() {
       </AppShell>
     );
   }
-
-  const current = queue[0];
-  const lesson = current ? course.lessons[current.lessonId] : null;
-  const skipDisabled = skips >= 2;
 
   function skip() {
     if (!current || skipDisabled) return;
@@ -155,19 +195,33 @@ export default function SessionPage() {
               <li key={o}>{o}</li>
             ))}
           </ul>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
+              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
             >
               Open lesson
             </Link>
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
-              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
             >
               Jump to quiz
             </Link>
+            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                Enter
+              </kbd>{" "}
+              open ·{" "}
+              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                J
+              </kbd>{" "}
+              quiz ·{" "}
+              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                K
+              </kbd>{" "}
+              skip
+            </span>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] pt-5">
             <Button
