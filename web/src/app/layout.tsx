@@ -24,6 +24,14 @@ export const metadata: Metadata = {
   },
   description:
     "Turn textbooks and lecture PDFs into adaptive unit–lesson paths with grounded lessons and spaced review.",
+  other: {
+    "color-scheme": "dark",
+  },
+};
+
+export const viewport = {
+  themeColor: "#07070a",
+  colorScheme: "dark" as const,
 };
 
 export default function RootLayout({

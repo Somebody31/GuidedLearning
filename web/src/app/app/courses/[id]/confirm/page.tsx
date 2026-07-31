@@ -72,7 +72,17 @@ export default function ConfirmCoursePage() {
   if (!course) {
     return (
       <AppShell>
-        <p className="p-8 text-[var(--text-secondary)]">Course not found.</p>
+        <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+            404
+          </p>
+          <h1 className="text-[22px] font-semibold tracking-tight">
+            Course not found
+          </h1>
+          <Link href="/app" className="cta-primary mt-2">
+            Library
+          </Link>
+        </div>
       </AppShell>
     );
   }

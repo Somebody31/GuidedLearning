@@ -84,9 +84,15 @@ export default function NewCoursePage() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Computer Networks"
             autoComplete="off"
+            maxLength={80}
             className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)]"
           />
         </label>
+        {!title.trim() ? (
+          <p className="mt-1.5 text-[12px] text-[var(--warning)]">
+            Add a title before building the map
+          </p>
+        ) : null}
 
         <button
           type="button"
@@ -128,54 +134,59 @@ export default function NewCoursePage() {
           </span>
         </button>
 
-        {files.length > 0 && (
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-[13px] text-[var(--text-tertiary)]">
-              Sources ·{" "}
-              <span className="tabular text-[var(--text-secondary)]">
-                {readyCount}/{files.length}
-              </span>{" "}
-              ready
-              {parsing ? (
-                <span className="text-[var(--info)]"> · parsing…</span>
-              ) : null}
-            </p>
-          </div>
+        {files.length > 0 ? (
+          <>
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-[13px] text-[var(--text-tertiary)]">
+                Sources ·{" "}
+                <span className="tabular text-[var(--text-secondary)]">
+                  {readyCount}/{files.length}
+                </span>{" "}
+                ready
+                {parsing ? (
+                  <span className="text-[var(--info)]"> · parsing…</span>
+                ) : null}
+              </p>
+            </div>
+            <ul className="mt-3 space-y-2">
+              {files.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors hover:border-[var(--hairline-strong)]"
+                >
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                    aria-hidden
+                  >
+                    <FileText className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-medium">{f.name}</p>
+                    <p className="tabular text-[12px] text-[var(--text-tertiary)]">
+                      {f.size}
+                      {f.status === "parsing" ? " · extracting text" : null}
+                    </p>
+                  </div>
+                  <FileStatusChip status={f.status} />
+                  <button
+                    type="button"
+                    aria-label={`Remove ${f.name}`}
+                    className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                    onClick={() =>
+                      setFiles((prev) => prev.filter((x) => x.id !== f.id))
+                    }
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="mt-6 text-[13px] text-[var(--text-tertiary)]">
+            No sources yet — drop at least one PDF to unlock Build.
+          </p>
         )}
-
-        <ul className="mt-3 space-y-2">
-          {files.map((f) => (
-            <li
-              key={f.id}
-              className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors hover:border-[var(--hairline-strong)]"
-            >
-              <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
-                aria-hidden
-              >
-                <FileText className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium">{f.name}</p>
-                <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                  {f.size}
-                  {f.status === "parsing" ? " · extracting text" : null}
-                </p>
-              </div>
-              <FileStatusChip status={f.status} />
-              <button
-                type="button"
-                aria-label={`Remove ${f.name}`}
-                className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
-                onClick={() =>
-                  setFiles((prev) => prev.filter((x) => x.id !== f.id))
-                }
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
 
         <div className="mt-10 flex items-center justify-between gap-3">
           <Link
@@ -187,6 +198,15 @@ export default function NewCoursePage() {
           <Button
             size="lg"
             disabled={!canBuild}
+            title={
+              !title.trim()
+                ? "Add a course title"
+                : readyCount === 0
+                  ? "Add at least one ready PDF"
+                  : parsing
+                    ? "Wait for parsing to finish"
+                    : undefined
+            }
             onClick={() =>
               router.push(`/app/courses/${CN_COURSE_ID}/confirm`)
             }
