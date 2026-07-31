@@ -234,20 +234,29 @@ export default function QuizPage() {
         </p>
       )}
 
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10 flex items-center justify-between gap-3">
         <Link
           href={`/app/courses/${courseId}/lessons/${lessonId}`}
-          className="text-[13px] text-[var(--text-tertiary)]"
+          className="text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
         >
           Back to lesson
         </Link>
-        <Button onClick={submit} disabled={!selected}>
-          {!revealed
-            ? "Check · Enter"
-            : index + 1 >= questions.length
-              ? "Finish · Enter"
-              : "Next · Enter"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {selected && (
+            <span className="hidden text-[12px] text-[var(--text-tertiary)] sm:inline">
+              <kbd className="rounded border border-[var(--hairline)] px-1">
+                Enter
+              </kbd>
+            </span>
+          )}
+          <Button onClick={submit} disabled={!selected}>
+            {!revealed
+              ? "Check"
+              : index + 1 >= questions.length
+                ? "Finish"
+                : "Next"}
+          </Button>
+        </div>
       </div>
     </div>
   );
