@@ -56,7 +56,7 @@ function LessonNodeComponent({ data }: NodeProps) {
         {d.title}
       </p>
       <div className="mt-2">
-        <StateBadge status={d.status} />
+        <StateBadge status={d.status} compact />
       </div>
       <Handle
         type="source"
