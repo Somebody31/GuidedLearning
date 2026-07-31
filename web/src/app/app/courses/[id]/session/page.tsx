@@ -191,7 +191,15 @@ export default function SessionPage() {
                     {i + 1}
                   </span>
                   <div className="min-w-0">
-                    <span className="text-[11px] capitalize text-[var(--text-tertiary)]">
+                    <span
+                      className={
+                        item.kind === "review"
+                          ? "text-[11px] capitalize text-[var(--state-due)]"
+                          : item.kind === "weak"
+                            ? "text-[11px] capitalize text-[var(--state-weak)]"
+                            : "text-[11px] capitalize text-[var(--accent)]"
+                      }
+                    >
                       {item.kind}
                     </span>
                     <p className="truncate font-medium text-[var(--text-primary)]">
@@ -261,21 +269,36 @@ export default function SessionPage() {
               >
                 Open lesson
               </Link>
-              <Link
-                href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
-                className="cta-secondary text-[14px] text-[var(--text-primary)]"
-              >
-                Jump to quiz
-              </Link>
+              {lesson.quizReady ? (
+                <Link
+                  href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
+                  className="cta-secondary text-[14px] text-[var(--text-primary)]"
+                >
+                  Jump to quiz
+                </Link>
+              ) : (
+                <span
+                  className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-disabled)]"
+                  title="Quiz not generated yet"
+                >
+                  Quiz pending
+                </span>
+              )}
               <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
                 <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                   Enter
                 </kbd>{" "}
-                open ·{" "}
-                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                  J
-                </kbd>{" "}
-                quiz ·{" "}
+                open
+                {lesson.quizReady ? (
+                  <>
+                    {" · "}
+                    <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                      J
+                    </kbd>{" "}
+                    quiz
+                  </>
+                ) : null}
+                {" · "}
                 <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                   K
                 </kbd>{" "}

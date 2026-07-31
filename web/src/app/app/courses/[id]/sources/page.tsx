@@ -44,29 +44,41 @@ export default async function SourcesPage({
             Add PDF
           </button>
         </div>
-        <ul className="mt-8 space-y-2">
-          {course.sources.map((s) => (
-            <li
-              key={s.id}
-              className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-all duration-[var(--duration-fast)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
-            >
-              <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
-                aria-hidden
+        {course.sources.length === 0 ? (
+          <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-[var(--surface-0)] px-6 py-12 text-center">
+            <p className="text-[15px] font-medium text-[var(--text-secondary)]">
+              No sources yet
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+              Upload lands in the next backend pass. Demo course ships with
+              textbooks and lecture PDFs.
+            </p>
+          </div>
+        ) : (
+          <ul className="mt-8 space-y-2">
+            {course.sources.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-all duration-[var(--duration-fast)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
               >
-                <FileText className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{s.name}</p>
-                <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                  {s.pages} pages
-                  {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
-                </p>
-              </div>
-              <FileStatusChip status={s.status} />
-            </li>
-          ))}
-        </ul>
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                  aria-hidden
+                >
+                  <FileText className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{s.name}</p>
+                  <p className="tabular text-[12px] text-[var(--text-tertiary)]">
+                    {s.pages} pages
+                    {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
+                  </p>
+                </div>
+                <FileStatusChip status={s.status} />
+              </li>
+            ))}
+          </ul>
+        )}
         <p className="mt-8 text-[13px] text-[var(--text-tertiary)]">
           <Link
             href={`/app/courses/${id}`}

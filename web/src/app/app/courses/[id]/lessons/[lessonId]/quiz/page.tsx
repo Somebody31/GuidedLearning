@@ -348,8 +348,8 @@ export default function QuizPage() {
             {!revealed
               ? "Check"
               : index + 1 >= questions.length
-                ? "Finish"
-                : "Next"}
+                ? "See results"
+                : "Next question"}
           </Button>
         </div>
       </div>

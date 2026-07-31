@@ -197,7 +197,7 @@ async function main() {
   if (optCount < 2) note("fail", "quiz", `Only ${optCount} options`);
   else note("ok", "quiz", `${optCount} answer options`);
 
-  // Answer all questions: prefer 2nd option (often correct in mock) → Check → Next/Finish
+  // Answer all questions: prefer 2nd option (often correct in mock) → Check → Next/See results
   for (let i = 0; i < 12; i++) {
     if ((await page.getByText("Quiz complete").count()) > 0) break;
 
@@ -210,7 +210,9 @@ async function main() {
     }
 
     const action = page
-      .getByRole("button", { name: /^(Check|Next|Finish)(\s*·.*)?$/ })
+      .getByRole("button", {
+        name: /^(Check|Next|Finish|Next question|See results)(\s*·.*)?$/i,
+      })
       .first();
     if ((await action.count()) === 0) break;
     if (!(await action.isEnabled().catch(() => false))) {
