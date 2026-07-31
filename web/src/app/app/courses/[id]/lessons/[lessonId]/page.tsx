@@ -228,15 +228,24 @@ export default function LessonPage() {
           </section>
         )}
 
-        <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-6 border-[var(--hairline)]">
+        <footer
+          className={cn(
+            "sticky bottom-0 mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-4 pb-4 backdrop-blur-md",
+            paper
+              ? "border-[var(--paper-line)] bg-[var(--paper)]/95"
+              : "border-[var(--hairline)] bg-[var(--canvas)]/95",
+          )}
+        >
           <button
             type="button"
             onClick={() =>
               setSourceOpen(lesson.citations[0]?.id ?? null)
             }
             className={cn(
-              "inline-flex items-center gap-2 text-[13px]",
-              paper ? "text-[var(--paper-muted)]" : "text-[var(--text-secondary)]",
+              "inline-flex items-center gap-2 text-[13px] transition-colors",
+              paper
+                ? "text-[var(--paper-muted)] hover:text-[var(--paper-ink)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
             )}
           >
             <BookOpen className="h-4 w-4" />
@@ -274,7 +283,7 @@ export default function LessonPage() {
             className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
             onClick={() => setSourceOpen(null)}
           />
-          <div className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5 shadow-[-16px_0_48px_rgba(0,0,0,0.35)]">
+          <div className="animate-sheet-in relative z-10 flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5 shadow-[-16px_0_48px_rgba(0,0,0,0.35)]">
             <div className="flex items-center justify-between gap-3">
               <h3 id="source-preview-title" className="text-[15px] font-medium">
                 Source preview
