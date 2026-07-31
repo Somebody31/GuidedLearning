@@ -233,7 +233,7 @@ export default function DiagnosticPage() {
             </kbd>
           )}
           <Button disabled={sel === null} onClick={advance}>
-            {i + 1 >= QUESTIONS.length ? "Finish" : "Next"}
+            {i + 1 >= QUESTIONS.length ? "See placement" : "Next"}
           </Button>
         </div>
       </div>

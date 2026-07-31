@@ -83,7 +83,11 @@ export function CurriculumList({
                           href={`/app/courses/${course.id}/lessons/${lesson.id}`}
                           className="shrink-0 rounded-full border border-[var(--hairline)] px-2.5 py-1 text-[12px] font-medium text-[var(--accent)] transition-colors hover:border-[var(--accent)]/40 hover:bg-[var(--accent-muted)] active:scale-[0.98]"
                         >
-                          Open
+                          {lesson.status === "in_progress"
+                            ? "Resume"
+                            : lesson.status === "due"
+                              ? "Review"
+                              : "Open"}
                         </Link>
                       )}
                     </div>

@@ -164,7 +164,10 @@ export default function SessionPage() {
   return (
     <AppShell courseId={course.id} courseTitle={course.title}>
       <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-4 px-4 py-6 sm:gap-6 sm:py-8 lg:grid-cols-[240px_1fr] md:px-6">
-        <aside className="surface-card h-fit overflow-x-auto p-4 lg:sticky lg:top-20">
+        <aside
+          className="surface-card h-fit overflow-x-auto p-4 lg:sticky lg:top-20"
+          aria-label="Session queue"
+        >
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
             Queue ·{" "}
             <span className="tabular text-[var(--text-secondary)]">

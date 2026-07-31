@@ -54,7 +54,10 @@ export function MasteryRing({
         />
       </svg>
       {showLabel && (
-        <span className="tabular text-[12px] text-[var(--text-secondary)]" aria-hidden>
+        <span
+          className="tabular text-[12px] text-[var(--text-secondary)]"
+          aria-hidden
+        >
           {pct}%
         </span>
       )}

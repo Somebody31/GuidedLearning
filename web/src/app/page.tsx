@@ -150,6 +150,12 @@ export default function MarketingPage() {
               >
                 New course
               </Link>
+              <Link
+                href="/app/settings"
+                className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+              >
+                Settings
+              </Link>
             </div>
           </div>
         </footer>

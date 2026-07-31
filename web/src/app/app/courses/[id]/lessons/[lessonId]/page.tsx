@@ -208,7 +208,7 @@ export default function LessonPage() {
         </div>
       </header>
 
-      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
         <p
           className={cn(
             "text-[12px] uppercase tracking-[0.08em]",
@@ -279,7 +279,7 @@ export default function LessonPage() {
 
       <footer
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md",
+          "fixed inset-x-0 bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
           paper
             ? "border-[var(--paper-line)] bg-[var(--paper)]"
             : "border-[var(--hairline)] bg-[var(--canvas)]",
@@ -290,14 +290,14 @@ export default function LessonPage() {
             type="button"
             onClick={() => setSourceOpen(lesson.citations[0]?.id ?? null)}
             className={cn(
-              "inline-flex items-center gap-2 text-[13px] transition-colors",
+              "inline-flex min-h-10 items-center gap-2 rounded-full px-1 text-[13px] transition-colors",
               paper
                 ? "text-[var(--paper-muted)] hover:text-[var(--paper-ink)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
             )}
           >
-            <BookOpen className="h-4 w-4" />
-            Open sources
+            <BookOpen className="h-4 w-4 shrink-0" />
+            <span>Open sources</span>
           </button>
           <div className="flex items-center gap-2">
             {lesson.quizReady && lesson.quiz.length > 0 ? (
