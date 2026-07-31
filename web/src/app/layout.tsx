@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   },
   description:
     "Turn textbooks and lecture PDFs into adaptive unit–lesson paths with grounded lessons and spaced review.",
+  applicationName: "GuidedLearning",
+  openGraph: {
+    title: "GuidedLearning",
+    description:
+      "From PDFs to a living course path — grounded lessons and adaptive spaced review.",
+    type: "website",
+  },
   other: {
     "color-scheme": "dark",
   },

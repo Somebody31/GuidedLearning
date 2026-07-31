@@ -159,7 +159,12 @@ export default function DiagnosticPage() {
       <p className="mt-4 text-[13px] text-[var(--text-tertiary)]">
         Optional placement · never auto-masters strong topics
       </p>
-      <h1 className="mt-4 text-[20px] font-semibold leading-snug">{q.stem}</h1>
+      <h1
+        key={i}
+        className="animate-fade-up mt-4 text-[20px] font-semibold leading-snug"
+      >
+        {q.stem}
+      </h1>
       <ul className="mt-6 space-y-2" role="listbox" aria-label="Answers">
         {q.options.map((o, idx) => (
           <li key={o}>
