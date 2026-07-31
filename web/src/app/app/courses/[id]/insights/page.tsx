@@ -43,7 +43,14 @@ export default async function InsightsPage({
             >
               Start session
             </Link>
-          ) : null}
+          ) : (
+            <Link
+              href={`/app/courses/${id}`}
+              className="cta-secondary text-[14px] text-[var(--text-primary)]"
+            >
+              Browse atlas
+            </Link>
+          )}
         </div>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-3">

@@ -34,8 +34,10 @@ export default function DiagnosticPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    document.title = "Diagnostic · GuidedLearning";
-  }, []);
+    document.title = done
+      ? "Placement applied · GuidedLearning"
+      : "Diagnostic · GuidedLearning";
+  }, [done]);
 
   function advance() {
     if (sel === null) return;
@@ -96,7 +98,27 @@ export default function DiagnosticPage() {
           with low pack priority — never auto-mastered. Weak areas join the weak
           queue. SRS reviews start only after real quizzes.
         </p>
-        <ul className="mt-6 space-y-2 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 text-[13px] text-[var(--text-secondary)]">
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+            <p className="text-[12px] text-[var(--text-tertiary)]">Ready</p>
+            <p className="tabular mt-1 text-[22px] font-semibold text-[var(--accent)]">
+              2
+            </p>
+            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+              Low pack priority
+            </p>
+          </div>
+          <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
+            <p className="text-[12px] text-[var(--text-tertiary)]">Weak queue</p>
+            <p className="tabular mt-1 text-[22px] font-semibold text-[var(--state-weak)]">
+              1
+            </p>
+            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+              Pack first
+            </p>
+          </div>
+        </div>
+        <ul className="mt-4 space-y-2 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 text-[13px] text-[var(--text-secondary)]">
           <li className="flex gap-2">
             <span className="text-[var(--accent)]" aria-hidden>
               ·

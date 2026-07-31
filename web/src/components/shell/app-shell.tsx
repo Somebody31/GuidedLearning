@@ -45,9 +45,12 @@ export function AppShell({
           <div className="flex min-w-0 items-center gap-4">
             <Link
               href="/app"
-              className="shrink-0 text-[15px] font-semibold tracking-tight text-[var(--text-primary)] transition-opacity hover:opacity-90"
+              className="group shrink-0 text-[15px] font-semibold tracking-tight text-[var(--text-primary)] transition-opacity hover:opacity-95"
             >
-              Guided<span className="text-[var(--accent)]">Learning</span>
+              Guided
+              <span className="text-[var(--accent)] transition-colors group-hover:text-[var(--accent-hover)]">
+                Learning
+              </span>
             </Link>
             {courseTitle && courseId && (
               <>

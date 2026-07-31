@@ -71,7 +71,7 @@ export default function NewCoursePage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl px-4 py-10 md:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-10 pb-28 sm:pb-10 md:px-6">
         <h1 className="text-[28px] font-semibold tracking-tight">New course</h1>
         <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
           PDFs only in v1 · textbooks and lecture slides work best
@@ -200,7 +200,7 @@ export default function NewCoursePage() {
           </p>
         )}
 
-        <div className="mt-10 flex items-center justify-between gap-3">
+        <div className="mt-10 hidden items-center justify-between gap-3 sm:flex">
           <Link
             href="/app"
             className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
@@ -224,6 +224,26 @@ export default function NewCoursePage() {
             }
           >
             {parsing ? "Parsing sources…" : "Build course map"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <Link
+            href="/app"
+            className="text-[13px] text-[var(--text-tertiary)]"
+          >
+            Cancel
+          </Link>
+          <Button
+            size="lg"
+            disabled={!canBuild}
+            onClick={() =>
+              router.push(`/app/courses/${CN_COURSE_ID}/confirm`)
+            }
+          >
+            {parsing ? "Parsing…" : "Build course map"}
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 
 export default function LessonPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = String(params.id);
   const lessonId = String(params.lessonId);
   const course = getCourse(courseId);
@@ -47,6 +48,39 @@ export default function LessonPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [sourceOpen]);
+
+  useEffect(() => {
+    if (!lesson || sourceOpen) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        setPaper((prev) => {
+          setFlipping(true);
+          window.setTimeout(() => setFlipping(false), 220);
+          return !prev;
+        });
+      }
+      if (
+        (e.key === "q" || e.key === "Q") &&
+        lesson?.quizReady &&
+        (lesson.quiz?.length ?? 0) > 0
+      ) {
+        e.preventDefault();
+        router.push(`/app/courses/${courseId}/lessons/${lessonId}/quiz`);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lesson, sourceOpen, courseId, lessonId, router]);
 
   useEffect(() => {
     function onScroll() {
@@ -141,6 +175,7 @@ export default function LessonPage() {
               type="button"
               onClick={togglePaper}
               aria-pressed={paper}
+              title="Toggle paper mode (P)"
               className={cn(
                 "rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors",
                 paper
@@ -264,22 +299,38 @@ export default function LessonPage() {
             <BookOpen className="h-4 w-4" />
             Open sources
           </button>
-          {lesson.quizReady && lesson.quiz.length > 0 ? (
-            <Link
-              href={`/app/courses/${courseId}/lessons/${lessonId}/quiz`}
-              className="paper-cta cta-primary"
-            >
-              Take quiz →
-            </Link>
-          ) : (
-            <button
-              type="button"
-              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-tertiary)]"
-              disabled
-            >
-              Quiz not ready · retry later
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {lesson.quizReady && lesson.quiz.length > 0 ? (
+              <>
+                <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+                  <kbd
+                    className={cn(
+                      "rounded border px-1 font-mono",
+                      paper
+                        ? "border-[var(--paper-line)]"
+                        : "border-[var(--hairline)]",
+                    )}
+                  >
+                    Q
+                  </kbd>
+                </span>
+                <Link
+                  href={`/app/courses/${courseId}/lessons/${lessonId}/quiz`}
+                  className="paper-cta cta-primary"
+                >
+                  Take quiz →
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-tertiary)]"
+                disabled
+              >
+                Quiz not ready · retry later
+              </button>
+            )}
+          </div>
         </div>
       </footer>
 

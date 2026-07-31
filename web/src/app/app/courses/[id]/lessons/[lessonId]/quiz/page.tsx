@@ -322,29 +322,44 @@ export default function QuizPage() {
         </div>
       )}
 
-      <div className="mt-10 flex items-center justify-between gap-3">
+      <div className="mt-10 flex items-center justify-between gap-3 pb-20 sm:pb-0">
         <Link
           href={`/app/courses/${courseId}/lessons/${lessonId}`}
           className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
         >
           Back to lesson
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
           {!revealed && (
-            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+            <span className="text-[11px] text-[var(--text-tertiary)]">
               <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                 1–4
               </kbd>
             </span>
           )}
           {selected && (
-            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+            <span className="text-[11px] text-[var(--text-tertiary)]">
               <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                 Enter
               </kbd>
             </span>
           )}
           <Button onClick={submit} disabled={!selected}>
+            {!revealed
+              ? "Check"
+              : index + 1 >= questions.length
+                ? "See results"
+                : "Next question"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+          <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+            Q {index + 1}/{questions.length}
+          </span>
+          <Button onClick={submit} disabled={!selected} size="lg">
             {!revealed
               ? "Check"
               : index + 1 >= questions.length
