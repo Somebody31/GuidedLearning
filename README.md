@@ -38,7 +38,7 @@ cd server && bun test
 |---|---|
 | Runtime | Bun |
 | HTTP | Hono |
-| LLM | DeepSeek V4 Flash 0731 |
+| LLM | DeepSeek V4 Flash (`deepseek-v4-flash`) |
 | Embeddings | Qwen3 Embedding |
 | Store (now) | In-memory + local uploads (`cn-kurose` seed) |
 | Store (next) | Postgres + pgvector · S3 for PDFs |
