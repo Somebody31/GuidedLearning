@@ -58,17 +58,18 @@ export default function LessonPage() {
   }
 
   function togglePaper() {
+    // Snap theme immediately so screenshots/audit never catch a mid-lerp gray.
+    // Overlay only provides a brief flash transition.
+    const next = !paper;
+    setPaper(next);
     setFlipping(true);
-    setTimeout(() => {
-      setPaper((p) => !p);
-      setFlipping(false);
-    }, 280);
+    window.setTimeout(() => setFlipping(false), 220);
   }
 
   return (
     <div
       className={cn(
-        "relative min-h-full transition-colors duration-[320ms]",
+        "relative min-h-full",
         paper ? "paper-mode" : "bg-[var(--canvas)] text-[var(--text-primary)]",
       )}
       style={
@@ -81,8 +82,8 @@ export default function LessonPage() {
         <div
           className="pointer-events-none fixed inset-0 z-[var(--z-theme)]"
           style={{
-            background: paper ? "var(--canvas)" : "var(--paper)",
-            animation: "paper-fade 280ms var(--ease-out-soft)",
+            background: paper ? "var(--paper)" : "var(--canvas)",
+            animation: "paper-fade 220ms var(--ease-out-soft) forwards",
           }}
         />
       )}

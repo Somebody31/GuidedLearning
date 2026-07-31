@@ -171,11 +171,19 @@ async function main() {
   const paperBtn = page.getByRole("button", { name: /^Paper$/i });
   if ((await paperBtn.count()) > 0) {
     await paperBtn.click();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(350);
     await shot(page, "08-lesson-paper");
-    note("ok", "lesson", "Paper mode toggle");
+    // Sanity: paper surface should not still be near-black canvas
+    const paperBg = await page.evaluate(() => {
+      const el = document.querySelector(".paper-mode");
+      if (!el) return null;
+      return getComputedStyle(el).backgroundColor;
+    });
+    if (!paperBg || paperBg.includes("7, 7, 10") || paperBg.includes("rgb(7"))
+      note("fail", "lesson", `Paper mode bg still dark: ${paperBg}`);
+    else note("ok", "lesson", "Paper mode toggle");
     await page.getByRole("button", { name: /^Dark$/i }).click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(250);
   }
 
   // ---- 5. Quiz flow ----

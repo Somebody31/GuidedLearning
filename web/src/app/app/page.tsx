@@ -43,13 +43,19 @@ export default function AppHomePage() {
                 next pack ready
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <MasteryRing value={progress} size={40} />
               <Link
                 href={`/app/courses/${active.id}`}
                 className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
               >
                 Open atlas
+              </Link>
+              <Link
+                href={`/app/courses/${active.id}/diagnostic`}
+                className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+              >
+                Diagnostic
               </Link>
             </div>
           </div>
