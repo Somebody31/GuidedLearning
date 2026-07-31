@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CN_COURSE_ID } from "@/lib/mock-data";
 
 export default function NotFound() {
   return (
@@ -17,8 +18,14 @@ export default function NotFound() {
         <Link href="/app" className="cta-primary">
           Library
         </Link>
-        <Link href="/app/courses/cn-kurose" className="cta-secondary text-[14px]">
+        <Link
+          href={`/app/courses/${CN_COURSE_ID}`}
+          className="cta-secondary text-[14px]"
+        >
           Open demo atlas
+        </Link>
+        <Link href="/" className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]">
+          Marketing
         </Link>
       </div>
     </div>

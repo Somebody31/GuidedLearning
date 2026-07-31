@@ -26,6 +26,11 @@ export default function AppError({
       <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
         Demo UI hit an unexpected error. Retry, or head back to the library.
       </p>
+      {error.digest ? (
+        <p className="font-mono text-[11px] text-[var(--text-tertiary)]">
+          Digest {error.digest}
+        </p>
+      ) : null}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <Button size="lg" onClick={reset}>
           Try again

@@ -149,6 +149,12 @@ export default function SessionPage() {
             >
               View insights
             </Link>
+            <Link
+              href="/app"
+              className="inline-flex h-10 items-center text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
+            >
+              Library
+            </Link>
           </div>
         </div>
       </AppShell>

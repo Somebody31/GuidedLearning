@@ -6,7 +6,9 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
 import {
   applyMotionAttr,
+  DEFAULT_PREFS,
   readPrefs,
+  resetPrefs,
   writePrefs,
   type GlPrefs,
 } from "@/lib/prefs";
@@ -28,7 +30,7 @@ function Toggle({
       aria-label={label}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
+        "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ring)]",
         checked ? "bg-[var(--accent)]" : "bg-[var(--surface-3)]",
       )}
     >
@@ -41,6 +43,14 @@ function Toggle({
         )}
       />
     </button>
+  );
+}
+
+function prefsDirty(p: GlPrefs): boolean {
+  return (
+    p.motion !== DEFAULT_PREFS.motion ||
+    p.paperDefault !== DEFAULT_PREFS.paperDefault ||
+    p.sessionMinutes !== DEFAULT_PREFS.sessionMinutes
   );
 }
 
@@ -57,6 +67,13 @@ export default function SettingsPage() {
 
   function update(partial: Partial<GlPrefs>) {
     const next = writePrefs(partial);
+    setPrefs(next);
+    setSavedFlash(true);
+    window.setTimeout(() => setSavedFlash(false), 1400);
+  }
+
+  function resetToDefaults() {
+    const next = resetPrefs();
     setPrefs(next);
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1400);
@@ -160,9 +177,24 @@ export default function SettingsPage() {
           </p>
         </section>
 
-        <p className="mt-8 text-[12px] text-[var(--text-tertiary)]">
-          Demo preferences stay in this browser — nothing is synced yet.
-        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[12px] text-[var(--text-tertiary)]">
+            Demo preferences stay in this browser — nothing is synced yet.
+          </p>
+          <button
+            type="button"
+            disabled={!prefsDirty(prefs)}
+            onClick={resetToDefaults}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-[12px] transition-colors",
+              prefsDirty(prefs)
+                ? "border-[var(--hairline)] text-[var(--text-secondary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-primary)]"
+                : "cursor-not-allowed border-[var(--hairline)] text-[var(--text-disabled)]",
+            )}
+          >
+            Reset defaults
+          </button>
+        </div>
       </div>
     </AppShell>
   );

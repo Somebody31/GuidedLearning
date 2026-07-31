@@ -78,18 +78,30 @@ export default function NewCoursePage() {
         </p>
 
         <label className="mt-8 block text-[13px] text-[var(--text-secondary)]">
-          Course title
+          <span className="flex items-center justify-between gap-2">
+            <span>Course title</span>
+            <span
+              className={cn(
+                "tabular text-[11px]",
+                title.length >= 72
+                  ? "text-[var(--warning)]"
+                  : "text-[var(--text-tertiary)]",
+              )}
+            >
+              {title.length}/80
+            </span>
+          </span>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Computer Networks"
             autoComplete="off"
             maxLength={80}
-            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)]"
+            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
           />
         </label>
         {!title.trim() ? (
-          <p className="mt-1.5 text-[12px] text-[var(--warning)]">
+          <p className="mt-1.5 text-[12px] text-[var(--warning)]" role="alert">
             Add a title before building the map
           </p>
         ) : null}

@@ -107,17 +107,29 @@ export default function AppHomePage() {
                 (l) => l.status === "mastered",
               ).length;
               const t = Object.keys(c.lessons).length;
+              const isActive = c.id === active.id;
               return (
                 <li key={c.id}>
                   <Link
                     href={`/app/courses/${c.id}`}
-                    className="group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
+                    className={
+                      isActive
+                        ? "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--accent)]/25 bg-[var(--surface-1)] p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.06)] transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
+                        : "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.28)] active:scale-[0.995]"
+                    }
                   >
                     <MasteryRing value={t ? m / t : 0} size={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium transition-colors group-hover:text-[var(--text-primary)]">
-                        {c.title}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-medium transition-colors group-hover:text-[var(--text-primary)]">
+                          {c.title}
+                        </p>
+                        {isActive ? (
+                          <span className="shrink-0 rounded-full bg-[var(--accent-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent)]">
+                            Active
+                          </span>
+                        ) : null}
+                      </div>
                       <p className="text-[13px] text-[var(--text-tertiary)]">
                         <span className="tabular text-[var(--state-due)]">
                           {due}

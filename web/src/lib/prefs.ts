@@ -49,6 +49,17 @@ export function writePrefs(partial: Partial<GlPrefs>): GlPrefs {
   return next;
 }
 
+/** Restore factory defaults and clear local storage key. */
+export function resetPrefs(): GlPrefs {
+  try {
+    localStorage.removeItem(PREFS_KEY);
+  } catch {
+    /* private mode */
+  }
+  applyMotionAttr(DEFAULT_PREFS.motion);
+  return { ...DEFAULT_PREFS };
+}
+
 export function applyMotionAttr(motion: boolean) {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.motion = motion ? "on" : "off";

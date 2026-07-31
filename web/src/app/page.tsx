@@ -11,6 +11,12 @@ export const metadata: Metadata = {
 export default function MarketingPage() {
   return (
     <div className="relative min-h-full overflow-hidden">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[var(--z-toast)] focus:rounded-[var(--radius-md)] focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-[var(--text-invert)]"
+      >
+        Skip to content
+      </a>
       <div
         className="pointer-events-none absolute inset-0 opacity-100"
         style={{
@@ -38,7 +44,10 @@ export default function MarketingPage() {
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto flex max-w-5xl flex-col px-6 pb-24 pt-16 md:pt-24">
+      <main
+        id="main"
+        className="relative z-10 mx-auto flex max-w-5xl flex-col px-6 pb-24 pt-16 md:pt-24"
+      >
         <p className="animate-fade-up text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--accent)] [animation-delay:40ms]">
           Atlas Noir · adaptive study
         </p>
