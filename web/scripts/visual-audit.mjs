@@ -202,7 +202,7 @@ async function main() {
     }
 
     const action = page
-      .getByRole("button", { name: /^(Check|Next|Finish)$/ })
+      .getByRole("button", { name: /^(Check|Next|Finish)(\s*·.*)?$/ })
       .first();
     if ((await action.count()) === 0) break;
     if (!(await action.isEnabled().catch(() => false))) {
