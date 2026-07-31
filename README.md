@@ -2,13 +2,11 @@
 
 AI-guided learning platform: upload textbooks and lecture PDFs → build a **Course → Unit → Lesson** path → study with grounded lessons, quizzes, and adaptive spaced review.
 
-## Docs
-
-| Document | Description |
-|---|---|
-| [docs/UX_DESIGN.md](./docs/UX_DESIGN.md) | Product UX flows, screens, adaptive behavior |
-| [docs/DESIGN_SYSTEM.md](./docs/DESIGN_SYSTEM.md) | **Atlas Noir** design language (tokens, components, motion) |
-
 ## Status
 
-Design phase — implementation not started.
+UI scaffold in progress (`web/`). Design specs live **locally** under `docs/` (not published to git — only this README is tracked as markdown).
+
+## Local docs (clone only)
+
+- `docs/UX_DESIGN.md` — product UX  
+- `docs/DESIGN_SYSTEM.md` — Atlas Noir design language  
