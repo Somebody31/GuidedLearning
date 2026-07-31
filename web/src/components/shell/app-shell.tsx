@@ -63,12 +63,19 @@ export function AppShell({
             </nav>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/app/courses/new"
-              className="text-[13px] text-[var(--text-tertiary)] hover:text-[var(--accent)]"
+              className="hidden text-[13px] text-[var(--text-tertiary)] hover:text-[var(--accent)] sm:inline"
             >
               New course
+            </Link>
+            <Link
+              href="/app/courses/new"
+              className="inline text-[13px] text-[var(--text-tertiary)] hover:text-[var(--accent)] sm:hidden"
+              aria-label="New course"
+            >
+              New
             </Link>
             <Link
               href="/app/settings"

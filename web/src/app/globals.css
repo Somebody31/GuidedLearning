@@ -35,11 +35,12 @@
   --danger: #f87171;
   --info: #38bdf8;
 
-  --paper: #f7f6f2;
-  --paper-ink: #18181b;
-  --paper-muted: #52525b;
-  --paper-line: rgba(24, 24, 27, 0.08);
+  --paper: #f4f0e6;
+  --paper-ink: #1c1917;
+  --paper-muted: #57534e;
+  --paper-line: rgba(28, 25, 23, 0.12);
   --paper-accent: #0f766e;
+  --paper-surface: #ebe6d9;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -137,10 +138,25 @@ body {
 .paper-mode {
   background: var(--paper);
   color: var(--paper-ink);
+  min-height: 100%;
 }
 
 .paper-mode a {
   color: var(--paper-accent);
+}
+
+.paper-mode h1,
+.paper-mode h2,
+.paper-mode h3 {
+  color: var(--paper-ink);
+}
+
+.paper-mode .lesson-serif {
+  color: var(--paper-ink);
+}
+
+.paper-mode footer {
+  border-color: var(--paper-line) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -150,6 +166,15 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes paper-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 

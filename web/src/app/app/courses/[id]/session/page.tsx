@@ -13,8 +13,15 @@ export default function SessionPage() {
   const params = useParams();
   const courseId = String(params.id);
   const course = getCourse(courseId);
+  // Prefer a full pack for the runner so skip-cap (2) is reachable with queue left.
   const initialPack = useMemo(
-    () => (course ? buildSessionPack(course, course.sessionDefaultMinutes) : []),
+    () =>
+      course
+        ? buildSessionPack(
+            course,
+            Math.max(course.sessionDefaultMinutes, 45),
+          )
+        : [],
     [course],
   );
   const [queue, setQueue] = useState<SessionPackItem[]>(initialPack);
@@ -69,12 +76,12 @@ export default function SessionPage() {
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title}>
-      <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[240px_1fr] md:px-6">
-        <aside className="surface-card p-4">
-          <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
-            Queue
+      <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[240px_1fr] md:px-6">
+        <aside className="surface-card h-fit p-4 lg:sticky lg:top-20">
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
+            Queue · {queue.length} left
           </p>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 space-y-1.5">
             {queue.map((item, i) => {
               const l = course.lessons[item.lessonId];
               return (
@@ -82,11 +89,11 @@ export default function SessionPage() {
                   key={item.lessonId}
                   className={
                     i === 0
-                      ? "rounded-[var(--radius-md)] bg-[var(--surface-2)] px-2 py-2 text-[13px]"
-                      : "px-2 py-1.5 text-[13px] text-[var(--text-secondary)]"
+                      ? "rounded-[var(--radius-md)] bg-[var(--surface-2)] px-2.5 py-2 text-[13px]"
+                      : "px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)]"
                   }
                 >
-                  <span className="text-[11px] uppercase text-[var(--text-tertiary)]">
+                  <span className="text-[11px] capitalize text-[var(--text-tertiary)]">
                     {item.kind}
                   </span>
                   <p className="truncate font-medium text-[var(--text-primary)]">
@@ -98,31 +105,38 @@ export default function SessionPage() {
           </ul>
         </aside>
 
-        <div className="surface-card flex flex-col p-6">
+        <div className="surface-card flex min-h-[360px] flex-col p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-2">
             <StateBadge status={lesson.status} />
             <span className="tabular text-[12px] text-[var(--text-tertiary)]">
               {lesson.estMinutes} min
             </span>
-            <span className="text-[12px] text-[var(--text-tertiary)]">
+            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
               Skips {skips}/2
             </span>
           </div>
-          <h1 className="mt-3 text-[24px] font-semibold">{lesson.title}</h1>
-          <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+          <h1 className="mt-3 text-[24px] font-semibold tracking-tight md:text-[28px]">
+            {lesson.title}
+          </h1>
+          <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)]">
             Open the lesson, then complete the quiz to count as done. Skip defers
             +1 day (max 2 per pack).
           </p>
+          <ul className="mt-6 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
+            {lesson.objectives.slice(0, 3).map((o) => (
+              <li key={o}>{o}</li>
+            ))}
+          </ul>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)]"
+              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
             >
               Open lesson
             </Link>
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
-              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px]"
+              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
             >
               Jump to quiz
             </Link>
@@ -132,9 +146,15 @@ export default function SessionPage() {
               variant="ghost"
               disabled={skipDisabled}
               onClick={skip}
-              title={skipDisabled ? "Defer limit for this pack" : "Defer until tomorrow"}
+              title={
+                skipDisabled
+                  ? "Defer limit for this pack"
+                  : "Defer until tomorrow"
+              }
             >
-              {skipDisabled ? "Defer limit for this pack" : "Skip · defer +1 day"}
+              {skipDisabled
+                ? "Defer limit for this pack"
+                : "Skip · defer +1 day"}
             </Button>
             <div className="flex gap-2">
               <Button

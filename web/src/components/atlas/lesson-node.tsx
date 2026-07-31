@@ -24,7 +24,7 @@ function LessonNodeComponent({ data }: NodeProps) {
 
   return (
     <div
-      className="w-[200px] rounded-[var(--radius-lg)] border bg-[var(--surface-1)] px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+      className="w-[212px] rounded-[var(--radius-lg)] border bg-[var(--surface-1)] px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
       style={{
         borderColor: d.selected ? "var(--accent)" : `${color}66`,
         borderStyle: locked ? "dashed" : "solid",

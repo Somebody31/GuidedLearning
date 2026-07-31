@@ -21,35 +21,53 @@ export function SessionPackBar({
     new: pack.filter((p) => p.kind === "new" || p.kind === "resume").length,
   };
   const minutes = pack.reduce(
-    (sum, p) => sum + (course.lessons[p.lessonId]?.estMinutes ?? 0) + 4,
+    (sum, p) => sum + (course.lessons[p.lessonId]?.estMinutes ?? 0),
     0,
   );
+  const overBudget = minutes > budget;
 
   return (
     <div className="flex flex-col gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)]/90 p-3 md:flex-row md:items-center md:justify-between md:p-4">
       <div className="min-w-0">
-        <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+        <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
           Today&apos;s pack
         </p>
         <p className="mt-0.5 text-[15px] text-[var(--text-primary)]">
-          <span className="tabular">~{minutes} min</span>
-          <span className="text-[var(--text-tertiary)]"> · </span>
-          {counts.review > 0 && (
-            <span className="text-[var(--state-due)]">{counts.review} due</span>
-          )}
-          {counts.review > 0 && (counts.weak > 0 || counts.new > 0) && (
-            <span className="text-[var(--text-tertiary)]"> · </span>
-          )}
-          {counts.weak > 0 && (
-            <span className="text-[var(--state-weak)]">{counts.weak} weak</span>
-          )}
-          {counts.weak > 0 && counts.new > 0 && (
-            <span className="text-[var(--text-tertiary)]"> · </span>
-          )}
-          {counts.new > 0 && (
-            <span className="text-[var(--accent)]">{counts.new} new/resume</span>
-          )}
-          {pack.length === 0 && (
+          {pack.length > 0 ? (
+            <>
+              <span className="tabular">
+                ~{minutes} of {budget} min
+              </span>
+              {overBudget && (
+                <span className="text-[var(--text-tertiary)]">
+                  {" "}
+                  (one long item)
+                </span>
+              )}
+              <span className="text-[var(--text-tertiary)]"> · </span>
+              {counts.review > 0 && (
+                <span className="text-[var(--state-due)]">
+                  {counts.review} due
+                </span>
+              )}
+              {counts.review > 0 && (counts.weak > 0 || counts.new > 0) && (
+                <span className="text-[var(--text-tertiary)]"> · </span>
+              )}
+              {counts.weak > 0 && (
+                <span className="text-[var(--state-weak)]">
+                  {counts.weak} weak
+                </span>
+              )}
+              {counts.weak > 0 && counts.new > 0 && (
+                <span className="text-[var(--text-tertiary)]"> · </span>
+              )}
+              {counts.new > 0 && (
+                <span className="text-[var(--accent)]">
+                  {counts.new} new/resume
+                </span>
+              )}
+            </>
+          ) : (
             <span className="text-[var(--text-secondary)]">
               Nothing due · you&apos;re clear for today
             </span>

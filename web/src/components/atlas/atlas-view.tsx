@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CourseAtlas } from "./course-atlas";
 import { CurriculumList } from "./curriculum-list";
 import { SessionPackBar } from "./session-pack-bar";
@@ -12,6 +13,7 @@ import { buildSessionPack, unitForLesson } from "@/lib/mock-data";
 import type { Course } from "@/lib/types";
 
 export function AtlasView({ course }: { course: Course }) {
+  const router = useRouter();
   const [view, setView] = useState<"map" | "list">("map");
   const [budget, setBudget] = useState(course.sessionDefaultMinutes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -39,10 +41,14 @@ export function AtlasView({ course }: { course: Course }) {
         setView((v) => (v === "map" ? "list" : "map"));
       }
       if (e.key === "Escape") setSelectedId(null);
+      if ((e.key === "s" || e.key === "S") && pack.length > 0) {
+        e.preventDefault();
+        router.push(`/app/courses/${course.id}/session`);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [pack.length, course.id, router]);
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-3.5rem)] max-w-[1440px] flex-col gap-4 p-4 md:p-6">
@@ -82,7 +88,7 @@ export function AtlasView({ course }: { course: Course }) {
               onSelect={setSelectedId}
             />
           ) : (
-            <div className="h-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4">
+            <div className="h-full max-h-[min(70dvh,720px)] overflow-auto rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4 lg:max-h-none">
               <CurriculumList
                 course={course}
                 selectedId={selectedId}
@@ -92,10 +98,15 @@ export function AtlasView({ course }: { course: Course }) {
           )}
         </div>
 
-        <aside className="surface-card flex min-h-[200px] flex-col p-4 lg:min-h-0">
+        {/* Empty inspector is desktop-only; mobile shows panel only when a lesson is selected */}
+        <aside
+          className={`surface-card flex min-h-[160px] flex-col p-4 lg:min-h-0 ${
+            selected ? "flex" : "hidden lg:flex"
+          }`}
+        >
           {selected && unit ? (
             <>
-              <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+              <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
                 {unit.title}
               </p>
               <h2 className="mt-1 text-[18px] font-semibold leading-snug">
@@ -117,7 +128,14 @@ export function AtlasView({ course }: { course: Course }) {
                 {selected.citations.length} citation
                 {selected.citations.length === 1 ? "" : "s"}
               </p>
-              <div className="mt-auto pt-6">
+              <div className="mt-auto flex gap-2 pt-6">
+                <button
+                  type="button"
+                  className="inline-flex h-10 shrink-0 items-center rounded-full border border-[var(--hairline)] px-3 text-[13px] text-[var(--text-tertiary)] lg:hidden"
+                  onClick={() => setSelectedId(null)}
+                >
+                  Close
+                </button>
                 {selected.status === "locked" ? (
                   <p className="text-[13px] text-[var(--text-tertiary)]">
                     Locked · complete prerequisites first
@@ -142,9 +160,9 @@ export function AtlasView({ course }: { course: Course }) {
                 Select a lesson on the path
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
-                Press <kbd className="text-[var(--text-secondary)]">M</kbd> for
+                Press <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">M</kbd> for
                 map/list ·{" "}
-                <kbd className="text-[var(--text-secondary)]">S</kbd> starts
+                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">S</kbd> starts
                 session from pack
               </p>
             </div>

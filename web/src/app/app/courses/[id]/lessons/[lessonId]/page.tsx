@@ -50,20 +50,28 @@ export default function LessonPage() {
         "relative min-h-full transition-colors duration-[320ms]",
         paper ? "paper-mode" : "bg-[var(--canvas)] text-[var(--text-primary)]",
       )}
+      style={
+        paper
+          ? { background: "var(--paper)", color: "var(--paper-ink)" }
+          : undefined
+      }
     >
       {flipping && (
         <div
-          className="pointer-events-none fixed inset-0 z-[var(--z-theme)] bg-[var(--canvas)]"
-          style={{ animation: "fade 300ms var(--ease-out-soft)" }}
+          className="pointer-events-none fixed inset-0 z-[var(--z-theme)]"
+          style={{
+            background: paper ? "var(--canvas)" : "var(--paper)",
+            animation: "paper-fade 280ms var(--ease-out-soft)",
+          }}
         />
       )}
 
       <header
         className={cn(
-          "sticky top-0 z-[var(--z-raised)] border-b backdrop-blur-md",
+          "sticky top-0 z-[var(--z-raised)] border-b",
           paper
-            ? "border-[var(--paper-line)] bg-[var(--paper)]/90"
-            : "border-[var(--hairline)] bg-[var(--canvas)]/90",
+            ? "border-[var(--paper-line)] bg-[var(--paper)]"
+            : "border-[var(--hairline)] bg-[var(--canvas)]/90 backdrop-blur-md",
         )}
       >
         <div className="mx-auto flex h-14 max-w-[42rem] items-center justify-between gap-3 px-4">

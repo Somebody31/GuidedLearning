@@ -40,7 +40,7 @@ export function CurriculumList({
         );
         return (
           <section key={unit.id}>
-            <h3 className="mb-2 text-[12px] font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+            <h3 className="mb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
               {unit.title}
             </h3>
             <ul className="space-y-2">

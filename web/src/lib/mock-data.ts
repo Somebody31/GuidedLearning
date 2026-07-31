@@ -592,6 +592,11 @@ export function getActiveCourse(): Course {
   })[0];
 }
 
+/** Lesson study time only — quiz is assumed inside estMinutes for packing density. */
+export function lessonPackCost(lesson: { estMinutes: number }): number {
+  return lesson.estMinutes;
+}
+
 export function buildSessionPack(
   course: Course,
   budgetMinutes: number,
@@ -602,23 +607,49 @@ export function buildSessionPack(
   const resume = lessons.filter((l) => l.status === "in_progress");
   const available = lessons.filter((l) => l.status === "available");
 
-  const ordered: SessionPackItem[] = [
-    ...due.map((l) => ({ lessonId: l.id, kind: "review" as const })),
-    ...weak.map((l) => ({ lessonId: l.id, kind: "weak" as const })),
-    ...resume.map((l) => ({ lessonId: l.id, kind: "resume" as const })),
-    ...available.map((l) => ({ lessonId: l.id, kind: "new" as const })),
+  // Priority tiers; within each tier pack smallest first so the budget fills denser.
+  const tiers: SessionPackItem[][] = [
+    due
+      .slice()
+      .sort((a, b) => a.estMinutes - b.estMinutes)
+      .map((l) => ({ lessonId: l.id, kind: "review" as const })),
+    weak
+      .slice()
+      .sort((a, b) => a.estMinutes - b.estMinutes)
+      .map((l) => ({ lessonId: l.id, kind: "weak" as const })),
+    resume
+      .slice()
+      .sort((a, b) => a.estMinutes - b.estMinutes)
+      .map((l) => ({ lessonId: l.id, kind: "resume" as const })),
+    available
+      .slice()
+      .sort((a, b) => a.estMinutes - b.estMinutes)
+      .map((l) => ({ lessonId: l.id, kind: "new" as const })),
   ];
 
   const pack: SessionPackItem[] = [];
   let used = 0;
-  for (const item of ordered) {
-    const lesson = course.lessons[item.lessonId];
-    if (!lesson || lesson.status === "deferred") continue;
-    const cost = lesson.estMinutes + 4;
-    if (used + cost > budgetMinutes && pack.length > 0) break;
-    pack.push(item);
-    used += cost;
-    if (used >= budgetMinutes) break;
+  const packed = new Set<string>();
+
+  // Multi-pass: each pass may add smaller items that fit remaining budget
+  // (first pass always admits at least one item even if over budget).
+  for (let pass = 0; pass < 3; pass++) {
+    let added = false;
+    for (const tier of tiers) {
+      for (const item of tier) {
+        if (packed.has(item.lessonId)) continue;
+        const lesson = course.lessons[item.lessonId];
+        if (!lesson || lesson.status === "deferred") continue;
+        const cost = lessonPackCost(lesson);
+        if (used + cost > budgetMinutes && pack.length > 0) continue;
+        pack.push(item);
+        packed.add(item.lessonId);
+        used += cost;
+        added = true;
+        if (used >= budgetMinutes) return pack;
+      }
+    }
+    if (!added) break;
   }
   return pack;
 }

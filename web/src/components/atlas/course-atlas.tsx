@@ -104,7 +104,7 @@ export function CourseAtlas({
   const onPaneClick = useCallback(() => onSelect(null), [onSelect]);
 
   return (
-    <div className="path-wash h-full min-h-[420px] w-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)]">
+    <div className="path-wash h-full min-h-[280px] w-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] md:min-h-[420px]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -112,8 +112,8 @@ export function CourseAtlas({
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.4}
+        fitViewOptions={{ padding: 0.15 }}
+        minZoom={0.35}
         maxZoom={1.4}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
@@ -126,7 +126,7 @@ export function CourseAtlas({
           className="!m-3 !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-1)] !shadow-none [&>button]:!border-[var(--hairline)] [&>button]:!bg-[var(--surface-1)] [&>button]:!fill-[var(--text-secondary)]"
         />
         <MiniMap
-          className="!m-3 !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-0)]"
+          className="!m-3 !hidden !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-0)] md:!block"
           nodeColor={() => "var(--accent)"}
           maskColor="rgba(7,7,10,0.7)"
         />

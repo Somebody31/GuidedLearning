@@ -12,7 +12,8 @@ export function StateBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide",
+        // Title case, zero letter-spacing — uppercase + tracking-wide read as "MA ST ERED"
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none [letter-spacing:0]",
         className,
       )}
       style={{
@@ -22,7 +23,7 @@ export function StateBadge({
       }}
     >
       <span
-        className="h-1.5 w-1.5 rounded-full"
+        className="h-1.5 w-1.5 shrink-0 rounded-full"
         style={{ background: STATUS_COLOR[status] }}
         aria-hidden
       />
