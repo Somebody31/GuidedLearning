@@ -42,8 +42,8 @@ export function CurriculumList({
           <section key={unit.id}>
             <h3 className="sticky top-0 z-[1] mb-2 bg-[var(--surface-0)]/95 py-1 text-[12px] font-medium text-[var(--text-tertiary)] backdrop-blur-sm">
               {unit.title}
-              <span className="ml-2 tabular text-[var(--text-disabled)]">
-                {lessons.length}
+              <span className="ml-2 font-normal tabular text-[var(--text-disabled)]">
+                · {lessons.length} lesson{lessons.length === 1 ? "" : "s"}
               </span>
             </h3>
             <ul className="space-y-2">

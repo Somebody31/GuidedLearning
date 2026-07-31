@@ -27,7 +27,9 @@ export default function AppError({
         Demo UI hit an unexpected error. Retry, or head back to the library.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-        <Button onClick={reset}>Try again</Button>
+        <Button size="lg" onClick={reset}>
+          Try again
+        </Button>
         <Link href="/app" className="cta-secondary text-[14px]">
           Library
         </Link>

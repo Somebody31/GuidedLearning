@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { applyMotionAttr, readPrefs } from "@/lib/prefs";
 
 export function AppShell({
   children,
@@ -16,6 +20,10 @@ export function AppShell({
   settingsActive?: boolean;
   className?: string;
 }) {
+  useEffect(() => {
+    applyMotionAttr(readPrefs().motion);
+  }, []);
+
   const courseLinks = courseId
     ? ([
         ["atlas", "Atlas", `/app/courses/${courseId}`],

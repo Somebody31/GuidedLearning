@@ -117,10 +117,32 @@ export default function MarketingPage() {
           ))}
         </dl>
 
-        <footer className="animate-fade-up mt-24 border-t border-[var(--hairline)] pt-8 text-[12px] text-[var(--text-tertiary)] [animation-delay:520ms]">
-          <p>
-            Atlas Noir UI demo · mock CN data · no backend yet
-          </p>
+        <footer className="animate-fade-up mt-24 border-t border-[var(--hairline)] pt-8 [animation-delay:520ms]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[12px] text-[var(--text-tertiary)]">
+              Atlas Noir UI demo · mock CN data · no backend yet
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-[12px]">
+              <Link
+                href={`/app/courses/${CN_COURSE_ID}`}
+                className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+              >
+                Demo atlas
+              </Link>
+              <Link
+                href="/app"
+                className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+              >
+                Library
+              </Link>
+              <Link
+                href="/app/courses/new"
+                className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+              >
+                New course
+              </Link>
+            </div>
+          </div>
         </footer>
       </main>
     </div>

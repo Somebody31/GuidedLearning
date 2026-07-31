@@ -200,13 +200,16 @@ export const computerNetworksCourse: Course = {
           sourceId: "src-3",
           sourceName: "Lecture-02-HTTP.pdf",
           page: 9,
-          excerpt: "HTTP is stateless…",
+          excerpt:
+            "HTTP is a stateless protocol: the server does not retain information about past client requests. Cookies and other application mechanisms may add state on top of HTTP.",
         },
         {
           id: "c5",
           sourceId: "src-3",
           sourceName: "Lecture-02-HTTP.pdf",
           page: 12,
+          excerpt:
+            "Figure: cookie jar — browser stores name/value pairs per domain; subsequent requests include Cookie headers. Do not confuse this application-layer state with TCP connection state.",
         },
       ],
       quiz: [

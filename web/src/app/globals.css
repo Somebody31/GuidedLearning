@@ -247,6 +247,10 @@ html[data-motion="off"] *::after {
   transform: scale(0.98);
   background: var(--accent-press);
 }
+.cta-primary:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 3px;
+}
 
 .cta-secondary {
   display: inline-flex;
@@ -272,6 +276,10 @@ html[data-motion="off"] *::after {
 }
 .cta-secondary:active {
   transform: scale(0.98);
+}
+.cta-secondary:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 3px;
 }
 
 @keyframes bar-grow {

@@ -28,6 +28,12 @@ export default function LessonPage() {
     setPaper(p.paperDefault);
   }, []);
 
+  useEffect(() => {
+    if (lesson) {
+      document.title = `${lesson.title} · GuidedLearning`;
+    }
+  }, [lesson]);
+
   const citation = useMemo(() => {
     if (!lesson || !sourceOpen) return null;
     return lesson.citations.find((c) => c.id === sourceOpen) ?? null;
@@ -310,12 +316,21 @@ export default function LessonPage() {
                 </kbd>
               </button>
             </div>
-            <p className="mt-4 font-mono text-[12px] text-[var(--accent)]">
-              {citation.sourceName} · p.{citation.page}
-            </p>
-            <p className="mt-4 text-[14px] leading-relaxed text-[var(--text-secondary)]">
-              {citation.excerpt ??
-                "Text layer excerpt would appear here from the PDF pipeline. Figures are referenced by page only (no invented diagram vision)."}
+            <div className="mt-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4">
+              <p className="font-mono text-[12px] text-[var(--accent)]">
+                {citation.sourceName}
+              </p>
+              <p className="mt-1 tabular text-[12px] text-[var(--text-tertiary)]">
+                Page {citation.page}
+              </p>
+              <p className="lesson-serif mt-4 text-[15px] leading-relaxed text-[var(--text-primary)]">
+                {citation.excerpt ??
+                  "Text layer excerpt would appear here from the PDF pipeline. Figures are referenced by page only (no invented diagram vision)."}
+              </p>
+            </div>
+            <p className="mt-4 text-[12px] leading-relaxed text-[var(--text-tertiary)]">
+              Grounded snippet from the parse pipeline — not model invention.
+              Full PDF page render lands with the backend.
             </p>
           </div>
         </div>
