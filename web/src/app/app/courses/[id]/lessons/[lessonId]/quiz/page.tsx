@@ -97,7 +97,7 @@ export default function QuizPage() {
           </Button>
           <Link
             href={`/app/courses/${courseId}/lessons/${lessonId}`}
-            className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-[var(--accent)] px-4 text-[14px] font-medium text-[var(--text-invert)]"
+            className="cta-primary h-9 px-4 text-[14px]"
           >
             Back to lesson
           </Link>
@@ -157,10 +157,7 @@ export default function QuizPage() {
           </div>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={`/app/courses/${courseId}`}
-            className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
-          >
+          <Link href={`/app/courses/${courseId}`} className="cta-primary">
             Back to path
           </Link>
           {attempt < 3 && score < 100 && (
@@ -180,7 +177,7 @@ export default function QuizPage() {
           )}
           <Link
             href={`/app/courses/${courseId}/session`}
-            className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+            className="cta-secondary"
           >
             Next in session
           </Link>

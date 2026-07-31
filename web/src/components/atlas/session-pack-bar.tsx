@@ -98,7 +98,7 @@ export function SessionPackBar({
             </kbd>
             <Link
               href={`/app/courses/${course.id}/session`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[15px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+              className="cta-primary text-[15px]"
             >
               Start session
             </Link>

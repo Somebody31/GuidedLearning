@@ -109,15 +109,12 @@ export default function SessionPage() {
             )}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href={`/app/courses/${course.id}`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
-            >
+            <Link href={`/app/courses/${course.id}`} className="cta-primary">
               Back to atlas
             </Link>
             <Link
               href={`/app/courses/${course.id}/insights`}
-              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
+              className="cta-secondary text-[14px] text-[var(--text-primary)]"
             >
               View insights
             </Link>
@@ -198,13 +195,13 @@ export default function SessionPage() {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+              className="cta-primary"
             >
               Open lesson
             </Link>
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
-              className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
+              className="cta-secondary text-[14px] text-[var(--text-primary)]"
             >
               Jump to quiz
             </Link>

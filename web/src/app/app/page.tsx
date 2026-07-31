@@ -14,6 +14,9 @@ export default function AppHomePage() {
   const dueCount = Object.values(active.lessons).filter(
     (l) => l.status === "due",
   ).length;
+  const weakCount = Object.values(active.lessons).filter(
+    (l) => l.status === "weak",
+  ).length;
   const libraryDue = courses.reduce(
     (n, c) =>
       n + Object.values(c.lessons).filter((l) => l.status === "due").length,
@@ -24,6 +27,7 @@ export default function AppHomePage() {
   ).length;
   const total = Object.keys(active.lessons).length;
   const progress = total ? mastered / total : 0;
+  const packReady = dueCount + weakCount > 0;
 
   return (
     <AppShell>
@@ -43,22 +47,40 @@ export default function AppHomePage() {
               </h2>
               <p className="mt-1 text-[14px] text-[var(--text-secondary)]">
                 <span className="tabular text-[var(--state-due)]">{dueCount}</span>{" "}
-                due ·{" "}
-                <span className="tabular">{mastered}</span>/{total} mastered ·
-                next pack ready
+                due
+                {weakCount > 0 && (
+                  <>
+                    {" · "}
+                    <span className="tabular text-[var(--state-weak)]">
+                      {weakCount}
+                    </span>{" "}
+                    weak
+                  </>
+                )}
+                {" · "}
+                <span className="tabular">{mastered}</span>/{total} mastered
+                {packReady ? " · pack ready" : ""}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <MasteryRing value={progress} size={40} />
+              {packReady ? (
+                <Link
+                  href={`/app/courses/${active.id}/session`}
+                  className="cta-primary"
+                >
+                  Start session
+                </Link>
+              ) : null}
               <Link
                 href={`/app/courses/${active.id}`}
-                className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+                className={packReady ? "cta-secondary" : "cta-primary"}
               >
                 Open atlas
               </Link>
               <Link
                 href={`/app/courses/${active.id}/diagnostic`}
-                className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                className="cta-secondary"
               >
                 Diagnostic
               </Link>
@@ -71,7 +93,7 @@ export default function AppHomePage() {
             <h2 className="text-[16px] font-medium">Courses</h2>
             <Link
               href="/app/courses/new"
-              className="text-[13px] text-[var(--accent)] hover:underline"
+              className="text-[13px] text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)] hover:underline"
             >
               New course
             </Link>
@@ -89,11 +111,13 @@ export default function AppHomePage() {
                 <li key={c.id}>
                   <Link
                     href={`/app/courses/${c.id}`}
-                    className="flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
+                    className="group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] active:scale-[0.995]"
                   >
                     <MasteryRing value={t ? m / t : 0} size={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{c.title}</p>
+                      <p className="truncate font-medium transition-colors group-hover:text-[var(--text-primary)]">
+                        {c.title}
+                      </p>
                       <p className="text-[13px] text-[var(--text-tertiary)]">
                         <span className="tabular text-[var(--state-due)]">
                           {due}
@@ -109,7 +133,7 @@ export default function AppHomePage() {
             <li>
               <Link
                 href="/app/courses/new"
-                className="flex h-full min-h-[76px] items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-transparent p-4 text-[14px] text-[var(--text-tertiary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
+                className="flex h-full min-h-[76px] items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-transparent p-4 text-[14px] text-[var(--text-tertiary)] transition-all duration-[var(--duration-fast)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent-muted)]/30 hover:text-[var(--accent)] active:scale-[0.995]"
               >
                 + New course from PDFs
               </Link>

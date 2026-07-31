@@ -204,6 +204,72 @@ body {
   animation: fade-up var(--duration-slow) var(--ease-out-expo) both;
 }
 
+/* Shared link CTAs (match Button primary/secondary scale + press) */
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--text-invert);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    color var(--duration-fast) var(--ease-out-soft),
+    background-color var(--duration-fast) var(--ease-out-soft),
+    transform var(--duration-fast) var(--ease-out-soft),
+    box-shadow var(--duration-fast) var(--ease-out-soft);
+}
+.cta-primary:hover {
+  background: var(--accent-hover);
+}
+.cta-primary:active {
+  transform: scale(0.98);
+  background: var(--accent-press);
+}
+
+.cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--hairline);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    color var(--duration-fast) var(--ease-out-soft),
+    background-color var(--duration-fast) var(--ease-out-soft),
+    border-color var(--duration-fast) var(--ease-out-soft),
+    transform var(--duration-fast) var(--ease-out-soft);
+}
+.cta-secondary:hover {
+  border-color: var(--hairline-strong);
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+.cta-secondary:active {
+  transform: scale(0.98);
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.bar-fill {
+  transform-origin: left center;
+  animation: bar-grow var(--duration-slow) var(--ease-out-expo) both;
+}
+
 /* xyflow overrides */
 .react-flow__attribution {
   display: none;

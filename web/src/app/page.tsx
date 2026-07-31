@@ -45,19 +45,50 @@ export default function MarketingPage() {
         <div className="animate-fade-up mt-10 flex flex-wrap gap-3 [animation-delay:220ms]">
           <Link
             href={`/app/courses/${CN_COURSE_ID}`}
-            className="inline-flex h-11 items-center rounded-full bg-[var(--accent)] px-6 text-[15px] font-medium text-[var(--text-invert)] transition-all duration-[var(--duration-fast)] hover:bg-[var(--accent-hover)] hover:shadow-[0_0_24px_rgba(45,212,191,0.25)] active:scale-[0.98]"
+            className="cta-primary h-11 px-6 text-[15px] hover:shadow-[0_0_24px_rgba(45,212,191,0.25)]"
           >
             Open demo · Computer Networks
           </Link>
           <Link
             href="/app"
-            className="inline-flex h-11 items-center rounded-full border border-[var(--hairline)] px-6 text-[15px] text-[var(--text-primary)] transition-colors hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
+            className="cta-secondary h-11 px-6 text-[15px] text-[var(--text-primary)]"
           >
             Your library
           </Link>
         </div>
 
-        <dl className="mt-20 grid gap-6 sm:grid-cols-3">
+        <ol className="animate-fade-up mt-16 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 [animation-delay:260ms]">
+          {[
+            ["01", "Upload", "PDFs of textbooks & lectures"],
+            ["02", "Confirm", "Unit → lesson map you own"],
+            ["03", "Study", "Quiz, review, adaptive pack"],
+          ].map(([n, t, d], i) => (
+            <li
+              key={n}
+              className="relative flex flex-1 items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-0)]/60 px-4 py-3 sm:rounded-none sm:border-y sm:border-r-0 sm:border-l sm:first:rounded-l-[var(--radius-lg)] sm:last:rounded-r-[var(--radius-lg)] sm:last:border-r"
+            >
+              <span className="tabular text-[12px] font-medium text-[var(--accent)]">
+                {n}
+              </span>
+              <div>
+                <p className="text-[13px] font-medium text-[var(--text-primary)]">
+                  {t}
+                </p>
+                <p className="mt-0.5 text-[12px] text-[var(--text-tertiary)]">
+                  {d}
+                </p>
+              </div>
+              {i < 2 && (
+                <span
+                  className="pointer-events-none absolute -right-1.5 top-1/2 hidden h-2 w-2 -translate-y-1/2 rotate-45 border-r border-t border-[var(--hairline)] bg-[var(--surface-0)] sm:block"
+                  aria-hidden
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+
+        <dl className="mt-16 grid gap-6 sm:grid-cols-3">
           {[
             ["Course shape", "Units and lessons on a spatial atlas"],
             ["Grounded lessons", "Citations back into your PDFs"],
@@ -66,7 +97,7 @@ export default function MarketingPage() {
             <div
               key={t}
               className="animate-fade-up group rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5 transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)] hover:-translate-y-0.5 hover:border-[var(--accent)]/25 hover:bg-[var(--surface-2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
-              style={{ animationDelay: `${280 + i * 70}ms` }}
+              style={{ animationDelay: `${340 + i * 70}ms` }}
             >
               <dt className="text-[13px] font-medium text-[var(--accent)] transition-colors group-hover:text-[var(--accent-hover)]">
                 {t}

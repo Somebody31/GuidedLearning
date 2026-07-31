@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FileText } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { FileStatusChip } from "@/components/ui/file-status-chip";
 import { getCourse } from "@/lib/mock-data";
+
+export const metadata: Metadata = {
+  title: "Sources",
+};
 
 export default async function SourcesPage({
   params,

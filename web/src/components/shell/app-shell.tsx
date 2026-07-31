@@ -6,12 +6,14 @@ export function AppShell({
   courseTitle,
   courseId,
   activeNav,
+  settingsActive,
   className,
 }: {
   children: React.ReactNode;
   courseTitle?: string;
   courseId?: string;
   activeNav?: "atlas" | "sources" | "insights" | "confirm";
+  settingsActive?: boolean;
   className?: string;
 }) {
   const courseLinks = courseId
@@ -24,6 +26,12 @@ export function AppShell({
 
   return (
     <div className={cn("flex min-h-full flex-col bg-[var(--canvas)]", className)}>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[var(--z-toast)] focus:rounded-[var(--radius-md)] focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-[var(--text-invert)]"
+      >
+        Skip to content
+      </a>
       <header className="sticky top-0 z-[var(--z-raised)] border-b border-[var(--hairline)] bg-[var(--canvas)]/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-4">
@@ -35,7 +43,9 @@ export function AppShell({
             </Link>
             {courseTitle && courseId && (
               <>
-                <span className="text-[var(--text-tertiary)]">/</span>
+                <span className="text-[var(--text-tertiary)]" aria-hidden>
+                  /
+                </span>
                 <Link
                   href={`/app/courses/${courseId}`}
                   className="truncate text-[14px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
@@ -55,6 +65,7 @@ export function AppShell({
                 <Link
                   key={key}
                   href={href}
+                  aria-current={activeNav === key ? "page" : undefined}
                   className={cn(
                     "rounded-[var(--radius-sm)] px-3 py-1.5 text-[13px] transition-colors",
                     activeNav === key
@@ -84,7 +95,13 @@ export function AppShell({
             </Link>
             <Link
               href="/app/settings"
-              className="rounded-full border border-[var(--hairline)] px-3 py-1 text-[12px] text-[var(--text-secondary)] transition-colors hover:border-[var(--hairline-strong)] hover:text-[var(--text-primary)]"
+              aria-current={settingsActive ? "page" : undefined}
+              className={cn(
+                "rounded-full border px-3 py-1 text-[12px] transition-colors",
+                settingsActive
+                  ? "border-[var(--accent)]/40 bg-[var(--accent-muted)] text-[var(--accent)]"
+                  : "border-[var(--hairline)] text-[var(--text-secondary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-primary)]",
+              )}
             >
               Settings
             </Link>
@@ -92,7 +109,7 @@ export function AppShell({
         </div>
       </header>
 
-      <main className={cn("flex-1", courseId && "pb-16 sm:pb-0")}>
+      <main id="main" className={cn("flex-1", courseId && "pb-16 sm:pb-0")}>
         {children}
       </main>
 
@@ -106,6 +123,7 @@ export function AppShell({
               <Link
                 key={key}
                 href={href}
+                aria-current={activeNav === key ? "page" : undefined}
                 className={cn(
                   "relative flex flex-1 flex-col items-center justify-center text-[12px] font-medium transition-colors",
                   activeNav === key

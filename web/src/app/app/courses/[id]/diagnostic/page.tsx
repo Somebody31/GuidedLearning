@@ -79,15 +79,12 @@ export default function DiagnosticPage() {
           queue. SRS reviews start only after real quizzes.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={`/app/courses/${courseId}`}
-            className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
-          >
+          <Link href={`/app/courses/${courseId}`} className="cta-primary">
             Open atlas
           </Link>
           <Link
             href={`/app/courses/${courseId}/session`}
-            className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
+            className="cta-secondary text-[14px] text-[var(--text-primary)]"
           >
             Start a session
           </Link>

@@ -14,16 +14,10 @@ export default function NotFound() {
         Computer Networks atlas.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/app"
-          className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
-        >
+        <Link href="/app" className="cta-primary">
           Library
         </Link>
-        <Link
-          href="/app/courses/cn-kurose"
-          className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-primary)] transition-colors hover:bg-[var(--surface-2)]"
-        >
+        <Link href="/app/courses/cn-kurose" className="cta-secondary text-[14px]">
           Open demo atlas
         </Link>
       </div>

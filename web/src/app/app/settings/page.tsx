@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
-
-// Client settings page; document title set via effect for demo.
 
 function Toggle({
   checked,
@@ -45,8 +43,12 @@ export default function SettingsPage() {
   const [paperDefault, setPaperDefault] = useState(false);
   const [session, setSession] = useState("25");
 
+  useEffect(() => {
+    document.title = "Settings · GuidedLearning";
+  }, []);
+
   return (
-    <AppShell>
+    <AppShell settingsActive>
       <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
         <h1 className="text-[28px] font-semibold tracking-tight">Settings</h1>
         <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
@@ -108,6 +110,13 @@ export default function SettingsPage() {
               { value: "60", label: "60" },
             ]}
           />
+          <p className="mt-3 text-[12px] text-[var(--text-tertiary)]">
+            Current:{" "}
+            <span className="tabular text-[var(--text-secondary)]">
+              {session} min
+            </span>{" "}
+            packs
+          </p>
         </section>
       </div>
     </AppShell>

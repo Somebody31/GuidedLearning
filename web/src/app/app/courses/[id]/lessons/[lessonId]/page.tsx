@@ -49,7 +49,7 @@ export default function LessonPage() {
         </p>
         <Link
           href={`/app/courses/${courseId}`}
-          className="mt-2 inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+          className="cta-primary mt-2"
         >
           Back to atlas
         </Link>
@@ -212,12 +212,7 @@ export default function LessonPage() {
           {lesson.quizReady && lesson.quiz.length > 0 ? (
             <Link
               href={`/app/courses/${courseId}/lessons/${lessonId}/quiz`}
-              className={cn(
-                "paper-cta inline-flex h-10 items-center rounded-full px-5 text-[14px] font-medium transition-colors",
-                paper
-                  ? ""
-                  : "bg-[var(--accent)] text-[var(--text-invert)] hover:bg-[var(--accent-hover)]",
-              )}
+              className="paper-cta cta-primary"
             >
               Take quiz →
             </Link>

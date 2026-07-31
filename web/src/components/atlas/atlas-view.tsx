@@ -151,7 +151,7 @@ export function AtlasView({ course }: { course: Course }) {
                   <div className="flex w-full flex-col gap-2">
                     <Link
                       href={`/app/courses/${course.id}/lessons/${selected.id}`}
-                      className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--accent)] text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+                      className="cta-primary w-full"
                     >
                       {selected.status === "in_progress"
                         ? "Resume lesson"

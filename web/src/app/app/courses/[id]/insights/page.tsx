@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { StateBadge } from "@/components/ui/state-badge";
 import { getCourse } from "@/lib/mock-data";
+
+export const metadata: Metadata = {
+  title: "Insights",
+};
 
 export default async function InsightsPage({
   params,
@@ -19,14 +24,27 @@ export default async function InsightsPage({
   const mastered = lessons.filter((l) => l.status === "mastered").length;
   const coverage = 0.78;
   const faithfulness = 0.91;
+  const needsPack = due > 0 || weak > 0;
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title} activeNav="insights">
       <div className="mx-auto max-w-3xl px-4 py-10 md:px-6">
-        <h1 className="text-[28px] font-semibold tracking-tight">Insights</h1>
-        <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-          Learner health + honest model signals
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-[28px] font-semibold tracking-tight">Insights</h1>
+            <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
+              Learner health + honest model signals
+            </p>
+          </div>
+          {needsPack ? (
+            <Link
+              href={`/app/courses/${id}/session`}
+              className="cta-primary"
+            >
+              Start session
+            </Link>
+          ) : null}
+        </div>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
@@ -36,7 +54,7 @@ export default async function InsightsPage({
           ].map(([label, n, color]) => (
             <div
               key={String(label)}
-              className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4"
+              className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-colors hover:border-[var(--hairline-strong)]"
             >
               <p className="text-[12px] text-[var(--text-tertiary)]">{label}</p>
               <p className="tabular mt-1 text-[28px] font-semibold" style={{ color: String(color) }}>
@@ -46,7 +64,7 @@ export default async function InsightsPage({
           ))}
         </section>
 
-        {(due > 0 || weak > 0) && (
+        {needsPack && (
           <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
             <h2 className="text-[15px] font-medium">Needs attention</h2>
             <ul className="mt-3 space-y-2">
@@ -72,7 +90,7 @@ export default async function InsightsPage({
         <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
           <h2 className="text-[15px] font-medium">Mastery by unit</h2>
           <ul className="mt-4 space-y-3">
-            {course.units.map((u) => {
+            {course.units.map((u, i) => {
               const ls = u.lessonIds.map((lid) => course.lessons[lid]).filter(Boolean);
               const avg =
                 ls.reduce((s, l) => s + (l?.mastery ?? 0), 0) / Math.max(1, ls.length);
@@ -86,8 +104,11 @@ export default async function InsightsPage({
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]">
                     <div
-                      className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
-                      style={{ width: `${avg * 100}%` }}
+                      className="bar-fill h-full rounded-full bg-[var(--accent)]"
+                      style={{
+                        width: `${avg * 100}%`,
+                        animationDelay: `${i * 60}ms`,
+                      }}
                     />
                   </div>
                 </li>
@@ -120,7 +141,10 @@ export default async function InsightsPage({
         </section>
 
         <p className="mt-8 text-[13px]">
-          <Link href={`/app/courses/${id}`} className="text-[var(--accent)]">
+          <Link
+            href={`/app/courses/${id}`}
+            className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+          >
             Back to atlas
           </Link>
         </p>
