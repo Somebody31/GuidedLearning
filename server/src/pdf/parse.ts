@@ -51,11 +51,49 @@ export async function parseDocument(
   }
 }
 
+/**
+ * Prefer markdown/section-aware chunks so RAG hits "§1.2 …" as whole units.
+ * Falls back to fixed windows when the file has no structural headings.
+ */
 function splitPlainTextToPages(text: string, charsPerPage = 1800): ParsedPage[] {
   const clean = text.replace(/\r\n/g, "\n").trim();
   if (!clean) {
     return [{ page: 1, text: "[Empty document]" }];
   }
+
+  // Split before ## headings or "1.2 TITLE" / "CHAPTER n" lines
+  // (escape / inside the regex literal so it does not terminate the pattern)
+  const parts = clean.split(
+    /(?=^#{1,3}\s+\S|^(?:CHAPTER|Chapter)\s+\d+\b|^\d{1,2}(?:\.\d{1,2}){1,2}\s+[A-Z][A-Za-z0-9 ,\-()'&]{3,})/m,
+  );
+
+  const structural = parts.filter((p) => p.trim().length > 0);
+  const headingish = structural.filter((p) =>
+    /^#{1,3}\s+\S|^(?:CHAPTER|Chapter)\s+\d|\d{1,2}(?:\.\d{1,2}){1,2}\s+[A-Z]/.test(
+      p.trim(),
+    ),
+  ).length;
+
+  if (headingish >= 8) {
+    const pages: ParsedPage[] = [];
+    for (const part of structural) {
+      const t = part.trim();
+      if (!t) continue;
+      // Oversized sections: hard-wrap while keeping the heading on the first piece
+      if (t.length <= charsPerPage * 1.4) {
+        pages.push({ page: pages.length + 1, text: t });
+      } else {
+        for (let i = 0; i < t.length; i += charsPerPage) {
+          pages.push({
+            page: pages.length + 1,
+            text: t.slice(i, i + charsPerPage).trim(),
+          });
+        }
+      }
+    }
+    if (pages.length > 0) return pages;
+  }
+
   const pages: ParsedPage[] = [];
   for (let i = 0; i < clean.length; i += charsPerPage) {
     pages.push({

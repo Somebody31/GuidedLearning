@@ -335,7 +335,7 @@ coursesRoutes.get("/:id/lessons/:lessonId", (c) => {
   });
 });
 
-coursesRoutes.post("/:id/lessons/:lessonId/open", (c) => {
+coursesRoutes.post("/:id/lessons/:lessonId/open", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
   if (!course) return c.json({ error: "Course not found" }, 404);
   const lesson = course.lessons[c.req.param("lessonId")];
@@ -343,6 +343,9 @@ coursesRoutes.post("/:id/lessons/:lessonId/open", (c) => {
   if (lesson.status === "locked") {
     return c.json({ error: "Lesson locked" }, 409);
   }
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const force = body?.force === true || c.req.query("force") === "1";
+
   if (
     lesson.status === "available" ||
     lesson.status === "due" ||
@@ -352,6 +355,16 @@ coursesRoutes.post("/:id/lessons/:lessonId/open", (c) => {
   }
   course.lastStudiedAt = new Date().toISOString();
   store.resetAttemptCounter(course.id, lesson.id);
+
+  if (force) {
+    lesson.sections = [];
+    lesson.citations = [];
+    lesson.quiz = [];
+    lesson.quizReady = false;
+    lesson.objectives = [];
+    lesson.contentVersion += 1;
+  }
+
   if (!lesson.sections.length || !lesson.quizReady) {
     store.enqueueJob({
       type: "generate_lesson",
@@ -360,7 +373,22 @@ coursesRoutes.post("/:id/lessons/:lessonId/open", (c) => {
     });
     kickJobs();
   }
-  return c.json({ lesson: structuredClone(lesson) });
+  return c.json({ lesson: structuredClone(lesson), forced: force });
+});
+
+coursesRoutes.post("/:id/reembed", (c) => {
+  const course = store.getCourseMutable(c.req.param("id"));
+  if (!course) return c.json({ error: "Course not found" }, 404);
+  const chunks = store.getChunks(course.id);
+  if (chunks.length === 0) {
+    return c.json({ error: "No chunks to reembed" }, 400);
+  }
+  const job = store.enqueueJob({
+    type: "reembed",
+    courseId: course.id,
+  });
+  kickJobs();
+  return c.json({ job, chunkCount: chunks.length }, 202);
 });
 
 coursesRoutes.get("/:id/lessons/:lessonId/quiz", (c) => {

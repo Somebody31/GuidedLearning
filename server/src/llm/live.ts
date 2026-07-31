@@ -20,11 +20,11 @@ export async function liveGenerateLesson(opts: {
   sections: { heading: string; body: string }[];
   citations: Citation[];
 }> {
-  const top = opts.retrieved.slice(0, 2);
+  const top = opts.retrieved.slice(0, 3);
   const sources = top
     .map(
       (r, i) =>
-        `[${i + 1}] ${r.chunk.sourceName} p.${r.chunk.pageStart}: ${clip(r.chunk.text, 350)}`,
+        `[${i + 1}] ${r.chunk.sourceName} p.${r.chunk.pageStart} (score=${r.score.toFixed(2)}): ${clip(r.chunk.text, 420)}`,
     )
     .join("\n");
 
@@ -36,11 +36,11 @@ export async function liveGenerateLesson(opts: {
       {
         role: "system",
         content:
-          "You write brief study notes grounded ONLY in provided excerpts. Reply JSON: {objectives:string[2], sections:[{heading,body}] length 1-2, bodies ≤90 words each}. No fluff.",
+          "You write brief study notes grounded ONLY in provided excerpts for the named lesson section. Ignore off-topic excerpts. Reply JSON: {objectives:string[2], sections:[{heading,body}] length 1-2, bodies ≤90 words each}. No fluff.",
       },
       {
         role: "user",
-        content: `Lesson: ${opts.title}\n\nExcerpts:\n${sources || "(no excerpts — write a 60-word placeholder overview)"}\n\nJSON only.`,
+        content: `Lesson section: ${opts.title}\nStay on this section's topic (e.g. if title is 1.2 Network Hardware, do not write about crypto or email).\n\nExcerpts:\n${sources || "(no excerpts — write a 60-word placeholder overview)"}\n\nJSON only.`,
       },
     ],
   });

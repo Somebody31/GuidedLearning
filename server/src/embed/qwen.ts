@@ -26,7 +26,7 @@ export type EmbedInputType = "document" | "query";
 
 export async function embedTexts(
   texts: string[],
-  opts?: { inputType?: EmbedInputType },
+  opts?: { inputType?: EmbedInputType; allowMockFallback?: boolean },
 ): Promise<number[][]> {
   if (texts.length === 0) return [];
 
@@ -38,10 +38,24 @@ export async function embedTexts(
   try {
     return await embedViaHttp(endpoint, texts, opts?.inputType ?? "document");
   } catch (err) {
+    // Local mode: never silently mock — that produced random RAG on the CN book.
+    const allowMock =
+      opts?.allowMockFallback === true || env.EMBEDDING_MODE === "remote";
+    if (!allowMock) {
+      throw err instanceof Error
+        ? err
+        : new Error(`Embedding backend failed: ${String(err)}`);
+    }
     console.warn("embedding backend failed, falling back to mock:", err);
     return texts.map((t) => mockEmbed(t));
   }
 }
+
+// Small batches keep 6GB GPUs from OOM on long textbook pages.
+const EMBED_BATCH = Math.max(
+  1,
+  Number.parseInt(process.env.EMBED_BATCH ?? "8", 10) || 8,
+);
 
 async function embedViaHttp(
   base: string,
@@ -59,30 +73,41 @@ async function embedViaHttp(
     headers.Authorization = `Bearer ${env.EMBEDDING_API_KEY}`;
   }
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: env.EMBEDDING_MODEL || EMBEDDING.model,
-      input: texts,
-      input_type: inputType,
-    }),
-  });
+  const out: number[][] = [];
+  for (let i = 0; i < texts.length; i += EMBED_BATCH) {
+    const batch = texts.slice(i, i + EMBED_BATCH);
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: env.EMBEDDING_MODEL || EMBEDDING.model,
+        input: batch,
+        input_type: inputType,
+      }),
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Embedding error ${res.status}: ${text.slice(0, 400)}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Embedding error ${res.status}: ${text.slice(0, 400)}`);
+    }
+
+    const data = (await res.json()) as {
+      data?: { embedding: number[]; index: number }[];
+    };
+    if (!data.data?.length) throw new Error("Embedding response empty");
+
+    const vectors = data.data
+      .slice()
+      .sort((a, b) => a.index - b.index)
+      .map((d) => d.embedding);
+    out.push(...vectors);
+    if (texts.length > EMBED_BATCH) {
+      console.log(
+        `embed batch ${Math.floor(i / EMBED_BATCH) + 1}/${Math.ceil(texts.length / EMBED_BATCH)} (${out.length}/${texts.length})`,
+      );
+    }
   }
-
-  const data = (await res.json()) as {
-    data?: { embedding: number[]; index: number }[];
-  };
-  if (!data.data?.length) throw new Error("Embedding response empty");
-
-  return data.data
-    .slice()
-    .sort((a, b) => a.index - b.index)
-    .map((d) => d.embedding);
+  return out;
 }
 
 export function embeddingConfigured(): boolean {

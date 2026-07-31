@@ -65,11 +65,7 @@ async function runJob(jobId: string) {
       await runGenerateCourseContent(job);
       break;
     case "reembed":
-      store.updateJob(jobId, {
-        status: "succeeded",
-        progress: 1,
-        result: { note: "reembed not needed offline" },
-      });
+      await runReembed(job);
       break;
     default:
       store.updateJob(jobId, {
@@ -128,10 +124,35 @@ async function runDraftGraph(job: Job) {
 
   store.updateJob(job.id, { progress: 0.2 });
   const ready = course.sources.filter((s) => s.status === "ready");
+  // Scan all pages for structural headings (cheap). Front-matter-only
+  // samples used to produce useless graphs on large textbooks.
   const samples: string[] = [];
   for (const s of ready) {
     const pages = store.getPages(s.id);
-    samples.push(...pages.slice(0, 3).map((p) => p.text.slice(0, 800)));
+    const headingLines: string[] = [];
+    for (const p of pages) {
+      for (const line of p.text.split("\n")) {
+        const t = line.trim();
+        if (!t || t.length > 120) continue;
+        if (
+          /^#{1,3}\s+/.test(t) ||
+          /^(chapter|part|unit)\b/i.test(t) ||
+          /^\d+(\.\d+){0,2}\s+[A-Z]/.test(t) ||
+          /^\d+\s+[A-Z][A-Z\s]{3,}/.test(t)
+        ) {
+          headingLines.push(t);
+        }
+      }
+    }
+    // Prefer extracted headings; fall back to scattered page samples
+    if (headingLines.length >= 6) {
+      samples.push(headingLines.join("\n"));
+    } else {
+      const step = Math.max(1, Math.floor(pages.length / 40));
+      for (let i = 0; i < pages.length; i += step) {
+        samples.push(pages[i]!.text.slice(0, 600));
+      }
+    }
   }
 
   // Always mock graph offline (live path reserved for later opt-in)
@@ -192,11 +213,8 @@ async function runGenerateLesson(job: Job) {
   }
 
   const chunks = store.getChunks(course.id);
-  const retrieved = await retrieveChunks(
-    `${lesson.title} ${lesson.objectives.join(" ")}`,
-    chunks,
-    2, // keep retrieval tiny for live prompts
-  );
+  // Title alone is best for section-id match; objectives may be empty/stale.
+  const retrieved = await retrieveChunks(lesson.title, chunks, 4);
 
   let mode: "mock" | "live" = "mock";
   let gen;
@@ -297,6 +315,50 @@ async function runGenerateQuiz(job: Job) {
       questions: lesson.quiz.length,
       mode,
       budget: liveBudgetSnapshot(),
+    },
+  });
+}
+
+async function runReembed(job: Job) {
+  const course = store.getCourseMutable(job.courseId);
+  if (!course) throw new Error("course missing");
+  const chunks = store.getChunks(course.id);
+  if (chunks.length === 0) {
+    store.updateJob(job.id, {
+      status: "succeeded",
+      progress: 1,
+      result: { note: "no chunks", count: 0 },
+    });
+    return;
+  }
+
+  // Re-embed in place so retrieval stops using mock vectors from CUDA-OOM fallback.
+  const { embedTexts } = await import("../embed/qwen");
+  const BATCH = 32;
+  for (let i = 0; i < chunks.length; i += BATCH) {
+    const slice = chunks.slice(i, i + BATCH);
+    const vectors = await embedTexts(
+      slice.map((c) => c.text),
+      { inputType: "document" },
+    );
+    for (let j = 0; j < slice.length; j++) {
+      slice[j]!.embedding = vectors[j] ?? [];
+    }
+    store.updateJob(job.id, {
+      progress: Math.min(0.95, (i + slice.length) / chunks.length),
+    });
+    console.log(
+      `reembed ${Math.min(i + slice.length, chunks.length)}/${chunks.length}`,
+    );
+  }
+  store.setChunks(course.id, chunks);
+  store.updateJob(job.id, {
+    status: "succeeded",
+    progress: 1,
+    result: {
+      count: chunks.length,
+      dims: chunks[0]?.embedding.length ?? 0,
+      mode: "local",
     },
   });
 }
