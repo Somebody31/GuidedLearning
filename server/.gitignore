@@ -35,3 +35,7 @@ data/
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# local embedding service
+embed-service/.venv/
+

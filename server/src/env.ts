@@ -10,8 +10,18 @@ const envSchema = z.object({
   DEEPSEEK_MODEL: z.string().default("deepseek-v4-flash"),
   EMBEDDING_API_KEY: z.string().optional(),
   EMBEDDING_BASE_URL: z.string().optional(),
-  EMBEDDING_MODEL: z.string().default("qwen3-embedding-8b"),
-  EMBEDDING_DIMS: z.coerce.number().default(64),
+  /**
+   * mock | local | remote
+   * - mock: free hash vectors (no model)
+   * - local: OpenAI-compatible sidecar (default URL http://127.0.0.1:8790)
+   * - remote: EMBEDDING_BASE_URL + EMBEDDING_API_KEY
+   */
+  EMBEDDING_MODE: z.enum(["mock", "local", "remote"]).default("mock"),
+  EMBEDDING_LOCAL_URL: z.string().default("http://127.0.0.1:8790"),
+  /** HF id / display name — local default is Qwen3-Embedding-0.6B */
+  EMBEDDING_MODEL: z.string().default("Qwen/Qwen3-Embedding-0.6B"),
+  /** Expected dims (0.6B full=1024; MRL truncate supported by sidecar) */
+  EMBEDDING_DIMS: z.coerce.number().default(1024),
   S3_ENDPOINT: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY: z.string().optional(),
@@ -60,10 +70,26 @@ export function liveLlmEnabled(): boolean {
   return env.USE_LIVE_AI && Boolean(env.DEEPSEEK_API_KEY);
 }
 
+/** True when embeddings hit a real model (local sidecar or remote API). */
 export function liveEmbedEnabled(): boolean {
+  if (env.EMBEDDING_MODE === "local") return true;
+  if (env.EMBEDDING_MODE === "remote") {
+    return Boolean(env.EMBEDDING_API_KEY) && Boolean(env.EMBEDDING_BASE_URL);
+  }
+  // legacy: remote when USE_LIVE_AI + keys, without explicit mode
   return (
     env.USE_LIVE_AI &&
     Boolean(env.EMBEDDING_API_KEY) &&
     Boolean(env.EMBEDDING_BASE_URL)
   );
+}
+
+export function embeddingEndpoint(): string | null {
+  if (env.EMBEDDING_MODE === "local") {
+    return env.EMBEDDING_LOCAL_URL.replace(/\/$/, "");
+  }
+  if (env.EMBEDDING_MODE === "remote" || liveEmbedEnabled()) {
+    return env.EMBEDDING_BASE_URL?.replace(/\/$/, "") ?? null;
+  }
+  return null;
 }

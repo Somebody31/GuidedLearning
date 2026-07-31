@@ -24,9 +24,10 @@ export async function retrieveChunks(
   k = 4,
 ): Promise<{ chunk: Chunk; score: number }[]> {
   if (chunks.length === 0) return [];
-  const [q] = await embedTexts([query]);
+  const [q] = await embedTexts([query], { inputType: "query" });
   if (!q) return [];
   return chunks
+    .filter((chunk) => chunk.embedding.length > 0)
     .map((chunk) => ({ chunk, score: cosine(q, chunk.embedding) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, k);

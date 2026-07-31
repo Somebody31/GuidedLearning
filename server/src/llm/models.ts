@@ -8,9 +8,12 @@ export const LLM = {
 
 export const EMBEDDING = {
   provider: "qwen3",
-  model: process.env.EMBEDDING_MODEL ?? "qwen3-embedding-8b",
-  baseUrl: process.env.EMBEDDING_BASE_URL ?? "",
+  model: process.env.EMBEDDING_MODEL ?? "Qwen/Qwen3-Embedding-0.6B",
+  baseUrl:
+    process.env.EMBEDDING_MODE === "local"
+      ? (process.env.EMBEDDING_LOCAL_URL ?? "http://127.0.0.1:8790")
+      : (process.env.EMBEDDING_BASE_URL ?? ""),
   dims: process.env.EMBEDDING_DIMS
     ? Number(process.env.EMBEDDING_DIMS)
-    : 64,
+    : 1024,
 } as const;

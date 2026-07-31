@@ -1,9 +1,9 @@
-import { env, liveEmbedEnabled } from "../env";
+import { embeddingEndpoint, env, liveEmbedEnabled } from "../env";
 import { EMBEDDING } from "../llm/models";
 
 /**
  * Deterministic offline embedding — free, stable for cosine retrieval demos.
- * Live Qwen3 only when USE_LIVE_AI=true and keys are set.
+ * Local/remote Qwen via OpenAI-compatible /v1/embeddings when configured.
  */
 export function mockEmbed(text: string, dims = env.EMBEDDING_DIMS): number[] {
   const v = new Array<number>(dims).fill(0);
@@ -22,27 +22,52 @@ export function mockEmbed(text: string, dims = env.EMBEDDING_DIMS): number[] {
   return v.map((x) => x / norm);
 }
 
-export async function embedTexts(texts: string[]): Promise<number[][]> {
+export type EmbedInputType = "document" | "query";
+
+export async function embedTexts(
+  texts: string[],
+  opts?: { inputType?: EmbedInputType },
+): Promise<number[][]> {
   if (texts.length === 0) return [];
 
-  if (!liveEmbedEnabled()) {
+  const endpoint = embeddingEndpoint();
+  if (!endpoint || env.EMBEDDING_MODE === "mock") {
     return texts.map((t) => mockEmbed(t));
   }
 
-  const res = await fetch(
-    `${env.EMBEDDING_BASE_URL!.replace(/\/$/, "")}/embeddings`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.EMBEDDING_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: EMBEDDING.model,
-        input: texts,
-      }),
-    },
-  );
+  try {
+    return await embedViaHttp(endpoint, texts, opts?.inputType ?? "document");
+  } catch (err) {
+    console.warn("embedding backend failed, falling back to mock:", err);
+    return texts.map((t) => mockEmbed(t));
+  }
+}
+
+async function embedViaHttp(
+  base: string,
+  texts: string[],
+  inputType: EmbedInputType,
+): Promise<number[][]> {
+  const url = base.endsWith("/embeddings")
+    ? base
+    : `${base}/v1/embeddings`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (env.EMBEDDING_API_KEY) {
+    headers.Authorization = `Bearer ${env.EMBEDDING_API_KEY}`;
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: env.EMBEDDING_MODEL || EMBEDDING.model,
+      input: texts,
+      input_type: inputType,
+    }),
+  });
 
   if (!res.ok) {
     const text = await res.text();
@@ -64,6 +89,10 @@ export function embeddingConfigured(): boolean {
   return liveEmbedEnabled();
 }
 
-export function embeddingMode(): "mock" | "live" {
-  return liveEmbedEnabled() ? "live" : "mock";
+export function embeddingMode(): "mock" | "local" | "remote" {
+  if (env.EMBEDDING_MODE === "local") return "local";
+  if (env.EMBEDDING_MODE === "remote") return "remote";
+  // legacy remote when keys present under USE_LIVE_AI
+  if (liveEmbedEnabled() && env.EMBEDDING_BASE_URL) return "remote";
+  return "mock";
 }

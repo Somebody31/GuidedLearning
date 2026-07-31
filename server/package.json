@@ -8,7 +8,9 @@
     "start": "bun run src/index.ts",
     "worker": "bun run src/worker.ts",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "embed": "bash embed-service/run.sh",
+    "dev:all": "echo \"Start embed in one terminal: bun run embed; then bun run dev\""
   },
   "dependencies": {
     "hono": "^4.12.33",

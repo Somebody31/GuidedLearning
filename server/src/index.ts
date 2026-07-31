@@ -38,10 +38,12 @@ app.get("/health", (c) =>
     },
     embedding: {
       provider: EMBEDDING.provider,
-      model: EMBEDDING.model,
+      model: env.EMBEDDING_MODEL || EMBEDDING.model,
       mode: embeddingMode(),
       dims: env.EMBEDDING_DIMS,
       live: liveEmbedEnabled(),
+      localUrl:
+        env.EMBEDDING_MODE === "local" ? env.EMBEDDING_LOCAL_URL : undefined,
     },
     seedCourseId: CN_COURSE_ID,
     liveBudget: liveBudgetSnapshot(),
