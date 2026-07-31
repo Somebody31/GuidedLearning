@@ -29,15 +29,18 @@ export default function AppHomePage() {
           <span className="tabular">{libraryDue}</span> due across library
         </p>
 
-        <section className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6">
-          <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--accent)]">
-            Continue
-          </p>
+        <section className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6 shadow-[0_0_0_1px_rgba(45,212,191,0.06)]">
+          <p className="text-[12px] font-medium text-[var(--accent)]">Continue</p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-[22px] font-semibold">{active.title}</h2>
+              <h2 className="text-[22px] font-semibold tracking-tight">
+                {active.title}
+              </h2>
               <p className="mt-1 text-[14px] text-[var(--text-secondary)]">
-                <span className="tabular">{dueCount}</span> due · next pack ready
+                <span className="tabular text-[var(--state-due)]">{dueCount}</span>{" "}
+                due ·{" "}
+                <span className="tabular">{mastered}</span>/{total} mastered ·
+                next pack ready
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -46,7 +49,7 @@ export default function AppHomePage() {
                 href={`/app/courses/${active.id}`}
                 className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
               >
-                Continue {active.title}
+                Open atlas
               </Link>
             </div>
           </div>

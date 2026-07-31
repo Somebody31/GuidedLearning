@@ -155,16 +155,47 @@ export function AtlasView({ course }: { course: Course }) {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 flex-col justify-center text-center">
-              <p className="text-[14px] text-[var(--text-secondary)]">
+            <div className="flex flex-1 flex-col">
+              <p className="text-[13px] font-medium text-[var(--text-secondary)]">
                 Select a lesson on the path
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
-                Press <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">M</kbd> for
+                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
+                  M
+                </kbd>{" "}
                 map/list ·{" "}
-                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">S</kbd> starts
-                session from pack
+                <kbd className="rounded border border-[var(--hairline)] px-1 text-[var(--text-secondary)]">
+                  S
+                </kbd>{" "}
+                start session
               </p>
+              {pack.length > 0 && (
+                <div className="mt-6 border-t border-[var(--hairline)] pt-4">
+                  <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
+                    In today&apos;s pack
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {pack.slice(0, 4).map((item) => {
+                      const l = course.lessons[item.lessonId];
+                      return (
+                        <li key={item.lessonId}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedId(item.lessonId)}
+                            className="w-full truncate rounded-[var(--radius-md)] px-2 py-1.5 text-left text-[13px] text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                          >
+                            <span className="capitalize text-[var(--text-tertiary)]">
+                              {item.kind}
+                            </span>
+                            {" · "}
+                            {l?.title ?? item.lessonId}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </aside>
