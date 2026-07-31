@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AppShell } from "@/components/shell/app-shell";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { getActiveCourse, listCourses } from "@/lib/mock-data";
+
+export const metadata: Metadata = {
+  title: "Library",
+};
 
 export default function AppHomePage() {
   const courses = listCourses();

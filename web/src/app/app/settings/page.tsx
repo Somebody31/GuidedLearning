@@ -5,6 +5,8 @@ import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
 
+// Client settings page; document title set via effect for demo.
+
 function Toggle({
   checked,
   onChange,

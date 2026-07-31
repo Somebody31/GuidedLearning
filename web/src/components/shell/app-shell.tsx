@@ -107,13 +107,19 @@ export function AppShell({
                 key={key}
                 href={href}
                 className={cn(
-                  "flex flex-1 flex-col items-center justify-center text-[12px] font-medium transition-colors",
+                  "relative flex flex-1 flex-col items-center justify-center text-[12px] font-medium transition-colors",
                   activeNav === key
                     ? "text-[var(--accent)]"
                     : "text-[var(--text-tertiary)]",
                 )}
               >
                 {label}
+                {activeNav === key && (
+                  <span
+                    className="absolute inset-x-6 bottom-1.5 h-0.5 rounded-full bg-[var(--accent)]"
+                    aria-hidden
+                  />
+                )}
               </Link>
             ))}
           </div>

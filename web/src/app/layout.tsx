@@ -18,7 +18,10 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "GuidedLearning",
+  title: {
+    default: "GuidedLearning",
+    template: "%s · GuidedLearning",
+  },
   description:
     "Turn textbooks and lecture PDFs into adaptive unit–lesson paths with grounded lessons and spaced review.",
 };

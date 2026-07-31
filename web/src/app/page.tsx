@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CN_COURSE_ID } from "@/lib/mock-data";
+
+export const metadata: Metadata = {
+  title: "From PDFs to a living course path",
+  description:
+    "Upload textbooks and lecture slides. Confirm a unit → lesson map. Adaptive spaced review — not a chatbot with a sidebar.",
+};
 
 export default function MarketingPage() {
   return (
