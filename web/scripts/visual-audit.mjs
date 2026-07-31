@@ -13,9 +13,11 @@ function note(level, area, message) {
   console.log(`[${tag}] ${area}: ${message}`);
 }
 
-async function shot(page, name) {
+async function shot(page, name, { fullPage = false } = {}) {
   const path = join(OUT, `${name}.png`);
-  await page.screenshot({ path, fullPage: true });
+  // Default viewport-only: fullPage paints fixed chrome mid-document and
+  // looks like content "under" sticky/fixed footers (false product bug).
+  await page.screenshot({ path, fullPage });
   console.log(`  📸 ${path}`);
   return path;
 }

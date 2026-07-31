@@ -180,7 +180,11 @@ export function AtlasView({ course }: { course: Course }) {
                         ? "Resume lesson"
                         : selected.status === "due"
                           ? "Start review"
-                          : "Start lesson"}
+                          : selected.status === "weak"
+                            ? "Remediate"
+                            : selected.status === "mastered"
+                              ? "Revisit lesson"
+                              : "Start lesson"}
                     </Link>
                     <p className="hidden text-center text-[11px] text-[var(--text-tertiary)] lg:block">
                       <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">

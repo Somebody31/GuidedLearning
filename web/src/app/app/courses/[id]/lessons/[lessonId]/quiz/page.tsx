@@ -207,6 +207,12 @@ export default function QuizPage() {
           >
             Next in session
           </Link>
+          <Link
+            href={`/app/courses/${courseId}/lessons/${lessonId}`}
+            className="inline-flex h-10 items-center text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
+          >
+            Re-read lesson
+          </Link>
         </div>
       </div>
     );

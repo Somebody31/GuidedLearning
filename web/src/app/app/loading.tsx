@@ -1,9 +1,15 @@
 export default function AppLoading() {
   return (
-    <div className="flex min-h-full flex-col bg-[var(--canvas)]" role="status" aria-label="Loading">
+    <div
+      className="flex min-h-full flex-col bg-[var(--canvas)]"
+      role="status"
+      aria-label="Loading"
+      aria-busy="true"
+    >
       <div className="h-14 border-b border-[var(--hairline)]">
         <div className="mx-auto flex h-full max-w-[1440px] items-center px-4 md:px-6">
           <div className="h-4 w-28 animate-pulse rounded bg-[var(--surface-2)]" />
+          <div className="ml-auto h-7 w-20 animate-pulse rounded-full bg-[var(--surface-2)]" />
         </div>
       </div>
       <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-6">
