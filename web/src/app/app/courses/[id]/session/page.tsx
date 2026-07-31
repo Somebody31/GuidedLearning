@@ -144,7 +144,10 @@ export default function SessionPage() {
             <span className="tabular text-[var(--text-secondary)]">
               {queue.length}
             </span>{" "}
-            left
+            left ·{" "}
+            <span className="tabular">
+              {initialPack.length - queue.length + 1}/{initialPack.length}
+            </span>
           </p>
           <ul className="mt-3 flex gap-2 lg:flex-col lg:space-y-1.5 lg:gap-0">
             {queue.map((item, i) => {

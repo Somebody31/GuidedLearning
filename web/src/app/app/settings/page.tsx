@@ -118,6 +118,10 @@ export default function SettingsPage() {
             packs
           </p>
         </section>
+
+        <p className="mt-8 text-[12px] text-[var(--text-tertiary)]">
+          Demo preferences stay in this tab only — nothing is synced yet.
+        </p>
       </div>
     </AppShell>
   );
