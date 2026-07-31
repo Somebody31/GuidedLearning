@@ -128,7 +128,15 @@ export function CourseAtlas({
         />
         <MiniMap
           className="!m-3 !hidden !overflow-hidden !rounded-[var(--radius-md)] !border-[var(--hairline)] !bg-[var(--surface-0)] md:!block"
-          nodeColor={() => "var(--accent)"}
+          nodeColor={(n) => {
+            const status = (n.data as LessonNodeData | undefined)?.status;
+            if (status === "due") return "var(--state-due)";
+            if (status === "weak") return "var(--state-weak)";
+            if (status === "mastered") return "var(--state-mastered)";
+            if (status === "locked") return "var(--state-locked)";
+            if (status === "in_progress") return "var(--state-progress)";
+            return "var(--accent)";
+          }}
           maskColor="rgba(7,7,10,0.7)"
         />
       </ReactFlow>

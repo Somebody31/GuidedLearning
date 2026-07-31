@@ -136,10 +136,10 @@ export function AppShell({
                 href={href}
                 aria-current={activeNav === key ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-center text-[12px] font-medium transition-colors",
+                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium transition-colors active:scale-[0.98]",
                   activeNav === key
                     ? "text-[var(--accent)]"
-                    : "text-[var(--text-tertiary)]",
+                    : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
                 )}
               >
                 {label}

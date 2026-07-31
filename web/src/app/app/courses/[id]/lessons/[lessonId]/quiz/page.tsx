@@ -236,11 +236,16 @@ export default function QuizPage() {
 
   return (
     <div className="mx-auto min-h-full max-w-lg px-4 py-10">
-      <div className="sticky top-0 z-[var(--z-raised)] -mx-4 mb-6 border-b border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 backdrop-blur-md">
-        <div className="flex items-center justify-between text-[13px] text-[var(--text-tertiary)]">
+      <div className="sticky top-0 z-[var(--z-raised)] -mx-4 mb-6 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-3">
+        <div className="flex items-center justify-between gap-3 text-[13px] text-[var(--text-tertiary)]">
           <span className="min-w-0 truncate">{lesson.title}</span>
           <span className="tabular shrink-0">
             Q {index + 1} of {questions.length}
+            {correctCount > 0 || revealed ? (
+              <span className="ml-2 text-[var(--text-disabled)]">
+                · {correctCount} right
+              </span>
+            ) : null}
           </span>
         </div>
         <div
