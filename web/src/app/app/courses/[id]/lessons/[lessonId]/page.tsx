@@ -152,14 +152,18 @@ export default function LessonPage() {
                   key={c.id}
                   type="button"
                   onClick={() => setSourceOpen(c.id)}
+                  title={`${c.sourceName} · p.${c.page}`}
                   className={cn(
-                    "rounded-full border px-3 py-1 font-mono text-[12px] tabular",
+                    "inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1 font-mono text-[12px] tabular",
                     paper
                       ? "border-[var(--paper-line)] text-[var(--paper-accent)]"
-                      : "border-[var(--hairline)] text-[var(--accent)] bg-[var(--accent-muted)]",
+                      : "border-[var(--hairline)] bg-[var(--accent-muted)] text-[var(--accent)]",
                   )}
                 >
-                  {c.sourceName} · p.{c.page}
+                  <span className="min-w-0 max-w-[11rem] truncate sm:max-w-[18rem]">
+                    {c.sourceName}
+                  </span>
+                  <span className="shrink-0">· p.{c.page}</span>
                 </button>
               ))}
             </div>

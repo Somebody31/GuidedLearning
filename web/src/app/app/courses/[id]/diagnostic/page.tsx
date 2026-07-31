@@ -57,14 +57,25 @@ export default function DiagnosticPage() {
   const q = QUESTIONS[i];
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12">
-      <div className="flex justify-between text-[13px] text-[var(--text-tertiary)]">
+    <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-lg flex-col justify-center px-4 py-12">
+      <div className="flex items-center justify-between text-[13px] text-[var(--text-tertiary)]">
         <span>Diagnostic</span>
         <span className="tabular">
           {i + 1}/{QUESTIONS.length}
         </span>
       </div>
-      <h1 className="mt-6 text-[20px] font-semibold">{q.stem}</h1>
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+        <div
+          className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)]"
+          style={{
+            width: `${((i + (sel !== null ? 0.5 : 0)) / QUESTIONS.length) * 100}%`,
+          }}
+        />
+      </div>
+      <p className="mt-4 text-[13px] text-[var(--text-tertiary)]">
+        Optional placement · never auto-masters strong topics
+      </p>
+      <h1 className="mt-4 text-[20px] font-semibold leading-snug">{q.stem}</h1>
       <ul className="mt-6 space-y-2">
         {q.options.map((o, idx) => (
           <li key={o}>
@@ -74,7 +85,7 @@ export default function DiagnosticPage() {
               className={
                 sel === idx
                   ? "w-full rounded-[var(--radius-lg)] border border-[var(--accent)] bg-[var(--accent-muted)] px-4 py-3 text-left text-[14px]"
-                  : "w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-left text-[14px]"
+                  : "w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-left text-[14px] hover:bg-[var(--surface-2)]"
               }
             >
               {o}
@@ -85,7 +96,7 @@ export default function DiagnosticPage() {
       <div className="mt-10 flex items-center justify-between">
         <button
           type="button"
-          className="text-[13px] text-[var(--text-tertiary)]"
+          className="text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           onClick={() => router.push(`/app/courses/${courseId}`)}
         >
           Skip diagnostic

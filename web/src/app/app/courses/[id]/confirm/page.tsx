@@ -154,16 +154,22 @@ export default function ConfirmCoursePage() {
 
       {showActivate && (
         <div
-          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
           role="dialog"
           aria-modal
           aria-labelledby="activate-title"
         >
-          <div className="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-6">
+          <button
+            type="button"
+            aria-label="Dismiss"
+            className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+            onClick={() => setShowActivate(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--hairline-strong)] bg-[var(--surface-1)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
             <h2 id="activate-title" className="text-[18px] font-semibold">
               Activate course and start tracking mastery?
             </h2>
-            <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+            <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-secondary)]">
               Spaced review will use this structure. Lesson IDs freeze after
               activate.
             </p>

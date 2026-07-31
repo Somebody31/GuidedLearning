@@ -13,9 +13,21 @@ export default function SettingsPage() {
     <AppShell>
       <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
         <h1 className="text-[28px] font-semibold tracking-tight">Settings</h1>
-        <div className="mt-8 space-y-6">
+        <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
+          Preferences apply to this browser for the demo.
+        </p>
+
+        <section className="surface-card mt-8 space-y-5 p-5">
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
+            Experience
+          </p>
           <label className="flex items-center justify-between gap-4">
-            <span className="text-[14px]">Motion</span>
+            <div>
+              <span className="text-[14px] text-[var(--text-primary)]">Motion</span>
+              <p className="text-[12px] text-[var(--text-tertiary)]">
+                Transitions and map animations
+              </p>
+            </div>
             <button
               type="button"
               role="switch"
@@ -23,8 +35,8 @@ export default function SettingsPage() {
               onClick={() => setMotion((m) => !m)}
               className={
                 motion
-                  ? "h-7 w-12 rounded-full bg-[var(--accent)] px-0.5 transition"
-                  : "h-7 w-12 rounded-full bg-[var(--surface-3)] px-0.5 transition"
+                  ? "h-7 w-12 shrink-0 rounded-full bg-[var(--accent)] px-0.5 transition"
+                  : "h-7 w-12 shrink-0 rounded-full bg-[var(--surface-3)] px-0.5 transition"
               }
             >
               <span
@@ -36,8 +48,15 @@ export default function SettingsPage() {
               />
             </button>
           </label>
-          <label className="flex items-center justify-between gap-4">
-            <span className="text-[14px]">Paper lesson default</span>
+          <label className="flex items-center justify-between gap-4 border-t border-[var(--hairline)] pt-5">
+            <div>
+              <span className="text-[14px] text-[var(--text-primary)]">
+                Paper lesson default
+              </span>
+              <p className="text-[12px] text-[var(--text-tertiary)]">
+                Open lessons in warm paper theme
+              </p>
+            </div>
             <button
               type="button"
               role="switch"
@@ -45,8 +64,8 @@ export default function SettingsPage() {
               onClick={() => setPaperDefault((m) => !m)}
               className={
                 paperDefault
-                  ? "h-7 w-12 rounded-full bg-[var(--accent)] px-0.5"
-                  : "h-7 w-12 rounded-full bg-[var(--surface-3)] px-0.5"
+                  ? "h-7 w-12 shrink-0 rounded-full bg-[var(--accent)] px-0.5"
+                  : "h-7 w-12 shrink-0 rounded-full bg-[var(--surface-3)] px-0.5"
               }
             >
               <span
@@ -58,21 +77,30 @@ export default function SettingsPage() {
               />
             </button>
           </label>
-          <div>
-            <p className="mb-2 text-[14px]">Default session length</p>
-            <SegmentedControl
-              ariaLabel="Default session minutes"
-              value={session}
-              onChange={setSession}
-              options={[
-                { value: "15", label: "15" },
-                { value: "25", label: "25" },
-                { value: "45", label: "45" },
-                { value: "60", label: "60" },
-              ]}
-            />
-          </div>
-        </div>
+        </section>
+
+        <section className="surface-card mt-4 p-5">
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
+            Sessions
+          </p>
+          <p className="mt-3 text-[14px] text-[var(--text-primary)]">
+            Default session length
+          </p>
+          <p className="mb-3 text-[12px] text-[var(--text-tertiary)]">
+            Minutes used when packing today&apos;s queue
+          </p>
+          <SegmentedControl
+            ariaLabel="Default session minutes"
+            value={session}
+            onChange={setSession}
+            options={[
+              { value: "15", label: "15" },
+              { value: "25", label: "25" },
+              { value: "45", label: "45" },
+              { value: "60", label: "60" },
+            ]}
+          />
+        </section>
       </div>
     </AppShell>
   );

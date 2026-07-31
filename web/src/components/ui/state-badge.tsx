@@ -13,7 +13,7 @@ export function StateBadge({
     <span
       className={cn(
         // Title case, zero letter-spacing — uppercase + tracking-wide read as "MA ST ERED"
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none [letter-spacing:0]",
+        "inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none [letter-spacing:0] whitespace-nowrap",
         className,
       )}
       style={{
