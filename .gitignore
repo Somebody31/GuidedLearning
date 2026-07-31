@@ -5,6 +5,7 @@
 # Dependencies & build
 node_modules/
 web/node_modules/
+server/node_modules/
 web/.next/
 web/out/
 dist/
