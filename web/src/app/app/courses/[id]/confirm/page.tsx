@@ -22,6 +22,10 @@ export default function ConfirmCoursePage() {
   const [showActivate, setShowActivate] = useState(false);
 
   useEffect(() => {
+    document.title = "Confirm course map · GuidedLearning";
+  }, []);
+
+  useEffect(() => {
     if (!course) return;
     const raw = localStorage.getItem(`${STORAGE_KEY}:${id}`);
     if (raw) {

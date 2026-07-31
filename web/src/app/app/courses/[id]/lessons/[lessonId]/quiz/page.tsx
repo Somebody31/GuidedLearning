@@ -36,6 +36,14 @@ export default function QuizPage() {
   const quizReady = Boolean(lesson?.quizReady && questions.length > 0);
 
   useEffect(() => {
+    if (done && lesson) {
+      document.title = `Quiz complete · ${lesson.title} · GuidedLearning`;
+    } else if (lesson) {
+      document.title = `Quiz · ${lesson.title} · GuidedLearning`;
+    }
+  }, [done, lesson]);
+
+  useEffect(() => {
     if (done || !quizReady) return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -229,7 +237,14 @@ export default function QuizPage() {
             Q {index + 1} of {questions.length}
           </span>
         </div>
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+        <div
+          className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={questions.length}
+          aria-valuenow={index + (revealed ? 1 : 0)}
+          aria-label="Quiz progress"
+        >
           <div
             className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
             style={{
@@ -239,7 +254,12 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <h1 className="text-[20px] font-semibold leading-snug">{q.stem}</h1>
+      <h1
+        key={q.id}
+        className="animate-fade-up text-[20px] font-semibold leading-snug"
+      >
+        {q.stem}
+      </h1>
 
       <ul className="mt-6 space-y-2" role="listbox" aria-label="Answers">
         {q.options.map((opt, idx) => {
@@ -282,12 +302,24 @@ export default function QuizPage() {
       </ul>
 
       {revealed && (
-        <p
-          className="animate-fade-up mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--text-secondary)]"
+        <div
+          className="animate-fade-up mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5"
           aria-live="polite"
         >
-          {q.explanation}
-        </p>
+          <p
+            className={cn(
+              "text-[12px] font-medium",
+              selected === q.correctOptionId
+                ? "text-[var(--success)]"
+                : "text-[var(--danger)]",
+            )}
+          >
+            {selected === q.correctOptionId ? "Correct" : "Not quite"}
+          </p>
+          <p className="mt-1 text-[14px] leading-relaxed text-[var(--text-secondary)]">
+            {q.explanation}
+          </p>
+        </div>
       )}
 
       <div className="mt-10 flex items-center justify-between gap-3">

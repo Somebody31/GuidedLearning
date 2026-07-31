@@ -141,7 +141,14 @@ export default function DiagnosticPage() {
           {i + 1}/{QUESTIONS.length}
         </span>
       </div>
-      <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+      <div
+        className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={QUESTIONS.length}
+        aria-valuenow={i + (sel !== null ? 1 : 0)}
+        aria-label="Diagnostic progress"
+      >
         <div
           className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
           style={{

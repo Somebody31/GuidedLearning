@@ -109,6 +109,30 @@ body {
   outline-offset: 2px;
 }
 
+/* Thin dark scrollbars (Firefox + Chromium) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-disabled);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }

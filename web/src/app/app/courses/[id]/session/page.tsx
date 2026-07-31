@@ -35,6 +35,16 @@ export default function SessionPage() {
   const skipDisabled = skips >= 2;
 
   useEffect(() => {
+    if (done) {
+      document.title = "Session complete · GuidedLearning";
+    } else if (lesson) {
+      document.title = `Session · ${lesson.title} · GuidedLearning`;
+    } else {
+      document.title = "Session · GuidedLearning";
+    }
+  }, [done, lesson]);
+
+  useEffect(() => {
     if (done || !course || !current || !lesson) return;
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null;
@@ -216,57 +226,62 @@ export default function SessionPage() {
               }}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StateBadge status={lesson.status} />
-            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
-              {lesson.estMinutes} min
-            </span>
-            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
-              Skips {skips}/2
-            </span>
-            <span className="tabular text-[12px] text-[var(--text-tertiary)]">
-              {initialPack.length - queue.length + 1}/{initialPack.length}
-            </span>
-          </div>
-          <h1 className="mt-3 text-[24px] font-semibold tracking-tight md:text-[28px]">
-            {lesson.title}
-          </h1>
-          <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)]">
-            Open the lesson, then complete the quiz to count as done. Skip defers
-            +1 day (max 2 per pack).
-          </p>
-          <ul className="mt-5 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
-            {lesson.objectives.slice(0, 3).map((o) => (
-              <li key={o}>{o}</li>
-            ))}
-          </ul>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-              className="cta-primary"
-            >
-              Open lesson
-            </Link>
-            <Link
-              href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
-              className="cta-secondary text-[14px] text-[var(--text-primary)]"
-            >
-              Jump to quiz
-            </Link>
-            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
-              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                Enter
-              </kbd>{" "}
-              open ·{" "}
-              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                J
-              </kbd>{" "}
-              quiz ·{" "}
-              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
-                K
-              </kbd>{" "}
-              skip
-            </span>
+          <div
+            key={current.lessonId}
+            className="animate-fade-up flex flex-1 flex-col"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <StateBadge status={lesson.status} />
+              <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+                {lesson.estMinutes} min
+              </span>
+              <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+                Skips {skips}/2
+              </span>
+              <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+                {initialPack.length - queue.length + 1}/{initialPack.length}
+              </span>
+            </div>
+            <h1 className="mt-3 text-[24px] font-semibold tracking-tight md:text-[28px]">
+              {lesson.title}
+            </h1>
+            <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)]">
+              Open the lesson, then complete the quiz to count as done. Skip
+              defers +1 day (max 2 per pack).
+            </p>
+            <ul className="mt-5 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
+              {lesson.objectives.slice(0, 3).map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href={`/app/courses/${course.id}/lessons/${lesson.id}`}
+                className="cta-primary"
+              >
+                Open lesson
+              </Link>
+              <Link
+                href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
+                className="cta-secondary text-[14px] text-[var(--text-primary)]"
+              >
+                Jump to quiz
+              </Link>
+              <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                  Enter
+                </kbd>{" "}
+                open ·{" "}
+                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                  J
+                </kbd>{" "}
+                quiz ·{" "}
+                <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                  K
+                </kbd>{" "}
+                skip
+              </span>
+            </div>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] pt-5">
             <Button
@@ -291,7 +306,7 @@ export default function SessionPage() {
                   if (queue.length <= 1) setDone(true);
                 }}
               >
-                Mark pack step done
+                Mark done
               </Button>
               <Button variant="ghost" onClick={() => setDone(true)}>
                 End session
