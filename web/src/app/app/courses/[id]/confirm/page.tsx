@@ -184,7 +184,14 @@ export default function ConfirmCoursePage() {
                           [lid]: e.target.value,
                         }))
                       }
-                      className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
+                      aria-invalid={
+                        !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim()
+                      }
+                      className={
+                        !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim()
+                          ? "min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--warning)]/50 bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--warning)] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.15)]"
+                          : "min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
+                      }
                     />
                     <span className="tabular shrink-0 text-[12px] text-[var(--text-tertiary)]">
                       {course.lessons[lid]?.estMinutes ?? "—"} min

@@ -88,12 +88,21 @@ export function SessionPackBar({
           ]}
         />
         {pack.length === 0 ? (
-          <span
-            className="inline-flex h-10 w-full cursor-not-allowed items-center justify-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)] sm:w-auto"
-            title="Nothing in today's pack"
-          >
-            All clear
-          </span>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <span
+              className="inline-flex h-10 flex-1 cursor-default items-center justify-center rounded-full bg-[var(--surface-3)] px-5 text-[15px] font-medium text-[var(--text-disabled)] sm:flex-none"
+              title="Nothing in today's pack"
+            >
+              All clear
+            </span>
+            <Link
+              href={`/app/courses/${course.id}/diagnostic`}
+              className="cta-secondary h-10 text-[13px] text-[var(--text-primary)]"
+              title="Optional placement if you're ahead"
+            >
+              Diagnostic
+            </Link>
+          </div>
         ) : (
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] md:inline">

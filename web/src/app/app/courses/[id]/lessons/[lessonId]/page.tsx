@@ -208,7 +208,7 @@ export default function LessonPage() {
         </div>
       </header>
 
-      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-28">
+      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(7rem+env(safe-area-inset-bottom))]">
         <p
           className={cn(
             "text-[12px] uppercase tracking-[0.08em]",
@@ -367,13 +367,20 @@ export default function LessonPage() {
                 </kbd>
               </button>
             </div>
-            <div className="mt-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4">
-              <p className="font-mono text-[12px] text-[var(--accent)]">
-                {citation.sourceName}
-              </p>
-              <p className="mt-1 tabular text-[12px] text-[var(--text-tertiary)]">
-                Page {citation.page}
-              </p>
+            <div className="mt-5 flex-1 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-[12px] text-[var(--accent)]">
+                    {citation.sourceName}
+                  </p>
+                  <p className="mt-1 tabular text-[12px] text-[var(--text-tertiary)]">
+                    Page {citation.page}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-[var(--hairline)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+                  Grounded
+                </span>
+              </div>
               <p className="lesson-serif mt-4 text-[15px] leading-relaxed text-[var(--text-primary)]">
                 {citation.excerpt ??
                   "Text layer excerpt would appear here from the PDF pipeline. Figures are referenced by page only (no invented diagram vision)."}
@@ -383,6 +390,12 @@ export default function LessonPage() {
               Grounded snippet from the parse pipeline — not model invention.
               Full PDF page render lands with the backend.
             </p>
+            <Link
+              href={`/app/courses/${courseId}/sources`}
+              className="mt-4 text-[13px] text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+            >
+              View all sources →
+            </Link>
           </div>
         </div>
       )}

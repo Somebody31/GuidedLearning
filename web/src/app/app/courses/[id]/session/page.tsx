@@ -320,14 +320,14 @@ export default function SessionPage() {
               title={
                 skipDisabled
                   ? "Defer limit for this pack"
-                  : "Defer until tomorrow"
+                  : "Defer until tomorrow · K"
               }
             >
               {skipDisabled
                 ? "Defer limit for this pack"
                 : "Skip · defer +1 day"}
             </Button>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
                 onClick={() => {
