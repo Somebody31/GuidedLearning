@@ -137,6 +137,12 @@ export default async function InsightsPage({
               <dd className="tabular text-[22px] font-semibold">
                 {Math.round(coverage * 100)}%
               </dd>
+              <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+                <div
+                  className="bar-fill h-full rounded-full bg-[var(--info)]"
+                  style={{ width: `${Math.max(coverage * 100, 2)}%` }}
+                />
+              </div>
             </div>
             <div>
               <dt className="text-[12px] text-[var(--text-tertiary)]">
@@ -145,6 +151,15 @@ export default async function InsightsPage({
               <dd className="tabular text-[22px] font-semibold">
                 {Math.round(faithfulness * 100)}%
               </dd>
+              <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+                <div
+                  className="bar-fill h-full rounded-full bg-[var(--accent)]"
+                  style={{
+                    width: `${Math.max(faithfulness * 100, 2)}%`,
+                    animationDelay: "80ms",
+                  }}
+                />
+              </div>
             </div>
           </dl>
           <p className="mt-3 text-[13px] text-[var(--text-tertiary)]">

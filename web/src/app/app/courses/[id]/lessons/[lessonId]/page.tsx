@@ -208,7 +208,7 @@ export default function LessonPage() {
         </div>
       </header>
 
-      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(7rem+env(safe-area-inset-bottom))]">
+      <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
         <p
           className={cn(
             "text-[12px] uppercase tracking-[0.08em]",
@@ -279,10 +279,10 @@ export default function LessonPage() {
 
       <footer
         className={cn(
-          "sticky bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md",
+          "fixed inset-x-0 bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md",
           paper
-            ? "border-[var(--paper-line)] bg-[var(--paper)]/95"
-            : "border-[var(--hairline)] bg-[var(--canvas)]/95",
+            ? "border-[var(--paper-line)] bg-[var(--paper)]"
+            : "border-[var(--hairline)] bg-[var(--canvas)]",
         )}
       >
         <div className="mx-auto flex w-full max-w-[42rem] flex-wrap items-center justify-between gap-3">

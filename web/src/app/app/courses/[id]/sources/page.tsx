@@ -39,9 +39,11 @@ export default async function SourcesPage({
             type="button"
             disabled
             title="Upload lands in the next backend pass"
+            aria-disabled="true"
             className="inline-flex h-9 cursor-not-allowed items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-disabled)]"
           >
             Add PDF
+            <span className="ml-1.5 hidden text-[10px] sm:inline">Soon</span>
           </button>
         </div>
         {course.sources.length === 0 ? (
