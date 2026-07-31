@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
+import { StateBadge } from "@/components/ui/state-badge";
 import { getCourse } from "@/lib/mock-data";
 
 export default async function InsightsPage({
@@ -55,22 +56,12 @@ export default async function InsightsPage({
                   <li key={l.id}>
                     <Link
                       href={`/app/courses/${id}/lessons/${l.id}`}
-                      className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] px-2 py-1.5 text-[14px] hover:bg-[var(--surface-2)]"
+                      className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] px-2 py-1.5 text-[14px] transition-colors hover:bg-[var(--surface-2)]"
                     >
                       <span className="truncate text-[var(--text-primary)]">
                         {l.title}
                       </span>
-                      <span
-                        className="shrink-0 text-[12px] capitalize"
-                        style={{
-                          color:
-                            l.status === "due"
-                              ? "var(--state-due)"
-                              : "var(--state-weak)",
-                        }}
-                      >
-                        {l.status}
-                      </span>
+                      <StateBadge status={l.status} />
                     </Link>
                   </li>
                 ))}

@@ -3,9 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileUp, X } from "lucide-react";
+import { FileText, FileUp, X } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import {
+  FileStatusChip,
+  type FileParseStatus,
+} from "@/components/ui/file-status-chip";
 import { CN_COURSE_ID } from "@/lib/mock-data";
 import { cn } from "@/lib/cn";
 
@@ -13,7 +17,7 @@ type FileRow = {
   id: string;
   name: string;
   size: string;
-  status: "queued" | "parsing" | "ready" | "failed";
+  status: FileParseStatus;
 };
 
 export default function NewCoursePage() {
@@ -33,14 +37,18 @@ export default function NewCoursePage() {
       status: "ready",
     },
   ]);
+  const [dropHot, setDropHot] = useState(false);
 
-  const ready = files.some((f) => f.status === "ready");
+  const readyCount = files.filter((f) => f.status === "ready").length;
+  const parsing = files.some((f) => f.status === "parsing");
+  const canBuild = readyCount > 0 && !parsing && Boolean(title.trim());
 
   function addMockFiles() {
+    const id = String(Date.now());
     setFiles((prev) => [
       ...prev,
       {
-        id: String(Date.now()),
+        id,
         name: "Lecture-notes-upload.pdf",
         size: "2.1 MB",
         status: "parsing",
@@ -49,7 +57,9 @@ export default function NewCoursePage() {
     setTimeout(() => {
       setFiles((prev) =>
         prev.map((f) =>
-          f.status === "parsing" ? { ...f, status: "ready" } : f,
+          f.id === id && f.status === "parsing"
+            ? { ...f, status: "ready" }
+            : f,
         ),
       );
     }, 1200);
@@ -68,16 +78,42 @@ export default function NewCoursePage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent)]"
           />
         </label>
 
         <button
           type="button"
           onClick={addMockFiles}
-          className="mt-6 flex w-full flex-col items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-[var(--surface-0)] px-6 py-14 transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-1)]"
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setDropHot(true);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDropHot(true);
+          }}
+          onDragLeave={() => setDropHot(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDropHot(false);
+            addMockFiles();
+          }}
+          className={cn(
+            "mt-6 flex w-full flex-col items-center justify-center rounded-[var(--radius-xl)] border border-dashed px-6 py-14 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
+            dropHot
+              ? "border-[var(--accent)] bg-[var(--accent-muted)] scale-[1.01]"
+              : "border-[var(--hairline-strong)] bg-[var(--surface-0)] hover:border-[var(--accent)] hover:bg-[var(--surface-1)]",
+          )}
         >
-          <FileUp className="h-8 w-8 text-[var(--accent)]" />
+          <span
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+              dropHot ? "bg-[var(--accent)]/20" : "bg-[var(--accent-muted)]",
+            )}
+          >
+            <FileUp className="h-5 w-5 text-[var(--accent)]" />
+          </span>
           <span className="mt-3 text-[15px] font-medium">
             Drop PDFs or click to upload
           </span>
@@ -86,33 +122,45 @@ export default function NewCoursePage() {
           </span>
         </button>
 
-        <ul className="mt-6 space-y-2">
+        {files.length > 0 && (
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-[13px] text-[var(--text-tertiary)]">
+              Sources ·{" "}
+              <span className="tabular text-[var(--text-secondary)]">
+                {readyCount}/{files.length}
+              </span>{" "}
+              ready
+              {parsing ? (
+                <span className="text-[var(--info)]"> · parsing…</span>
+              ) : null}
+            </p>
+          </div>
+        )}
+
+        <ul className="mt-3 space-y-2">
           {files.map((f) => (
             <li
               key={f.id}
-              className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5"
+              className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors"
             >
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                aria-hidden
+              >
+                <FileText className="h-4 w-4" />
+              </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px]">{f.name}</p>
-                <p className="text-[12px] text-[var(--text-tertiary)]">
+                <p className="truncate text-[14px] font-medium">{f.name}</p>
+                <p className="tabular text-[12px] text-[var(--text-tertiary)]">
                   {f.size}
+                  {f.status === "parsing" ? " · extracting text" : null}
                 </p>
               </div>
-              <span
-                className={cn(
-                  "text-[12px] capitalize",
-                  f.status === "ready" && "text-[var(--success)]",
-                  f.status === "failed" && "text-[var(--danger)]",
-                  f.status === "parsing" && "text-[var(--info)]",
-                  f.status === "queued" && "text-[var(--text-tertiary)]",
-                )}
-              >
-                {f.status}
-              </span>
+              <FileStatusChip status={f.status} />
               <button
                 type="button"
                 aria-label={`Remove ${f.name}`}
-                className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                 onClick={() =>
                   setFiles((prev) => prev.filter((x) => x.id !== f.id))
                 }
@@ -126,18 +174,18 @@ export default function NewCoursePage() {
         <div className="mt-10 flex items-center justify-between gap-3">
           <Link
             href="/app"
-            className="text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
           >
             Cancel
           </Link>
           <Button
             size="lg"
-            disabled={!ready || !title.trim()}
+            disabled={!canBuild}
             onClick={() =>
               router.push(`/app/courses/${CN_COURSE_ID}/confirm`)
             }
           >
-            Build course map
+            {parsing ? "Parsing sources…" : "Build course map"}
           </Button>
         </div>
       </div>

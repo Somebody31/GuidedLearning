@@ -3,6 +3,40 @@
 import { useState } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { cn } from "@/lib/cn";
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
+        checked ? "bg-[var(--accent)]" : "bg-[var(--surface-3)]",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-0.5 left-0.5 block h-6 w-6 rounded-full shadow-sm transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-expo)]",
+          checked
+            ? "translate-x-5 bg-[var(--text-invert)]"
+            : "translate-x-0 bg-[var(--text-secondary)]",
+        )}
+      />
+    </button>
+  );
+}
 
 export default function SettingsPage() {
   const [motion, setMotion] = useState(true);
@@ -28,25 +62,11 @@ export default function SettingsPage() {
                 Transitions and map animations
               </p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={motion}
-              onClick={() => setMotion((m) => !m)}
-              className={
-                motion
-                  ? "h-7 w-12 shrink-0 rounded-full bg-[var(--accent)] px-0.5 transition"
-                  : "h-7 w-12 shrink-0 rounded-full bg-[var(--surface-3)] px-0.5 transition"
-              }
-            >
-              <span
-                className={
-                  motion
-                    ? "ml-auto block h-6 w-6 rounded-full bg-[var(--text-invert)]"
-                    : "block h-6 w-6 rounded-full bg-[var(--text-secondary)]"
-                }
-              />
-            </button>
+            <Toggle
+              checked={motion}
+              onChange={setMotion}
+              label="Motion"
+            />
           </label>
           <label className="flex items-center justify-between gap-4 border-t border-[var(--hairline)] pt-5">
             <div>
@@ -57,25 +77,11 @@ export default function SettingsPage() {
                 Open lessons in warm paper theme
               </p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={paperDefault}
-              onClick={() => setPaperDefault((m) => !m)}
-              className={
-                paperDefault
-                  ? "h-7 w-12 shrink-0 rounded-full bg-[var(--accent)] px-0.5"
-                  : "h-7 w-12 shrink-0 rounded-full bg-[var(--surface-3)] px-0.5"
-              }
-            >
-              <span
-                className={
-                  paperDefault
-                    ? "ml-auto block h-6 w-6 rounded-full bg-[var(--text-invert)]"
-                    : "block h-6 w-6 rounded-full bg-[var(--text-secondary)]"
-                }
-              />
-            </button>
+            <Toggle
+              checked={paperDefault}
+              onChange={setPaperDefault}
+              label="Paper lesson default"
+            />
           </label>
         </section>
 

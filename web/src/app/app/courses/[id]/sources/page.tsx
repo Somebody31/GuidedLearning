@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FileText } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
+import { FileStatusChip } from "@/components/ui/file-status-chip";
 import { getCourse } from "@/lib/mock-data";
 
 export default async function SourcesPage({
@@ -41,31 +43,30 @@ export default async function SourcesPage({
           {course.sources.map((s) => (
             <li
               key={s.id}
-              className="flex items-center justify-between gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3"
+              className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-colors hover:border-[var(--hairline-strong)]"
             >
-              <div className="min-w-0">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                aria-hidden
+              >
+                <FileText className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{s.name}</p>
                 <p className="tabular text-[12px] text-[var(--text-tertiary)]">
                   {s.pages} pages
                   {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
                 </p>
               </div>
-              <span
-                className={
-                  s.status === "ready"
-                    ? "rounded-full border border-[var(--success)]/30 bg-[rgba(52,211,153,0.1)] px-2.5 py-0.5 text-[12px] capitalize text-[var(--success)]"
-                    : s.status === "failed"
-                      ? "rounded-full border border-[var(--danger)]/30 bg-[rgba(248,113,113,0.1)] px-2.5 py-0.5 text-[12px] capitalize text-[var(--danger)]"
-                      : "rounded-full border border-[var(--info)]/30 bg-[rgba(56,189,248,0.1)] px-2.5 py-0.5 text-[12px] capitalize text-[var(--info)]"
-                }
-              >
-                {s.status}
-              </span>
+              <FileStatusChip status={s.status} />
             </li>
           ))}
         </ul>
         <p className="mt-8 text-[13px] text-[var(--text-tertiary)]">
-          <Link href={`/app/courses/${id}`} className="text-[var(--accent)]">
+          <Link
+            href={`/app/courses/${id}`}
+            className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+          >
             Back to atlas
           </Link>
         </p>
