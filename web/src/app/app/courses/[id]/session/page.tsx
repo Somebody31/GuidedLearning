@@ -89,8 +89,8 @@ export default function SessionPage() {
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title}>
-      <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[240px_1fr] md:px-6">
-        <aside className="surface-card h-fit p-4 lg:sticky lg:top-20">
+      <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-4 px-4 py-6 sm:gap-6 sm:py-8 lg:grid-cols-[240px_1fr] md:px-6">
+        <aside className="surface-card h-fit overflow-x-auto p-4 lg:sticky lg:top-20">
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
             Queue ·{" "}
             <span className="tabular text-[var(--text-secondary)]">
@@ -98,7 +98,7 @@ export default function SessionPage() {
             </span>{" "}
             left
           </p>
-          <ul className="mt-3 space-y-1.5">
+          <ul className="mt-3 flex gap-2 lg:flex-col lg:space-y-1.5 lg:gap-0">
             {queue.map((item, i) => {
               const l = course.lessons[item.lessonId];
               return (
@@ -106,8 +106,8 @@ export default function SessionPage() {
                   key={item.lessonId}
                   className={
                     i === 0
-                      ? "flex gap-2.5 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-muted)] px-2.5 py-2 text-[13px]"
-                      : "flex gap-2.5 px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)]"
+                      ? "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-muted)] px-2.5 py-2 text-[13px] lg:min-w-0"
+                      : "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] border border-transparent px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)] lg:min-w-0"
                   }
                 >
                   <span

@@ -86,7 +86,7 @@ export default async function InsightsPage({
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]">
                     <div
-                      className="h-full rounded-full bg-[var(--accent)]"
+                      className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
                       style={{ width: `${avg * 100}%` }}
                     />
                   </div>

@@ -24,13 +24,13 @@ function LessonNodeComponent({ data }: NodeProps) {
 
   return (
     <div
-      className="w-[212px] rounded-[var(--radius-lg)] border bg-[var(--surface-1)] px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+      className="w-[212px] rounded-[var(--radius-lg)] border bg-[var(--surface-1)] px-3 py-2.5 transition-[border-color,box-shadow,opacity] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]"
       style={{
         borderColor: d.selected ? "var(--accent)" : `${color}66`,
         borderStyle: locked ? "dashed" : "solid",
         opacity: locked ? 0.72 : 1,
         boxShadow: d.selected
-          ? "0 0 0 2px var(--accent-ring)"
+          ? "0 0 0 2px var(--accent-ring), 0 12px 40px rgba(0,0,0,0.35)"
           : "0 12px 40px rgba(0,0,0,0.35)",
       }}
     >

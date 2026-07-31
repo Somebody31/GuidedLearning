@@ -211,7 +211,12 @@ export default function LessonPage() {
           {lesson.quizReady && lesson.quiz.length > 0 ? (
             <Link
               href={`/app/courses/${courseId}/lessons/${lessonId}/quiz`}
-              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
+              className={cn(
+                "paper-cta inline-flex h-10 items-center rounded-full px-5 text-[14px] font-medium transition-colors",
+                paper
+                  ? ""
+                  : "bg-[var(--accent)] text-[var(--text-invert)] hover:bg-[var(--accent-hover)]",
+              )}
             >
               Take quiz →
             </Link>

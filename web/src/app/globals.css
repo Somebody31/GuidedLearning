@@ -35,12 +35,14 @@
   --danger: #f87171;
   --info: #38bdf8;
 
-  --paper: #f4f0e6;
-  --paper-ink: #1c1917;
-  --paper-muted: #57534e;
-  --paper-line: rgba(28, 25, 23, 0.12);
-  --paper-accent: #0f766e;
-  --paper-surface: #ebe6d9;
+  --paper: #f7f1e4;
+  --paper-ink: #1a1614;
+  --paper-muted: #5c534c;
+  --paper-line: rgba(26, 22, 20, 0.14);
+  --paper-accent: #0d6b64;
+  --paper-surface: #efe8d8;
+  --paper-cta: #0f766e;
+  --paper-cta-hover: #0d9488;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -136,7 +138,7 @@ body {
 }
 
 .paper-mode {
-  background: var(--paper);
+  background: var(--paper) !important;
   color: var(--paper-ink);
   min-height: 100%;
 }
@@ -157,6 +159,15 @@ body {
 
 .paper-mode footer {
   border-color: var(--paper-line) !important;
+}
+
+.paper-mode .paper-cta {
+  background: var(--paper-cta) !important;
+  color: #faf8f4 !important;
+}
+
+.paper-mode .paper-cta:hover {
+  background: var(--paper-cta-hover) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
