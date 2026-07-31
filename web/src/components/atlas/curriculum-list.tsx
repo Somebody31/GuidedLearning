@@ -40,8 +40,11 @@ export function CurriculumList({
         );
         return (
           <section key={unit.id}>
-            <h3 className="mb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
+            <h3 className="sticky top-0 z-[1] mb-2 bg-[var(--surface-0)]/95 py-1 text-[12px] font-medium text-[var(--text-tertiary)] backdrop-blur-sm">
               {unit.title}
+              <span className="ml-2 tabular text-[var(--text-disabled)]">
+                {lessons.length}
+              </span>
             </h3>
             <ul className="space-y-2">
               {lessons.map((lesson) => {

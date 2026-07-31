@@ -22,12 +22,20 @@ export default function MarketingPage() {
         <span className="text-[15px] font-semibold tracking-tight">
           Guided<span className="text-[var(--accent)]">Learning</span>
         </span>
-        <Link
-          href="/app"
-          className="text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
-        >
-          Open app
-        </Link>
+        <nav className="flex items-center gap-4">
+          <Link
+            href={`/app/courses/${CN_COURSE_ID}`}
+            className="hidden text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)] sm:inline"
+          >
+            Demo
+          </Link>
+          <Link
+            href="/app"
+            className="text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+          >
+            Open app
+          </Link>
+        </nav>
       </header>
 
       <main className="relative z-10 mx-auto flex max-w-5xl flex-col px-6 pb-24 pt-16 md:pt-24">
@@ -108,6 +116,12 @@ export default function MarketingPage() {
             </div>
           ))}
         </dl>
+
+        <footer className="animate-fade-up mt-24 border-t border-[var(--hairline)] pt-8 text-[12px] text-[var(--text-tertiary)] [animation-delay:520ms]">
+          <p>
+            Atlas Noir UI demo · mock CN data · no backend yet
+          </p>
+        </footer>
       </main>
     </div>
   );

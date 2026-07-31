@@ -147,8 +147,8 @@ export default function DiagnosticPage() {
               onClick={() => setSel(idx)}
               className={
                 sel === idx
-                  ? "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--accent)] bg-[var(--accent-muted)] px-4 py-3 text-left text-[14px] transition-colors"
-                  : "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-left text-[14px] transition-colors hover:bg-[var(--surface-2)]"
+                  ? "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--accent)] bg-[var(--accent-muted)] px-4 py-3 text-left text-[14px] shadow-[0_0_0_1px_var(--accent-ring)] transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]"
+                  : "flex w-full items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 text-left text-[14px] transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]"
               }
             >
               <span
