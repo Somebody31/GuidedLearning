@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -33,13 +33,40 @@ export default function QuizPage() {
     return Math.min(1, masteryBefore * 0.4 + score * 0.6 + 0.1);
   }, [done, correctCount, questions.length, masteryBefore, attempt]);
 
+  const quizReady = Boolean(lesson?.quizReady && questions.length > 0);
+
+  useEffect(() => {
+    if (done || !quizReady) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (!selected || !q) return;
+      e.preventDefault();
+      if (!revealed) {
+        setRevealed(true);
+        if (selected === q.correctOptionId) setCorrectCount((c) => c + 1);
+        return;
+      }
+      if (index + 1 >= questions.length) {
+        setDone(true);
+      } else {
+        setIndex((i) => i + 1);
+        setSelected(null);
+        setRevealed(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [done, quizReady, selected, revealed, index, q, questions.length]);
+
   if (!course || !lesson) {
     return (
       <div className="p-8 text-[var(--text-secondary)]">Lesson missing.</div>
     );
   }
 
-  if (!lesson.quizReady || questions.length === 0) {
+  if (!quizReady) {
     return (
       <div className="mx-auto flex min-h-full max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
         <h1 className="text-[20px] font-semibold">Quiz not ready</h1>
@@ -66,7 +93,7 @@ export default function QuizPage() {
     const score = Math.round((correctCount / questions.length) * 100);
     return (
       <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-16">
-        <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--accent)]">
+        <p className="text-[12px] font-medium text-[var(--accent)]">
           What changed
         </p>
         <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
@@ -215,7 +242,11 @@ export default function QuizPage() {
           Back to lesson
         </Link>
         <Button onClick={submit} disabled={!selected}>
-          {!revealed ? "Check" : index + 1 >= questions.length ? "Finish" : "Next"}
+          {!revealed
+            ? "Check · Enter"
+            : index + 1 >= questions.length
+              ? "Finish · Enter"
+              : "Next · Enter"}
         </Button>
       </div>
     </div>

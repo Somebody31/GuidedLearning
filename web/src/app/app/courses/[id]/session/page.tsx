@@ -105,7 +105,7 @@ export default function SessionPage() {
           </ul>
         </aside>
 
-        <div className="surface-card flex min-h-[360px] flex-col p-6 md:p-8">
+        <div className="surface-card flex flex-col p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-2">
             <StateBadge status={lesson.status} />
             <span className="tabular text-[12px] text-[var(--text-tertiary)]">
@@ -122,12 +122,12 @@ export default function SessionPage() {
             Open the lesson, then complete the quiz to count as done. Skip defers
             +1 day (max 2 per pack).
           </p>
-          <ul className="mt-6 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
+          <ul className="mt-5 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
             {lesson.objectives.slice(0, 3).map((o) => (
               <li key={o}>{o}</li>
             ))}
           </ul>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={`/app/courses/${course.id}/lessons/${lesson.id}`}
               className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
@@ -141,7 +141,7 @@ export default function SessionPage() {
               Jump to quiz
             </Link>
           </div>
-          <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] pt-6">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] pt-5">
             <Button
               variant="ghost"
               disabled={skipDisabled}
