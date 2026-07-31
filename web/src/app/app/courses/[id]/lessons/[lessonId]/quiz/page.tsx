@@ -109,7 +109,7 @@ export default function QuizPage() {
   if (done) {
     const score = Math.round((correctCount / questions.length) * 100);
     return (
-      <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-16">
+      <div className="animate-fade-up mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-16">
         <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
           What changed
         </p>
@@ -234,9 +234,9 @@ export default function QuizPage() {
                 disabled={revealed}
                 onClick={() => setSelected(opt.id)}
                 className={cn(
-                  "flex w-full items-start gap-3 rounded-[var(--radius-lg)] border px-4 py-3 text-left text-[14px] transition-colors",
-                  !revealed && isSel && "border-[var(--accent)] bg-[var(--accent-muted)]",
-                  !revealed && !isSel && "border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]",
+                  "flex w-full items-start gap-3 rounded-[var(--radius-lg)] border px-4 py-3 text-left text-[14px] transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
+                  !revealed && isSel && "border-[var(--accent)] bg-[var(--accent-muted)] shadow-[0_0_0_1px_var(--accent-ring)]",
+                  !revealed && !isSel && "border-[var(--hairline)] bg-[var(--surface-1)] hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)]",
                   revealed && isCorrect && "border-[var(--success)] bg-[rgba(52,211,153,0.12)]",
                   revealed && isSel && !isCorrect && "border-[var(--danger)] bg-[rgba(248,113,113,0.1)]",
                   revealed && !isSel && !isCorrect && "border-[var(--hairline)] opacity-60",
@@ -263,7 +263,7 @@ export default function QuizPage() {
 
       {revealed && (
         <p
-          className="mt-4 text-[14px] text-[var(--text-secondary)]"
+          className="animate-fade-up mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[14px] leading-relaxed text-[var(--text-secondary)]"
           aria-live="polite"
         >
           {q.explanation}
@@ -273,14 +273,21 @@ export default function QuizPage() {
       <div className="mt-10 flex items-center justify-between gap-3">
         <Link
           href={`/app/courses/${courseId}/lessons/${lessonId}`}
-          className="text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+          className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
         >
           Back to lesson
         </Link>
         <div className="flex items-center gap-2">
+          {!revealed && (
+            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                1–4
+              </kbd>
+            </span>
+          )}
           {selected && (
-            <span className="hidden text-[12px] text-[var(--text-tertiary)] sm:inline">
-              <kbd className="rounded border border-[var(--hairline)] px-1">
+            <span className="hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
+              <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                 Enter
               </kbd>
             </span>

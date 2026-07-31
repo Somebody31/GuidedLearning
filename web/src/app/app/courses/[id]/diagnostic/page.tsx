@@ -67,7 +67,7 @@ export default function DiagnosticPage() {
 
   if (done) {
     return (
-      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-lg flex-col justify-center px-4 py-16">
+      <div className="animate-fade-up mx-auto flex min-h-[calc(100dvh-2rem)] max-w-lg flex-col justify-center px-4 py-16">
         <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
           Placement applied
         </p>
@@ -82,6 +82,26 @@ export default function DiagnosticPage() {
           with low pack priority — never auto-mastered. Weak areas join the weak
           queue. SRS reviews start only after real quizzes.
         </p>
+        <ul className="mt-6 space-y-2 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 text-[13px] text-[var(--text-secondary)]">
+          <li className="flex gap-2">
+            <span className="text-[var(--accent)]" aria-hidden>
+              ·
+            </span>
+            No auto-master from placement alone
+          </li>
+          <li className="flex gap-2">
+            <span className="text-[var(--accent)]" aria-hidden>
+              ·
+            </span>
+            Weak topics enter today&apos;s pack first
+          </li>
+          <li className="flex gap-2">
+            <span className="text-[var(--accent)]" aria-hidden>
+              ·
+            </span>
+            Reviews unlock after real quizzes
+          </li>
+        </ul>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href={`/app/courses/${courseId}`} className="cta-primary">
             Open atlas

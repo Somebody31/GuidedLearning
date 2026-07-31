@@ -99,15 +99,26 @@ export default function SessionPage() {
           <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
             Session complete
           </h1>
-          <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
-            Skips used: <span className="tabular">{skips}/2</span>
+          <div className="mt-6 space-y-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+            <div className="flex justify-between text-[14px]">
+              <span className="text-[var(--text-secondary)]">Pack steps</span>
+              <span className="tabular font-medium">
+                {initialPack.length - deferred.length}/{initialPack.length}
+              </span>
+            </div>
+            <div className="flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
+              <span className="text-[var(--text-secondary)]">Skips used</span>
+              <span className="tabular font-medium">{skips}/2</span>
+            </div>
             {deferred.length > 0 && (
-              <>
-                {" "}
-                · {deferred.length} deferred until tomorrow
-              </>
+              <div className="flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
+                <span className="text-[var(--text-secondary)]">Deferred</span>
+                <span className="tabular font-medium text-[var(--state-deferred)]">
+                  {deferred.length} until tomorrow
+                </span>
+              </div>
             )}
-          </p>
+          </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={`/app/courses/${course.id}`} className="cta-primary">
               Back to atlas
