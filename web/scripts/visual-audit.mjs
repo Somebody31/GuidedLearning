@@ -320,6 +320,12 @@ async function main() {
   await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "networkidle" });
   await page.waitForTimeout(600);
   await shot(page, "22-atlas-mobile");
+  const mobileNav = page.getByRole("navigation", { name: /Course mobile/i });
+  if ((await mobileNav.count()) === 0)
+    note("fail", "mobile", "Bottom course nav missing");
+  else if ((await mobileNav.getByRole("link", { name: "Sources" }).count()) === 0)
+    note("fail", "mobile", "Bottom nav missing Sources");
+  else note("ok", "mobile", "Bottom course nav present");
   await page.getByRole("radio", { name: "List" }).click();
   await page.waitForTimeout(200);
   await shot(page, "23-atlas-mobile-list");

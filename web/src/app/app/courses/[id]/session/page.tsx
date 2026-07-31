@@ -92,7 +92,11 @@ export default function SessionPage() {
       <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[240px_1fr] md:px-6">
         <aside className="surface-card h-fit p-4 lg:sticky lg:top-20">
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
-            Queue · {queue.length} left
+            Queue ·{" "}
+            <span className="tabular text-[var(--text-secondary)]">
+              {queue.length}
+            </span>{" "}
+            left
           </p>
           <ul className="mt-3 space-y-1.5">
             {queue.map((item, i) => {
@@ -102,16 +106,27 @@ export default function SessionPage() {
                   key={item.lessonId}
                   className={
                     i === 0
-                      ? "rounded-[var(--radius-md)] bg-[var(--surface-2)] px-2.5 py-2 text-[13px]"
-                      : "px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)]"
+                      ? "flex gap-2.5 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-muted)] px-2.5 py-2 text-[13px]"
+                      : "flex gap-2.5 px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)]"
                   }
                 >
-                  <span className="text-[11px] capitalize text-[var(--text-tertiary)]">
-                    {item.kind}
+                  <span
+                    className={
+                      i === 0
+                        ? "tabular mt-0.5 shrink-0 text-[11px] font-medium text-[var(--accent)]"
+                        : "tabular mt-0.5 shrink-0 text-[11px] text-[var(--text-tertiary)]"
+                    }
+                  >
+                    {i + 1}
                   </span>
-                  <p className="truncate font-medium text-[var(--text-primary)]">
-                    {l?.title}
-                  </p>
+                  <div className="min-w-0">
+                    <span className="text-[11px] capitalize text-[var(--text-tertiary)]">
+                      {item.kind}
+                    </span>
+                    <p className="truncate font-medium text-[var(--text-primary)]">
+                      {l?.title}
+                    </p>
+                  </div>
                 </li>
               );
             })}

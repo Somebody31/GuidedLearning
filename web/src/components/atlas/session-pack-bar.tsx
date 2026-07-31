@@ -92,12 +92,17 @@ export function SessionPackBar({
             Start session
           </span>
         ) : (
-          <Link
-            href={`/app/courses/${course.id}/session`}
-            className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[15px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
-          >
-            Start session
-          </Link>
+          <div className="flex items-center gap-2">
+            <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] md:inline">
+              S
+            </kbd>
+            <Link
+              href={`/app/courses/${course.id}/session`}
+              className="inline-flex h-10 items-center rounded-full bg-[var(--accent)] px-5 text-[15px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              Start session
+            </Link>
+          </div>
         )}
       </div>
     </div>
