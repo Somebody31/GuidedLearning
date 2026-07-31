@@ -1,0 +1,156 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { CourseAtlas } from "./course-atlas";
+import { CurriculumList } from "./curriculum-list";
+import { SessionPackBar } from "./session-pack-bar";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { StateBadge } from "@/components/ui/state-badge";
+import { MasteryRing } from "@/components/ui/mastery-ring";
+import { buildSessionPack, unitForLesson } from "@/lib/mock-data";
+import type { Course } from "@/lib/types";
+
+export function AtlasView({ course }: { course: Course }) {
+  const [view, setView] = useState<"map" | "list">("map");
+  const [budget, setBudget] = useState(course.sessionDefaultMinutes);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const pack = useMemo(
+    () => buildSessionPack(course, budget),
+    [course, budget],
+  );
+
+  const selected = selectedId ? course.lessons[selectedId] : null;
+  const unit = selected ? unitForLesson(course, selected.id) : null;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "m" || e.key === "M") {
+        setView((v) => (v === "map" ? "list" : "map"));
+      }
+      if (e.key === "Escape") setSelectedId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] max-w-[1440px] flex-col gap-4 p-4 md:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-semibold tracking-tight md:text-[28px]">
+            {course.title}
+          </h1>
+          <p className="text-[13px] text-[var(--text-tertiary)]">
+            Course atlas · quiz completes lessons · spaced reviews on due nodes
+          </p>
+        </div>
+        <SegmentedControl
+          ariaLabel="Atlas view"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: "map", label: "Map" },
+            { value: "list", label: "List" },
+          ]}
+        />
+      </div>
+
+      <SessionPackBar
+        course={course}
+        pack={pack}
+        budget={budget}
+        onBudgetChange={setBudget}
+      />
+
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[1fr_300px]">
+        <div className="min-h-0 min-w-0">
+          {view === "map" ? (
+            <CourseAtlas
+              course={course}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          ) : (
+            <div className="h-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-0)] p-4">
+              <CurriculumList
+                course={course}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+              />
+            </div>
+          )}
+        </div>
+
+        <aside className="surface-card flex min-h-[200px] flex-col p-4 lg:min-h-0">
+          {selected && unit ? (
+            <>
+              <p className="text-[12px] uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                {unit.title}
+              </p>
+              <h2 className="mt-1 text-[18px] font-semibold leading-snug">
+                {selected.title}
+              </h2>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <StateBadge status={selected.status} />
+                <MasteryRing value={selected.mastery} />
+                <span className="tabular text-[12px] text-[var(--text-tertiary)]">
+                  {selected.estMinutes} min
+                </span>
+              </div>
+              <ul className="mt-4 list-disc space-y-1 pl-4 text-[13px] text-[var(--text-secondary)]">
+                {selected.objectives.map((o) => (
+                  <li key={o}>{o}</li>
+                ))}
+              </ul>
+              <p className="mt-4 text-[12px] text-[var(--text-tertiary)]">
+                {selected.citations.length} citation
+                {selected.citations.length === 1 ? "" : "s"}
+              </p>
+              <div className="mt-auto pt-6">
+                {selected.status === "locked" ? (
+                  <p className="text-[13px] text-[var(--text-tertiary)]">
+                    Locked · complete prerequisites first
+                  </p>
+                ) : (
+                  <Link
+                    href={`/app/courses/${course.id}/lessons/${selected.id}`}
+                    className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--accent)] text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
+                  >
+                    {selected.status === "in_progress"
+                      ? "Resume lesson"
+                      : selected.status === "due"
+                        ? "Start review"
+                        : "Start lesson"}
+                  </Link>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col justify-center text-center">
+              <p className="text-[14px] text-[var(--text-secondary)]">
+                Select a lesson on the path
+              </p>
+              <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                Press <kbd className="text-[var(--text-secondary)]">M</kbd> for
+                map/list ·{" "}
+                <kbd className="text-[var(--text-secondary)]">S</kbd> starts
+                session from pack
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}

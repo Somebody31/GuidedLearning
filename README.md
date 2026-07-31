@@ -2,11 +2,18 @@
 
 AI-guided learning platform: upload textbooks and lecture PDFs → build a **Course → Unit → Lesson** path → study with grounded lessons, quizzes, and adaptive spaced review.
 
+## Quick start
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) — demo course atlas at `/app/courses/cn-kurose`.
+
 ## Status
 
-UI scaffold in progress (`web/`). Design specs live **locally** under `docs/` (not published to git — only this README is tracked as markdown).
+P0 UI (mock data): marketing, library, upload, confirm (autosave), atlas map/list, lesson, quiz, session, sources, insights, settings, diagnostic.
 
-## Local docs (clone only)
-
-- `docs/UX_DESIGN.md` — product UX  
-- `docs/DESIGN_SYSTEM.md` — Atlas Noir design language  
+Design specs stay **local** under `docs/` (gitignores all `.md` except this README).
