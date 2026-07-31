@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, BookOpen } from "lucide-react";
@@ -24,6 +24,15 @@ export default function LessonPage() {
     if (!lesson || !sourceOpen) return null;
     return lesson.citations.find((c) => c.id === sourceOpen) ?? null;
   }, [lesson, sourceOpen]);
+
+  useEffect(() => {
+    if (!sourceOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setSourceOpen(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sourceOpen]);
 
   if (!course || !lesson || !unit) {
     return (
@@ -220,19 +229,35 @@ export default function LessonPage() {
 
       {citation && (
         <div
-          className="fixed inset-0 z-[var(--z-modal)] flex justify-end bg-black/50"
+          className="fixed inset-0 z-[var(--z-modal)] flex justify-end"
           role="dialog"
           aria-modal
+          aria-labelledby="source-preview-title"
         >
-          <div className="flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-medium">Source preview</h3>
+          <button
+            type="button"
+            aria-label="Dismiss source preview"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+            onClick={() => setSourceOpen(null)}
+          />
+          <div className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-[var(--hairline)] bg-[var(--surface-1)] p-5 shadow-[-16px_0_48px_rgba(0,0,0,0.35)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="source-preview-title" className="text-[15px] font-medium">
+                Source preview
+              </h3>
               <button
                 type="button"
-                className="text-[13px] text-[var(--text-tertiary)]"
+                aria-label="Close"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1 text-[13px] text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                 onClick={() => setSourceOpen(null)}
               >
-                Close
+                <span aria-hidden>Close</span>
+                <kbd
+                  aria-hidden
+                  className="hidden rounded border border-[var(--hairline)] px-1 font-mono text-[10px] sm:inline"
+                >
+                  Esc
+                </kbd>
               </button>
             </div>
             <p className="mt-4 font-mono text-[12px] text-[var(--accent)]">

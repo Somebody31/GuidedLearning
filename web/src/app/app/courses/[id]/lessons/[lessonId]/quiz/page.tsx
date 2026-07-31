@@ -38,9 +38,26 @@ export default function QuizPage() {
   useEffect(() => {
     if (done || !quizReady) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Enter") return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+
+      if (!revealed && q) {
+        const digit = Number(e.key);
+        const letterIdx = "1234abcd".indexOf(e.key.toLowerCase());
+        let pick = -1;
+        if (digit >= 1 && digit <= q.options.length) pick = digit - 1;
+        else if (letterIdx >= 0) {
+          const mapped = letterIdx < 4 ? letterIdx : letterIdx - 4;
+          if (mapped < q.options.length) pick = mapped;
+        }
+        if (pick >= 0) {
+          e.preventDefault();
+          setSelected(q.options[pick].id);
+          return;
+        }
+      }
+
+      if (e.key !== "Enter") return;
       if (!selected || !q) return;
       e.preventDefault();
       if (!revealed) {
@@ -198,7 +215,7 @@ export default function QuizPage() {
       <h1 className="mt-8 text-[20px] font-semibold leading-snug">{q.stem}</h1>
 
       <ul className="mt-6 space-y-2" role="listbox" aria-label="Answers">
-        {q.options.map((opt) => {
+        {q.options.map((opt, idx) => {
           const isSel = selected === opt.id;
           const isCorrect = opt.id === q.correctOptionId;
           return (
@@ -210,7 +227,7 @@ export default function QuizPage() {
                 disabled={revealed}
                 onClick={() => setSelected(opt.id)}
                 className={cn(
-                  "w-full rounded-[var(--radius-lg)] border px-4 py-3 text-left text-[14px] transition-colors",
+                  "flex w-full items-start gap-3 rounded-[var(--radius-lg)] border px-4 py-3 text-left text-[14px] transition-colors",
                   !revealed && isSel && "border-[var(--accent)] bg-[var(--accent-muted)]",
                   !revealed && !isSel && "border-[var(--hairline)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]",
                   revealed && isCorrect && "border-[var(--success)] bg-[rgba(52,211,153,0.12)]",
@@ -218,7 +235,19 @@ export default function QuizPage() {
                   revealed && !isSel && !isCorrect && "border-[var(--hairline)] opacity-60",
                 )}
               >
-                {opt.text}
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium",
+                    !revealed && isSel
+                      ? "bg-[var(--accent)] text-[var(--text-invert)]"
+                      : "border border-[var(--hairline-strong)] text-[var(--text-tertiary)]",
+                    revealed && isCorrect && "border-[var(--success)] text-[var(--success)]",
+                    revealed && isSel && !isCorrect && "border-[var(--danger)] text-[var(--danger)]",
+                  )}
+                >
+                  {idx + 1}
+                </span>
+                <span className="min-w-0 flex-1 leading-snug">{opt.text}</span>
               </button>
             </li>
           );

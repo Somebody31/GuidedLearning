@@ -45,10 +45,17 @@ export function AtlasView({ course }: { course: Course }) {
         e.preventDefault();
         router.push(`/app/courses/${course.id}/session`);
       }
+      if (e.key === "Enter" && selectedId) {
+        const lesson = course.lessons[selectedId];
+        if (lesson && lesson.status !== "locked") {
+          e.preventDefault();
+          router.push(`/app/courses/${course.id}/lessons/${selectedId}`);
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pack.length, course.id, router]);
+  }, [pack.length, course.id, course.lessons, router, selectedId]);
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-3.5rem-3.5rem)] max-w-[1440px] flex-col gap-4 p-4 sm:h-[calc(100dvh-3.5rem)] md:p-6">
@@ -141,16 +148,28 @@ export function AtlasView({ course }: { course: Course }) {
                     Locked · complete prerequisites first
                   </p>
                 ) : (
-                  <Link
-                    href={`/app/courses/${course.id}/lessons/${selected.id}`}
-                    className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--accent)] text-[14px] font-medium text-[var(--text-invert)] hover:bg-[var(--accent-hover)]"
-                  >
-                    {selected.status === "in_progress"
-                      ? "Resume lesson"
-                      : selected.status === "due"
-                        ? "Start review"
-                        : "Start lesson"}
-                  </Link>
+                  <div className="flex w-full flex-col gap-2">
+                    <Link
+                      href={`/app/courses/${course.id}/lessons/${selected.id}`}
+                      className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--accent)] text-[14px] font-medium text-[var(--text-invert)] transition-colors hover:bg-[var(--accent-hover)]"
+                    >
+                      {selected.status === "in_progress"
+                        ? "Resume lesson"
+                        : selected.status === "due"
+                          ? "Start review"
+                          : "Start lesson"}
+                    </Link>
+                    <p className="hidden text-center text-[11px] text-[var(--text-tertiary)] lg:block">
+                      <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                        Enter
+                      </kbd>{" "}
+                      opens ·{" "}
+                      <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
+                        Esc
+                      </kbd>{" "}
+                      clears
+                    </p>
+                  </div>
                 )}
               </div>
             </>
