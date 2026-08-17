@@ -1,4 +1,4 @@
-// Helpers used by the atlas and session pages. Subject-agnostic.
+// Helpers used by Today and sitting pages. Subject-agnostic.
 
 import type { Course, SessionPackItem } from "./types";
 

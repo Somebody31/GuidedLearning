@@ -1,11 +1,21 @@
 "use client";
 
-// Shared top bar and course navigation.
+// Floating island chrome for the desk.
 
 import { useEffect } from "react";
 import Link from "next/link";
+import {
+  Books,
+  ChartLineUp,
+  GearSix,
+  House,
+  Plus,
+} from "@phosphor-icons/react";
+import { Wordmark } from "@/components/ui/cta-link";
 import { cn } from "@/lib/cn";
 import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
+
+export type CourseNavKey = "today" | "sources" | "progress" | "confirm";
 
 export function AppShell({
   children,
@@ -18,7 +28,7 @@ export function AppShell({
   children: React.ReactNode;
   courseTitle?: string;
   courseId?: string;
-  activeNav?: "atlas" | "sources" | "insights" | "confirm";
+  activeNav?: CourseNavKey;
   settingsActive?: boolean;
   className?: string;
 }) {
@@ -28,50 +38,54 @@ export function AppShell({
 
   const courseLinks = courseId
     ? ([
-        ["atlas", "Atlas", `/app/courses/${courseId}`],
-        ["sources", "Sources", `/app/courses/${courseId}/sources`],
-        ["insights", "Insights", `/app/courses/${courseId}/insights`],
+        ["today", "Today", `/app/courses/${courseId}`, House],
+        ["sources", "Sources", `/app/courses/${courseId}/sources`, Books],
+        [
+          "progress",
+          "Progress",
+          `/app/courses/${courseId}/insights`,
+          ChartLineUp,
+        ],
       ] as const)
     : [];
 
   return (
-    <div className={cn("flex min-h-full flex-col bg-[var(--canvas)]", className)}>
+    <div
+      className={cn(
+        "flex min-h-[100dvh] flex-col bg-[var(--canvas)]",
+        className,
+      )}
+    >
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[var(--z-toast)] focus:rounded-[var(--radius-md)] focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-[var(--text-invert)]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[var(--z-toast)] focus:rounded-full focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-[var(--text-invert)]"
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-[var(--z-raised)] border-b border-[var(--hairline)] bg-[var(--canvas)]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-4 md:px-6">
-          <div className="flex min-w-0 items-center gap-4">
-            <Link
-              href="/app"
-              className="group shrink-0 text-[15px] font-semibold tracking-tight text-[var(--text-primary)] transition-opacity hover:opacity-95"
-            >
-              Guided
-              <span className="text-[var(--accent)] transition-colors group-hover:text-[var(--accent-hover)]">
-                Learning
-              </span>
-            </Link>
-            {courseTitle && courseId && (
-              <>
-                <span className="text-[var(--text-tertiary)]" aria-hidden>
-                  /
-                </span>
-                <Link
-                  href={`/app/courses/${courseId}`}
-                  className="truncate text-[14px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-                >
-                  {courseTitle}
-                </Link>
-              </>
-            )}
-          </div>
 
-          {courseId && (
+      <div className="sticky top-0 z-[var(--z-raised)] px-3 pt-3 md:px-5 md:pt-4">
+        <header className="island mx-auto flex h-14 max-w-[1120px] items-center gap-2 rounded-full px-2 pl-4">
+          <Wordmark href="/app" />
+          {courseTitle && courseId ? (
+            <>
+              <span
+                className="hidden text-[var(--text-tertiary)] sm:inline"
+                aria-hidden
+              >
+                /
+              </span>
+              <Link
+                href={`/app/courses/${courseId}`}
+                className="hidden min-w-0 truncate text-[13px] text-[var(--text-secondary)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:text-[var(--text-primary)] sm:inline"
+              >
+                {courseTitle}
+              </Link>
+            </>
+          ) : null}
+
+          {courseId ? (
             <nav
-              className="hidden items-center gap-1 sm:flex"
+              className="ml-2 hidden items-center gap-0.5 sm:flex"
               aria-label="Course"
             >
               {courseLinks.map(([key, label, href]) => (
@@ -80,82 +94,78 @@ export function AppShell({
                   href={href}
                   aria-current={activeNav === key ? "page" : undefined}
                   className={cn(
-                    "rounded-[var(--radius-sm)] px-3 py-1.5 text-[13px] transition-colors",
+                    "rounded-full px-3 py-1.5 text-[13px] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
                     activeNav === key
                       ? "bg-[var(--surface-2)] text-[var(--text-primary)]"
-                      : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
+                      : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]",
                   )}
                 >
                   {label}
                 </Link>
               ))}
             </nav>
-          )}
+          ) : null}
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <Link
               href="/app/courses/new"
-              className="hidden text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)] sm:inline"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] text-[var(--text-secondary)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
             >
-              New course
-            </Link>
-            <Link
-              href="/app/courses/new"
-              className="inline text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--accent)] sm:hidden"
-              aria-label="New course"
-            >
-              New
+              <Plus size={14} weight="bold" />
+              <span className="hidden sm:inline">New</span>
             </Link>
             <Link
               href="/app/settings"
               aria-current={settingsActive ? "page" : undefined}
+              aria-label="Settings"
               className={cn(
-                "rounded-full border px-3 py-1 text-[12px] transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
                 settingsActive
-                  ? "border-[var(--accent)]/40 bg-[var(--accent-muted)] text-[var(--accent)]"
-                  : "border-[var(--hairline)] text-[var(--text-secondary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-primary)]",
+                  ? "bg-[var(--accent-muted)] text-[var(--accent)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]",
               )}
             >
-              Settings
+              <GearSix size={16} weight="light" />
             </Link>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
-      <main id="main" className={cn("flex-1", courseId && "pb-16 sm:pb-0")}>
+      <main
+        id="main"
+        className={cn("flex-1", courseId && "pb-24 sm:pb-8")}
+      >
         {children}
       </main>
 
-      {courseId && (
+      {courseId ? (
         <nav
-          className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
-          aria-label="Course mobile"
+          className="fixed inset-x-3 bottom-3 z-[var(--z-raised)] pb-[env(safe-area-inset-bottom)] sm:hidden"
+          aria-label="Course"
         >
-          <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-2">
-            {courseLinks.map(([key, label, href]) => (
+          <div className="island flex h-14 items-center justify-around rounded-full px-2">
+            {courseLinks.map(([key, label, href, Icon]) => (
               <Link
                 key={key}
                 href={href}
                 aria-current={activeNav === key ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium transition-colors active:scale-[0.98]",
+                  "flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] active:scale-[0.98]",
                   activeNav === key
                     ? "text-[var(--accent)]"
-                    : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
+                    : "text-[var(--text-tertiary)]",
                 )}
               >
+                <Icon
+                  size={18}
+                  weight={activeNav === key ? "regular" : "light"}
+                />
                 {label}
-                {activeNav === key && (
-                  <span
-                    className="absolute inset-x-6 bottom-1.5 h-0.5 rounded-full bg-[var(--accent)]"
-                    aria-hidden
-                  />
-                )}
               </Link>
             ))}
           </div>
         </nav>
-      )}
+      ) : null}
     </div>
   );
 }

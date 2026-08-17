@@ -1,48 +1,67 @@
 // Shared button styles.
 
 import { cn } from "@/lib/cn";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
-
-const variants: Record<Variant, string> = {
-  primary:
-    "bg-[var(--accent)] text-[var(--text-invert)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-press)] disabled:bg-[var(--surface-3)] disabled:text-[var(--text-disabled)]",
-  secondary:
-    "bg-transparent text-[var(--text-primary)] border border-[var(--hairline)] hover:bg-[var(--surface-2)] disabled:text-[var(--text-disabled)]",
-  ghost:
-    "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:text-[var(--text-disabled)]",
-  danger:
-    "bg-transparent text-[var(--danger)] border border-[var(--hairline)] hover:bg-[rgba(248,113,113,0.1)] disabled:text-[var(--text-disabled)]",
-};
-
-const sizes: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px] rounded-[var(--radius-sm)]",
-  md: "h-9 px-4 text-[14px] rounded-[var(--radius-md)]",
-  lg: "h-10 px-5 text-[15px] rounded-full",
-};
 
 export function Button({
   className,
   variant = "primary",
   size = "md",
   disabled,
+  icon,
+  children,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
+  icon?: ReactNode;
 }) {
+  if (variant === "primary") {
+    return (
+      <button
+        className={cn(
+          "cta-primary disabled:pointer-events-none disabled:bg-[var(--surface-3)] disabled:text-[var(--text-disabled)] disabled:active:scale-100",
+          size === "lg" && "h-11",
+          size === "sm" && "h-9 text-[13px]",
+          className,
+        )}
+        disabled={disabled}
+        {...props}
+      >
+        <span>{children}</span>
+        {icon ? (
+          <span className="cta-icon" aria-hidden>
+            {icon}
+          </span>
+        ) : null}
+      </button>
+    );
+  }
+
+  const variants: Record<Exclude<Variant, "primary">, string> = {
+    secondary:
+      "cta-secondary disabled:text-[var(--text-disabled)]",
+    ghost:
+      "inline-flex h-10 items-center justify-center rounded-full px-3 text-[13px] text-[var(--text-secondary)] transition-[color,background-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] active:scale-[0.98] disabled:text-[var(--text-disabled)]",
+    danger:
+      "inline-flex h-10 items-center justify-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--danger)] transition-[color,background-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:bg-[var(--accent-muted)] active:scale-[0.98] disabled:text-[var(--text-disabled)]",
+  };
+
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 font-medium transition-[color,background-color,border-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ring)] disabled:cursor-not-allowed disabled:pointer-events-none disabled:active:scale-100",
+        "font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ring)] disabled:cursor-not-allowed disabled:pointer-events-none disabled:active:scale-100",
         variants[variant],
-        sizes[size],
+        size === "sm" && variant !== "secondary" && "h-8 text-[13px]",
         className,
       )}
       disabled={disabled}
       {...props}
-    />
+    >
+      {children}
+    </button>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-// One lesson circle on the atlas map.
+// One lesson card on the optional path map.
 
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Lock } from "lucide-react";
+import { Lock } from "@phosphor-icons/react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
 import { STATUS_COLOR } from "@/lib/states";
@@ -52,7 +52,9 @@ function LessonNodeComponent({ data }: NodeProps) {
       <p className="mt-0.5 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">
         {locked && (
           <Lock
-            className="mr-1 inline h-3 w-3 text-[var(--state-locked)]"
+            className="mr-1 inline text-[var(--state-locked)]"
+            size={12}
+            weight="bold"
             aria-hidden
           />
         )}

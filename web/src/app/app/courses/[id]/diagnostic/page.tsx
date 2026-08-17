@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CtaLink } from "@/components/ui/cta-link";
+import { Plate } from "@/components/ui/plate";
 import { api } from "@/lib/api";
 
 type DiagItem = {
@@ -39,7 +41,7 @@ export default function DiagnosticPage() {
   useEffect(() => {
     document.title = done
       ? "Placement applied · GuidedLearning"
-      : "Diagnostic · GuidedLearning";
+      : "Placement · GuidedLearning";
   }, [done]);
 
   useEffect(() => {
@@ -123,7 +125,7 @@ export default function DiagnosticPage() {
           Course not found
         </h1>
         <Link href="/app" className="cta-primary mt-2">
-          Library
+          Desk
         </Link>
       </div>
     );
@@ -132,7 +134,7 @@ export default function DiagnosticPage() {
   if (!items) {
     return (
       <div className="px-6 py-20 text-center text-[14px] text-[var(--text-tertiary)]">
-        {loadError || "Loading diagnostic…"}
+        {loadError || "Loading placement…"}
       </div>
     );
   }
@@ -144,11 +146,11 @@ export default function DiagnosticPage() {
           No lessons to place yet
         </h1>
         <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
-          Activate a course map first, then come back.
+          Confirm a path first, then come back.
         </p>
-        <Link href={`/app/courses/${courseId}`} className="cta-primary mt-6">
-          Open atlas
-        </Link>
+        <CtaLink href={`/app/courses/${courseId}`} className="mt-6">
+          Open today
+        </CtaLink>
       </div>
     );
   }
@@ -162,49 +164,44 @@ export default function DiagnosticPage() {
     }
     return (
       <div className="animate-fade-up mx-auto flex min-h-[calc(100dvh-2rem)] max-w-lg flex-col justify-center px-4 py-16">
-        <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+        <p className="text-[12px] font-medium text-[var(--accent)]">
           Placement applied
         </p>
-        <h1 className="mt-3 text-[24px] font-semibold tracking-tight">
+        <h1 className="mt-3 text-[1.75rem] font-semibold tracking-[-0.025em]">
           Your path is ready
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
-          Strong areas stay{" "}
-          <strong className="font-medium text-[var(--text-primary)]">
-            Ready
-          </strong>{" "}
-          with low pack priority — never auto-mastered. Weak areas join the weak
-          queue. SRS reviews start only after real quizzes.
+          Strong areas stay ready with low sitting priority — never
+          auto-mastered. Weak areas join the practice queue. Reviews start only
+          after real quizzes.
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
-            <p className="text-[12px] text-[var(--text-tertiary)]">Ready</p>
-            <p className="tabular mt-1 text-[22px] font-semibold text-[var(--accent)]">
+        <Plate className="mt-6">
+          <div className="flex justify-between text-[14px]">
+            <span className="text-[var(--text-secondary)]">Ready</span>
+            <span className="tabular font-medium text-[var(--accent)]">
               {ready}
-            </p>
-            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
-              Low pack priority
-            </p>
+            </span>
           </div>
-          <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4">
-            <p className="text-[12px] text-[var(--text-tertiary)]">Weak queue</p>
-            <p className="tabular mt-1 text-[22px] font-semibold text-[var(--state-weak)]">
+          <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+            Later in today
+          </p>
+          <div className="mt-4 flex justify-between border-t border-[var(--hairline)] pt-4 text-[14px]">
+            <span className="text-[var(--text-secondary)]">Needs practice</span>
+            <span className="tabular font-medium text-[var(--state-weak)]">
               {weak}
-            </p>
-            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
-              Pack first
-            </p>
+            </span>
           </div>
-        </div>
+          <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+            Sit these first
+          </p>
+        </Plate>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href={`/app/courses/${courseId}`} className="cta-primary">
-            Open atlas
-          </Link>
+          <CtaLink href={`/app/courses/${courseId}`}>Open today</CtaLink>
           <Link
             href={`/app/courses/${courseId}/session`}
             className="cta-secondary text-[14px] text-[var(--text-primary)]"
           >
-            Start a session
+            Start a sitting
           </Link>
         </div>
       </div>
@@ -216,7 +213,7 @@ export default function DiagnosticPage() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-lg flex-col justify-center px-4 py-12">
       <div className="flex items-center justify-between text-[13px] text-[var(--text-tertiary)]">
-        <span>Diagnostic</span>
+        <span>Placement</span>
         <span className="tabular">
           {i + 1}/{items.length}
         </span>
@@ -227,7 +224,7 @@ export default function DiagnosticPage() {
         aria-valuemin={0}
         aria-valuemax={items.length}
         aria-valuenow={i + (sel !== null ? 1 : 0)}
-        aria-label="Diagnostic progress"
+        aria-label="Placement progress"
       >
         <div
           className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
@@ -237,7 +234,7 @@ export default function DiagnosticPage() {
         />
       </div>
       <p className="mt-4 text-[13px] text-[var(--text-tertiary)]">
-        Optional placement · never auto-masters strong topics
+        Optional · never auto-masters a topic
       </p>
       <h1
         key={q.lessonId}
@@ -279,7 +276,7 @@ export default function DiagnosticPage() {
           className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
           onClick={() => router.push(`/app/courses/${courseId}`)}
         >
-          Skip diagnostic
+          Skip placement
         </button>
         <div className="flex items-center gap-2">
           <kbd className="hidden rounded border border-[var(--hairline)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-tertiary)] sm:inline">

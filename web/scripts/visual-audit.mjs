@@ -9,21 +9,45 @@ mkdirSync(OUT, { recursive: true });
 const findings = [];
 function note(level, area, message) {
   findings.push({ level, area, message });
-  const tag = level.toUpperCase();
-  console.log(`[${tag}] ${area}: ${message}`);
+  console.log(`[${level.toUpperCase()}] ${area}: ${message}`);
 }
 
 async function shot(page, name, { fullPage = false } = {}) {
   const path = join(OUT, `${name}.png`);
-  // Default viewport-only: fullPage paints fixed chrome mid-document and
-  // looks like content "under" sticky/fixed footers (false product bug).
   await page.screenshot({ path, fullPage });
-  console.log(`  📸 ${path}`);
+  console.log(`  shot ${path}`);
   return path;
 }
 
-async function checkNoConsoleErrors(page, area) {
-  // collected via page.on
+async function mustSee(page, area, text, { exact = false } = {}) {
+  const loc = page.getByText(text, { exact });
+  if ((await loc.count()) === 0) {
+    note("fail", area, `Missing text: ${text}`);
+    return false;
+  }
+  note("ok", area, `Saw “${text}”`);
+  return true;
+}
+
+async function mustNotSee(page, area, re) {
+  const body = await page.locator("body").innerText();
+  if (re.test(body)) {
+    note("fail", area, `Leftover copy matching ${re}`);
+    return false;
+  }
+  note("ok", area, `No leftover ${re}`);
+  return true;
+}
+
+async function clickRole(page, area, role, name) {
+  const loc = page.getByRole(role, { name });
+  if ((await loc.count()) === 0) {
+    note("fail", area, `Missing ${role} “${name}”`);
+    return false;
+  }
+  await loc.first().click();
+  note("ok", area, `Clicked ${role} “${name}”`);
+  return true;
 }
 
 async function main() {
@@ -31,6 +55,7 @@ async function main() {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
+    reducedMotion: "reduce",
   });
   const page = await context.newPage();
   const consoleErrors = [];
@@ -45,356 +70,273 @@ async function main() {
     pageErrors.push({ url: page.url(), text: err.message });
   });
 
-  // ---- 1. Marketing ----
-  console.log("\n=== Marketing / ===");
-  await page.goto(BASE, { waitUntil: "networkidle" });
-  await shot(page, "01-marketing");
-  const h1 = await page.locator("h1").first().textContent();
-  if (!h1?.includes("PDFs")) note("fail", "marketing", `Unexpected h1: ${h1}`);
-  else note("ok", "marketing", "Hero headline present");
-  const startLink = page.getByRole("link", { name: /Start from your PDFs/i });
-  if ((await startLink.count()) === 0)
-    note("fail", "marketing", "Missing start-from-PDFs CTA");
-  else note("ok", "marketing", "Start-from-PDFs CTA present");
-
-  // ---- 2. Library ----
-  console.log("\n=== Library /app ===");
-  await page.goto(`${BASE}/app`, { waitUntil: "networkidle" });
-  await shot(page, "02-library");
-  if ((await page.getByText("Continue").count()) === 0)
-    note("fail", "library", "Continue hero missing");
-  else note("ok", "library", "Continue hero present");
-  if ((await page.getByText("Computer Networks").count()) === 0)
-    note("fail", "library", "Course card missing");
-  else note("ok", "library", "CN course listed");
-
-  // ---- 3. Atlas map ----
-  console.log("\n=== Atlas map ===");
-  await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(800); // react-flow layout
-  await shot(page, "03-atlas-map");
-  const rf = page.locator(".react-flow");
-  if ((await rf.count()) === 0) note("fail", "atlas", "React Flow missing");
-  else note("ok", "atlas", "Course map canvas mounted");
-  if ((await page.getByText("Today").count()) === 0)
-    note("fail", "atlas", "Session pack bar missing");
-  else note("ok", "atlas", "Session pack bar visible");
-  if ((await page.getByRole("link", { name: /Start session/i }).count()) === 0)
-    note("fail", "atlas", "Start session missing");
-  else note("ok", "atlas", "Start session CTA");
-
-  // Segmented Map|List
-  const listBtn = page.getByRole("radio", { name: "List" });
-  if ((await listBtn.count()) > 0) {
-    await listBtn.click();
-    await page.waitForTimeout(300);
-    await shot(page, "04-atlas-list");
-    if ((await page.getByText("Introduction & edge").count()) === 0)
-      note("fail", "atlas-list", "Unit headings missing in list");
-    else note("ok", "atlas-list", "Curriculum list shows units");
-    await page.getByRole("radio", { name: "Map" }).click();
-    await page.waitForTimeout(400);
-  } else note("fail", "atlas", "Map|List segmented control missing");
-
-  // Duration segments
-  const d45 = page.getByRole("radio", { name: "45" });
-  if ((await d45.count()) > 0) {
-    await d45.click();
-    await page.waitForTimeout(200);
-    note("ok", "atlas", "Duration segmented control works");
-  }
-
-  // Click a node via list for reliability
-  await page.getByRole("radio", { name: "List" }).click();
-  await page.waitForTimeout(200);
-  const httpRow = page.getByRole("button", { name: /HTTP/i }).first();
-  if ((await httpRow.count()) > 0) {
-    await httpRow.click();
-    await page.waitForTimeout(200);
-    await shot(page, "05-atlas-inspector");
-    if ((await page.getByRole("link", { name: /Start review|Start lesson|Resume/i }).count()) === 0)
-      note("warn", "atlas", "Inspector CTA not found after select");
-    else note("ok", "atlas", "Inspector shows lesson CTA");
-  }
-
-  // Keyboard M toggle
-  await page.keyboard.press("m");
-  await page.waitForTimeout(300);
-  note("ok", "atlas", "Pressed M for map/list toggle");
-
-  // Keyboard S starts session (only when pack non-empty)
-  const beforeS = page.url();
-  await page.keyboard.press("s");
-  await page.waitForTimeout(500);
-  if (page.url().includes("/session")) {
-    note("ok", "atlas", "Keyboard S navigates to session");
-    await page.goto(`${BASE}/app/courses/cn-kurose`, {
-      waitUntil: "networkidle",
-    });
-    await page.waitForTimeout(400);
+  // 1. Landing
+  console.log("\n=== Landing / ===");
+  await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "01-landing");
+  const h1 = (await page.locator("h1").first().textContent()) ?? "";
+  if (!h1.includes("already marked")) {
+    note("fail", "landing", `Unexpected h1: ${h1}`);
   } else {
-    note(
-      "warn",
-      "atlas",
-      `Keyboard S did not navigate (still ${beforeS}; pack may be empty)`,
-    );
+    note("ok", "landing", "Hero headline present");
   }
+  await mustSee(page, "landing", "Start from your PDFs");
+  await mustSee(page, "landing", "Open the desk");
+  await mustNotSee(page, "landing", /\bAtlas\b|\bLibrary\b|Start session|Skip diagnostic/i);
 
-  // ---- 4. Lesson focus ----
-  console.log("\n=== Lesson HTTP ===");
-  await page.goto(`${BASE}/app/courses/cn-kurose/lessons/l-http`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "06-lesson-http");
-  if ((await page.getByText("Objectives").count()) === 0)
-    note("fail", "lesson", "Objectives missing");
-  else note("ok", "lesson", "Objectives section");
-  if ((await page.getByText("Citations").count()) === 0)
-    note("fail", "lesson", "Citations missing");
-  else note("ok", "lesson", "Citations section");
-  const takeQuiz = page.getByRole("link", { name: /Take quiz/i });
-  if ((await takeQuiz.count()) === 0)
-    note("fail", "lesson", "Take quiz CTA missing");
-  else note("ok", "lesson", "Take quiz CTA");
-
-  // Citation chip
-  const chip = page.locator("button").filter({ hasText: /p\.\d+/ }).first();
-  if ((await chip.count()) > 0) {
-    await chip.click();
-    await page.waitForTimeout(200);
-    await shot(page, "07-lesson-citation-sheet");
-    if ((await page.getByText("Source preview").count()) === 0)
-      note("fail", "lesson", "Source sheet not opened");
-    else note("ok", "lesson", "Citation opens source preview");
-    await page.getByRole("button", { name: /Close/i }).click();
+  if (!(await clickRole(page, "landing", "link", /Open the desk/i))) {
+    await page.goto(`${BASE}/app`, { waitUntil: "domcontentloaded", timeout: 60000 });
   }
+  await page.waitForURL(/\/app\/?$/);
+  await page.waitForTimeout(400);
 
-  // Paper mode
-  const paperBtn = page.getByRole("button", { name: /^Paper$/i });
-  if ((await paperBtn.count()) > 0) {
-    await paperBtn.click();
-    await page.waitForTimeout(350);
-    await shot(page, "08-lesson-paper");
-    // Sanity: paper surface should not still be near-black canvas
-    const paperBg = await page.evaluate(() => {
-      const el = document.querySelector(".paper-mode");
-      if (!el) return null;
-      return getComputedStyle(el).backgroundColor;
-    });
-    if (!paperBg || paperBg.includes("7, 7, 10") || paperBg.includes("rgb(7"))
-      note("fail", "lesson", `Paper mode bg still dark: ${paperBg}`);
-    else note("ok", "lesson", "Paper mode toggle");
-    await page.getByRole("button", { name: /^Dark$/i }).click();
-    await page.waitForTimeout(250);
+  // 2. Desk
+  console.log("\n=== Desk /app ===");
+  await shot(page, "02-desk");
+  await mustSee(page, "desk", "Desk", { exact: true });
+  await mustSee(page, "desk", "Computer Networks");
+  await mustSee(page, "desk", "Continue");
+  await mustNotSee(page, "desk", /\bAtlas\b|Start session|Open atlas|Diagnostic/i);
+
+  const continuePlate = page.locator('a[aria-labelledby="continue-heading"]');
+  if ((await continuePlate.count()) === 0) {
+    note("fail", "desk", "Continue plate is not a link");
+    await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  } else {
+    await continuePlate.first().click();
+    note("ok", "desk", "Clicked continue plate");
   }
+  await page.waitForURL(/\/app\/courses\/cn-kurose/);
+  await page.waitForTimeout(400);
+  await page.waitForTimeout(300);
 
-  // ---- 5. Quiz flow ----
-  console.log("\n=== Quiz ===");
-  await page.goto(`${BASE}/app/courses/cn-kurose/lessons/l-http/quiz`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "09-quiz-q1");
-  const options = page.getByRole("option");
-  const optCount = await options.count();
-  if (optCount < 2) note("fail", "quiz", `Only ${optCount} options`);
-  else note("ok", "quiz", `${optCount} answer options`);
+  // 3. Today
+  console.log("\n=== Today /app/courses/cn-kurose ===");
+  await shot(page, "03-today");
+  await mustSee(page, "today", "This sitting");
+  await mustSee(page, "today", "Path");
+  await mustSee(page, "today", "Show map");
+  await mustSee(page, "today", "TCP basics");
+  if ((await page.getByRole("link", { name: /Practice this|Start review|Resume lesson|Start lesson|Open lesson/i }).count()) === 0) {
+    note("fail", "today", "Missing single next-lesson CTA");
+  } else {
+    note("ok", "today", "Single next-lesson CTA present");
+  }
+  if ((await page.locator(".react-flow").count()) > 0) {
+    note("fail", "today", "Map is visible by default");
+  } else {
+    note("ok", "today", "Path list is the default");
+  }
+  await mustNotSee(page, "today", /\bAtlas\b|Start session|Open atlas/i);
 
-  // Answer all questions: prefer 2nd option (often correct in mock) → Check → Next/See results
-  for (let i = 0; i < 12; i++) {
-    if ((await page.getByText("Quiz complete").count()) > 0) break;
-
-    const enabledOpts = page.locator('button[role="option"]:not([disabled])');
-    const n = await enabledOpts.count();
-    if (n > 0) {
-      // Prefer middle options — mock data often puts correct answer not first
-      await enabledOpts.nth(Math.min(1, n - 1)).click();
-      await page.waitForTimeout(80);
-    }
-
-    const action = page
-      .getByRole("button", {
-        name: /^(Check|Next|Finish|Next question|See results)(\s*·.*)?$/i,
-      })
-      .first();
-    if ((await action.count()) === 0) break;
-    if (!(await action.isEnabled().catch(() => false))) {
-      // Still disabled — try force-select first option
-      const anyOpt = page.locator('button[role="option"]').first();
-      if ((await anyOpt.count()) > 0) await anyOpt.click({ force: true });
-      await page.waitForTimeout(80);
-    }
-    if (await action.isEnabled().catch(() => false)) {
-      await action.click();
+  if (await clickRole(page, "today", "button", /Show map/i)) {
+    await page.waitForTimeout(600);
+    if ((await page.locator(".react-flow").count()) === 0) {
+      note("fail", "today", "Map did not appear");
     } else {
-      note("warn", "quiz", `Action button stuck disabled on step ${i}`);
-      break;
+      note("ok", "today", "Map toggle works");
     }
-    await page.waitForTimeout(250);
+    await shot(page, "03b-today-map");
+    await clickRole(page, "today", "button", /Show list/i);
+  }
+
+  // Sources
+  console.log("\n=== Sources ===");
+  if (!(await clickRole(page, "today", "link", /^Sources$/))) {
+    await page.goto(`${BASE}/app/courses/cn-kurose/sources`, { waitUntil: "domcontentloaded", timeout: 60000 });
   }
   await page.waitForTimeout(400);
-  await shot(page, "10-quiz-complete");
-  if ((await page.getByText(/What changed|Quiz complete/i).count()) === 0)
-    note("fail", "quiz", "Completion / what-changed panel missing");
-  else note("ok", "quiz", "What-changed panel after finish");
-  if ((await page.getByText(/Mastery/i).count()) === 0)
-    note("warn", "quiz", "Mastery delta not visible");
-  else note("ok", "quiz", "Mastery shown on complete");
+  await shot(page, "04-sources");
+  await mustSee(page, "sources", "Sources");
+  await mustSee(page, "sources", "Add PDF");
 
-  // ---- 6. Session ----
-  console.log("\n=== Session ===");
-  await page.goto(`${BASE}/app/courses/cn-kurose/session`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "11-session");
-  if ((await page.getByText("Queue").count()) === 0)
-    note("fail", "session", "Queue rail missing");
-  else note("ok", "session", "Queue rail");
-  const skip = page.getByRole("button", { name: /Skip/i });
-  if ((await skip.count()) > 0) {
-    await skip.click();
-    await page.waitForTimeout(200);
-    note("ok", "session", "Skip defer works (1/2)");
-    await shot(page, "12-session-after-skip");
+  // Progress
+  console.log("\n=== Progress ===");
+  if (!(await clickRole(page, "sources", "link", /^Progress$/))) {
+    await page.goto(`${BASE}/app/courses/cn-kurose/insights`, { waitUntil: "domcontentloaded", timeout: 60000 });
   }
-  // Cap skips (max 2). Short packs may end the session before the disabled label shows.
-  if ((await page.getByRole("button", { name: /Skip ·|Skip/i }).count()) > 0) {
-    await page.getByRole("button", { name: /Skip ·|Skip/i }).click();
-    await page.waitForTimeout(200);
-  }
-  await shot(page, "12b-session-skip-cap");
-  if ((await page.getByRole("button", { name: /Defer limit/i }).count()) > 0)
-    note("ok", "session", "Skip cap disables further skips");
-  else if ((await page.getByText(/Skips used:\s*2\/2/i).count()) > 0)
-    note("ok", "session", "Skip cap enforced (session ended at 2/2)");
-  else note("warn", "session", "Skip cap UI not observed (queue may be empty)");
+  await page.waitForTimeout(400);
+  await shot(page, "05-progress");
+  await mustSee(page, "progress", "Progress");
+  await mustSee(page, "progress", "Needs attention");
+  await mustNotSee(page, "progress", /\bInsights\b|\bAtlas\b/i);
 
-  // ---- 7. Confirm autosave ----
+  // Settings
+  console.log("\n=== Settings ===");
+  if (!(await clickRole(page, "progress", "link", /Settings/i))) {
+    await page.goto(`${BASE}/app/settings`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  }
+  await page.waitForTimeout(400);
+  await shot(page, "06-settings");
+  await mustSee(page, "settings", "Desk");
+  await mustSee(page, "settings", "Lamp");
+  await mustSee(page, "settings", "Sittings");
+  await mustNotSee(page, "settings", /Dark paper|Atlas/i);
+
+  const lamp = page.getByRole("radio", { name: /^Lamp$/ });
+  if ((await lamp.count()) > 0) {
+    await lamp.first().click();
+    await page.waitForTimeout(200);
+    const theme = await page.locator("html").getAttribute("data-theme");
+    if (theme !== "dark") note("fail", "settings", `Lamp did not set dark, got ${theme}`);
+    else note("ok", "settings", "Lamp theme applied");
+    await shot(page, "06b-settings-lamp");
+    await page.getByRole("radio", { name: /^Desk$/ }).first().click();
+  }
+
+  // New course
+  console.log("\n=== New course ===");
+  await page.goto(`${BASE}/app/courses/new`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "07-new");
+  await mustSee(page, "new", "New course");
+  await mustSee(page, "new", "Build the path");
+  await mustSee(page, "new", "Drop PDFs or click to upload");
+
+  // Confirm (activated sample)
   console.log("\n=== Confirm ===");
-  await page.goto(`${BASE}/app/courses/cn-kurose/confirm`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "13-confirm");
-  if ((await page.getByText(/Draft/i).count()) === 0)
-    note("fail", "confirm", "Draft save status missing");
-  else note("ok", "confirm", "Draft status chip");
-  const input = page.locator("input").first();
-  if ((await input.count()) > 0) {
-    await input.fill("Renamed intro lesson for visual test");
-    await page.waitForTimeout(600);
-    const status = await page.locator("text=/Draft/").first().textContent();
-    note("ok", "confirm", `After edit status area: ${status}`);
-    await shot(page, "14-confirm-edited");
-  }
-  await page.getByRole("button", { name: /Activate course/i }).click();
-  await page.waitForTimeout(200);
-  await shot(page, "15-confirm-modal");
-  if ((await page.getByText(/Spaced review will use/i).count()) === 0)
-    note("fail", "confirm", "Activate modal copy missing");
-  else note("ok", "confirm", "Activate modal");
-  await page.getByRole("button", { name: /Keep editing/i }).click();
-
-  // ---- 8. Upload ----
-  console.log("\n=== Upload ===");
-  await page.goto(`${BASE}/app/courses/new`, { waitUntil: "networkidle" });
-  await shot(page, "16-upload");
-  const titleBox = page.getByPlaceholder(/Organic Chemistry|Computer Networks/i);
-  if ((await titleBox.count()) === 0)
-    note("fail", "upload", "Course title field missing");
-  else note("ok", "upload", "Course title field present");
-  if ((await page.getByRole("button", { name: /Drop PDFs/i }).count()) === 0)
-    note("fail", "upload", "PDF drop zone missing");
-  else note("ok", "upload", "PDF drop zone present");
-
-  // ---- 9. Sources / Insights / Settings / Diagnostic ----
-  console.log("\n=== Supporting pages ===");
-  for (const [path, name, expectText] of [
-    ["/app/courses/cn-kurose/sources", "18-sources", "Sources"],
-    ["/app/courses/cn-kurose/insights", "19-insights", "Insights"],
-    ["/app/settings", "20-settings", "Settings"],
-    ["/app/courses/cn-kurose/diagnostic", "21-diagnostic", "Diagnostic"],
-  ]) {
-    await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
-    await shot(page, name);
-    if ((await page.getByText(expectText).count()) === 0)
-      note("fail", name, `Missing ${expectText}`);
-    else note("ok", name, `${expectText} page OK`);
+  await page.goto(`${BASE}/app/courses/cn-kurose/confirm`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "08-confirm");
+  await mustSee(page, "confirm", "Review the path");
+  await mustSee(page, "confirm", "Tracking on");
+  if ((await page.getByRole("button", { name: /Already confirmed|Start tracking/i }).count()) > 0) {
+    note("fail", "confirm", "Dead activate CTA still shown on an active course");
+  } else {
+    note("ok", "confirm", "No activate CTA on an already-tracked course");
   }
 
-  // Diagnostic skip path
-  await page.getByRole("button", { name: /Skip diagnostic/i }).click();
+  // Diagnostic / placement
+  console.log("\n=== Placement ===");
+  await page.goto(`${BASE}/app/courses/cn-kurose/diagnostic`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(500);
-  if (!page.url().includes("/app/courses/cn-kurose"))
-    note("warn", "diagnostic", `Skip landed on ${page.url()}`);
-  else note("ok", "diagnostic", "Skip diagnostic returns to atlas");
+  await shot(page, "09-placement");
+  const skip = page.getByRole("button", { name: /Skip placement/i });
+  if ((await skip.count()) > 0) {
+    note("ok", "placement", "Skip placement present");
+    await skip.first().click();
+    await page.waitForURL(/\/app\/courses\/cn-kurose\/?$/);
+    await page.waitForTimeout(500);
+    note("ok", "placement", "Skip returned to Today");
+  } else {
+    const body = await page.locator("body").innerText();
+    if (/No lessons to place|Placement applied|Open today/i.test(body)) {
+      note("ok", "placement", "Placement empty/done state rendered");
+    } else {
+      note("fail", "placement", `Unexpected placement body: ${body.slice(0, 180)}`);
+    }
+  }
 
-  // ---- 10. Mobile viewport atlas ----
-  console.log("\n=== Mobile 390x844 ===");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "networkidle" });
+  // Today → lesson
+  console.log("\n=== Lesson ===");
+  await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  const lessonCta = page.getByRole("link", {
+    name: /Practice this|Start review|Resume lesson|Start lesson|Open lesson/i,
+  });
+  if ((await lessonCta.count()) === 0) {
+    note("fail", "lesson", "No primary lesson CTA");
+    await page.goto(`${BASE}/app/courses/cn-kurose/lessons/l-tcp`, {
+      waitUntil: "networkidle",
+    });
+  } else {
+    await lessonCta.first().click();
+  }
+  await page.waitForURL(/\/lessons\//);
+  await page.waitForFunction(() => {
+    const h = document.querySelector("h1");
+    return Boolean(h && h.textContent && h.textContent.trim().length > 0);
+  }, null, { timeout: 15000 }).catch(() => {});
+  await shot(page, "10-lesson");
+  if ((await page.getByRole("link", { name: /^Today$/ }).count()) === 0) {
+    note("fail", "lesson", "Missing Today back link");
+  } else {
+    note("ok", "lesson", "Today back link present");
+  }
+  const quizCta = page.getByRole("link", { name: /Take quiz/i });
+  if ((await quizCta.count()) === 0) {
+    note("warn", "lesson", "Quiz CTA not ready");
+  } else {
+    note("ok", "lesson", "Take quiz present");
+    await quizCta.first().click();
+    await page.waitForURL(/\/quiz/);
+    await page.waitForTimeout(400);
+    await shot(page, "11-quiz");
+    if ((await page.getByRole("button", { name: /Check/i }).count()) === 0) {
+      note("fail", "quiz", "Check button missing");
+    } else {
+      note("ok", "quiz", "Quiz interactive");
+    }
+    await clickRole(page, "quiz", "link", /Back to lesson/i);
+  }
+
+  // Sitting
+  console.log("\n=== Sitting ===");
+  await page.goto(`${BASE}/app/courses/cn-kurose/session`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(600);
-  await shot(page, "22-atlas-mobile");
-  const mobileNav = page.getByRole("navigation", { name: /Course mobile/i });
-  if ((await mobileNav.count()) === 0)
-    note("fail", "mobile", "Bottom course nav missing");
-  else if ((await mobileNav.getByRole("link", { name: "Sources" }).count()) === 0)
-    note("fail", "mobile", "Bottom nav missing Sources");
-  else note("ok", "mobile", "Bottom course nav present");
-  await page.getByRole("radio", { name: "List" }).click();
-  await page.waitForTimeout(200);
-  await shot(page, "23-atlas-mobile-list");
-  note("ok", "mobile", "Atlas renders at 390px");
+  await shot(page, "12-sitting");
+  const sittingBody = await page.locator("body").innerText();
+  if (!/Sitting|Open lesson|Sitting complete/i.test(sittingBody)) {
+    note("fail", "sitting", `Unexpected sitting body: ${sittingBody.slice(0, 180)}`);
+  } else {
+    note("ok", "sitting", "Sitting screen rendered");
+  }
+  if (await page.getByRole("button", { name: /End sitting/i }).count()) {
+    await page.getByRole("button", { name: /End sitting/i }).click();
+    await page.waitForTimeout(400);
+    await shot(page, "12b-sitting-done");
+    await mustSee(page, "sitting", "Sitting complete");
+  }
 
-  await page.goto(`${BASE}/app/courses/cn-kurose/lessons/l-congestion`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "24-lesson-mobile");
+  // 404
+  console.log("\n=== 404 ===");
+  await page.goto(`${BASE}/this-route-does-not-exist`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "13-404");
+  await mustSee(page, "404", "Page not found");
 
-  // ---- 11. 404-ish lesson ----
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/app/courses/cn-kurose/lessons/does-not-exist`, {
-    waitUntil: "networkidle",
-  });
-  await shot(page, "25-lesson-missing");
-  if ((await page.getByText(/missing|Atlas/i).count()) === 0)
-    note("fail", "404", "Missing lesson fallback weak");
-  else note("ok", "404", "Missing lesson fallback");
+  // Mobile
+  console.log("\n=== Mobile ===");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "m01-landing");
+  await page.goto(`${BASE}/app`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "m02-desk");
+  await page.goto(`${BASE}/app/courses/cn-kurose`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await page.waitForTimeout(300);
+  await shot(page, "m03-today");
+  const mobileNav = page.getByRole("navigation", { name: "Course" });
+  if ((await mobileNav.count()) === 0) {
+    note("fail", "mobile", "Course bottom island missing");
+  } else {
+    note("ok", "mobile", "Course bottom island present");
+  }
+  await page.goto(`${BASE}/app/courses/new`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "m04-new");
+  await page.goto(`${BASE}/app/settings`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await shot(page, "m05-settings");
 
-  // Console / page errors summary
-  console.log("\n=== Console / page errors ===");
-  const meaningful = consoleErrors.filter(
+  const realConsole = consoleErrors.filter(
     (e) =>
-      !e.text.includes("favicon") &&
-      !e.text.includes("Download the React DevTools"),
+      !/favicon|hydration|Download the React DevTools/i.test(e.text),
   );
-  for (const e of meaningful.slice(0, 20)) {
-    note("warn", "console", `${e.url} → ${e.text.slice(0, 160)}`);
+  for (const e of realConsole) {
+    note("warn", "console", `${e.url}: ${e.text.slice(0, 200)}`);
   }
   for (const e of pageErrors) {
-    note("fail", "pageerror", `${e.url} → ${e.text.slice(0, 160)}`);
+    note("fail", "pageerror", `${e.url}: ${e.text.slice(0, 200)}`);
   }
-  if (meaningful.length === 0 && pageErrors.length === 0)
-    note("ok", "console", "No console/page errors captured");
 
+  const fails = findings.filter((f) => f.level === "fail");
+  const warns = findings.filter((f) => f.level === "warn");
+  writeFileSync(
+    join(OUT, "findings.json"),
+    JSON.stringify({ findings, consoleErrors: realConsole, pageErrors }, null, 2),
+  );
+  console.log(
+    `\n${findings.length} checks · ${fails.length} fail · ${warns.length} warn`,
+  );
   await browser.close();
-
-  const summary = {
-    base: BASE,
-    out: OUT,
-    counts: {
-      ok: findings.filter((f) => f.level === "ok").length,
-      warn: findings.filter((f) => f.level === "warn").length,
-      fail: findings.filter((f) => f.level === "fail").length,
-    },
-    findings,
-  };
-  writeFileSync(join(OUT, "report.json"), JSON.stringify(summary, null, 2));
-  console.log("\n=== SUMMARY ===");
-  console.log(JSON.stringify(summary.counts, null, 2));
-  console.log(`Report: ${join(OUT, "report.json")}`);
-  process.exit(summary.counts.fail > 0 ? 1 : 0);
+  if (fails.length) process.exit(1);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(2);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
 });

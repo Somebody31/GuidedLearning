@@ -7,8 +7,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
+import { CtaLink } from "@/components/ui/cta-link";
+import { Plate } from "@/components/ui/plate";
 import { StateBadge } from "@/components/ui/state-badge";
 import { patchSession, startSession } from "@/lib/api";
+import { PACK_KIND_LABEL } from "@/lib/next-action";
 import { useCourse } from "@/lib/use-course";
 import type { SessionPackItem } from "@/lib/types";
 
@@ -83,11 +86,11 @@ export default function SessionPage() {
 
   useEffect(() => {
     if (done) {
-      document.title = "Session complete · GuidedLearning";
+      document.title = "Sitting complete · GuidedLearning";
     } else if (lesson) {
-      document.title = `Session · ${lesson.title} · GuidedLearning`;
+      document.title = `Sitting · ${lesson.title} · GuidedLearning`;
     } else {
-      document.title = "Session · GuidedLearning";
+      document.title = "Sitting · GuidedLearning";
     }
   }, [done, lesson]);
 
@@ -128,7 +131,7 @@ export default function SessionPage() {
     return (
       <AppShell>
         <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
-          Loading session…
+          Loading sitting…
         </div>
       </AppShell>
     );
@@ -139,11 +142,11 @@ export default function SessionPage() {
       <AppShell>
         <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
           <h1 className="text-[22px] font-semibold tracking-tight">
-            Could not start session
+            Could not start sitting
           </h1>
           <p className="text-[14px] text-[var(--text-secondary)]">{actionError}</p>
           <Link href={`/app/courses/${courseId}`} className="cta-primary mt-2">
-            Back to atlas
+            Back to today
           </Link>
         </div>
       </AppShell>
@@ -161,7 +164,7 @@ export default function SessionPage() {
             Course not found
           </h1>
           <Link href="/app" className="cta-primary mt-2">
-            Library
+            Desk
           </Link>
         </div>
       </AppShell>
@@ -172,47 +175,45 @@ export default function SessionPage() {
     return (
       <AppShell courseId={course.id} courseTitle={course.title}>
         <div className="animate-fade-up mx-auto max-w-lg px-4 py-16">
-          <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
-            Pack finished
+          <p className="text-[12px] font-medium text-[var(--accent)]">
+            Sitting finished
           </p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            Session complete
+          <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.025em]">
+            Sitting complete
           </h1>
-          <div className="mt-6 space-y-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+          <Plate className="mt-6">
             <div className="flex justify-between text-[14px]">
-              <span className="text-[var(--text-secondary)]">Pack steps</span>
+              <span className="text-[var(--text-secondary)]">Steps done</span>
               <span className="tabular font-medium">
                 {initialPack.length - deferred.length}/{initialPack.length}
               </span>
             </div>
-            <div className="flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
+            <div className="mt-3 flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
               <span className="text-[var(--text-secondary)]">Skips used</span>
               <span className="tabular font-medium">{skips}/2</span>
             </div>
             {deferred.length > 0 && (
-              <div className="flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
+              <div className="mt-3 flex justify-between border-t border-[var(--hairline)] pt-3 text-[14px]">
                 <span className="text-[var(--text-secondary)]">Deferred</span>
                 <span className="tabular font-medium text-[var(--state-deferred)]">
                   {deferred.length} until tomorrow
                 </span>
               </div>
             )}
-          </div>
+          </Plate>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={`/app/courses/${course.id}`} className="cta-primary">
-              Back to atlas
-            </Link>
+            <CtaLink href={`/app/courses/${course.id}`}>Back to today</CtaLink>
             <Link
               href={`/app/courses/${course.id}/insights`}
               className="cta-secondary text-[14px] text-[var(--text-primary)]"
             >
-              View insights
+              View progress
             </Link>
             <Link
               href="/app"
               className="inline-flex h-10 items-center text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]"
             >
-              Library
+              Desk
             </Link>
           </div>
         </div>
@@ -223,12 +224,10 @@ export default function SessionPage() {
   return (
     <AppShell courseId={course.id} courseTitle={course.title}>
       <div className="mx-auto grid min-h-[calc(100dvh-3.5rem)] max-w-5xl gap-4 px-4 py-6 sm:gap-6 sm:py-8 lg:grid-cols-[240px_1fr] md:px-6">
-        <aside
-          className="surface-card h-fit overflow-x-auto p-4 lg:sticky lg:top-20"
-          aria-label="Session queue"
-        >
+        <aside className="h-fit lg:sticky lg:top-20" aria-label="Sitting queue">
+          <Plate innerClassName="overflow-x-auto p-4">
           <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
-            Queue ·{" "}
+            Sitting ·{" "}
             <span className="tabular text-[var(--text-secondary)]">
               {queue.length}
             </span>{" "}
@@ -245,8 +244,8 @@ export default function SessionPage() {
                   key={item.lessonId}
                   className={
                     i === 0
-                      ? "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-muted)] px-2.5 py-2 text-[13px] lg:min-w-0"
-                      : "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] border border-transparent px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)] lg:min-w-0"
+                      ? "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] bg-[var(--accent-muted)] px-2.5 py-2 text-[13px] lg:min-w-0"
+                      : "flex min-w-[9.5rem] shrink-0 gap-2.5 rounded-[var(--radius-md)] px-2.5 py-1.5 text-[13px] text-[var(--text-secondary)] lg:min-w-0"
                   }
                 >
                   <span
@@ -262,13 +261,13 @@ export default function SessionPage() {
                     <span
                       className={
                         item.kind === "review"
-                          ? "text-[11px] capitalize text-[var(--state-due)]"
+                          ? "text-[11px] text-[var(--state-due)]"
                           : item.kind === "weak"
-                            ? "text-[11px] capitalize text-[var(--state-weak)]"
-                            : "text-[11px] capitalize text-[var(--accent)]"
+                            ? "text-[11px] text-[var(--state-weak)]"
+                            : "text-[11px] text-[var(--accent)]"
                       }
                     >
-                      {item.kind}
+                      {PACK_KIND_LABEL[item.kind]}
                     </span>
                     <p className="truncate font-medium text-[var(--text-primary)]">
                       {l?.title}
@@ -278,9 +277,10 @@ export default function SessionPage() {
               );
             })}
           </ul>
+          </Plate>
         </aside>
 
-        <div className="surface-card flex flex-col p-6 md:p-8">
+        <Plate innerClassName="flex flex-col p-6 md:p-8">
           <div
             className="mb-5 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]"
             role="progressbar"
@@ -323,7 +323,7 @@ export default function SessionPage() {
             </h1>
             <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)]">
               Open the lesson, then complete the quiz to count as done. Skip
-              defers +1 day (max 2 per pack).
+              defers +1 day (max 2 per sitting).
             </p>
             <ul className="mt-5 list-disc space-y-1 pl-5 text-[14px] text-[var(--text-secondary)]">
               {lesson.objectives.slice(0, 3).map((o) => (
@@ -331,12 +331,11 @@ export default function SessionPage() {
               ))}
             </ul>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Link
+              <CtaLink
                 href={`/app/courses/${course.id}/lessons/${lesson.id}`}
-                className="cta-primary"
               >
                 Open lesson
-              </Link>
+              </CtaLink>
               {lesson.quizReady ? (
                 <Link
                   href={`/app/courses/${course.id}/lessons/${lesson.id}/quiz`}
@@ -386,12 +385,12 @@ export default function SessionPage() {
               onClick={skip}
               title={
                 skipDisabled
-                  ? "Defer limit for this pack"
+                  ? "Defer limit for this sitting"
                   : "Defer until tomorrow · K"
               }
             >
               {skipDisabled
-                ? "Defer limit for this pack"
+                ? "Defer limit for this sitting"
                 : "Skip · defer +1 day"}
             </Button>
             <div className="flex flex-wrap gap-2">
@@ -405,11 +404,11 @@ export default function SessionPage() {
                 variant="ghost"
                 onClick={() => void applyAction("finish")}
               >
-                End session
+                End sitting
               </Button>
             </div>
           </div>
-        </div>
+        </Plate>
       </div>
     </AppShell>
   );

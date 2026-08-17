@@ -4,6 +4,9 @@ const api = (process.env.API_URL || "http://127.0.0.1:8787").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  turbopack: {
+    root: process.cwd(),
+  },
   async rewrites() {
     return [
       { source: "/v1/:path*", destination: `${api}/v1/:path*` },

@@ -1,9 +1,10 @@
 "use client";
 
-// Theme, motion, and default session length.
+// Theme, motion, and default sitting length.
 
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/shell/app-shell";
+import { DeskPage, Plate } from "@/components/ui/plate";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/cn";
 import {
@@ -86,21 +87,25 @@ export default function SettingsPage() {
   if (!prefs) {
     return (
       <AppShell settingsActive>
-        <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
+        <DeskPage width="narrow">
           <div className="h-8 w-36 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-2)]" />
-          <div className="mt-8 h-40 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-1)]" />
-        </div>
+          <div className="plate-shell mt-8">
+            <div className="plate-inner h-40 animate-pulse" />
+          </div>
+        </DeskPage>
       </AppShell>
     );
   }
 
   return (
     <AppShell settingsActive>
-      <div className="mx-auto max-w-lg px-4 py-10 md:px-6">
+      <DeskPage width="narrow">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h1 className="text-[28px] font-semibold tracking-tight">Settings</h1>
-            <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
+            <h1 className="text-[1.75rem] font-semibold tracking-[-0.025em]">
+              Settings
+            </h1>
+            <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
               Preferences apply to this browser for the demo.
             </p>
           </div>
@@ -117,36 +122,27 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <section className="surface-card mt-8 space-y-5 p-5">
-          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
-            Appearance
+        <Plate className="mt-8">
+          <p className="text-[15px] font-medium">The desk</p>
+          <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+            Daylight, or the same table after sunset
           </p>
-          <div>
-            <p className="text-[14px] text-[var(--text-primary)]">Theme</p>
-            <p className="mb-3 text-[12px] text-[var(--text-tertiary)]">
-              Atlas Noir by default, or a cool daylight palette
-            </p>
+          <div className="mt-4">
             <SegmentedControl
               ariaLabel="Color theme"
               value={prefs.theme}
               onChange={(v) => update({ theme: v as GlTheme })}
               options={[
-                { value: "dark", label: "Dark" },
-                { value: "light", label: "Light" },
+                { value: "light", label: "Desk" },
+                { value: "dark", label: "Lamp" },
               ]}
             />
           </div>
-        </section>
-
-        <section className="surface-card mt-4 space-y-5 p-5">
-          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
-            Experience
-          </p>
-          <label className="flex items-center justify-between gap-4">
+          <label className="mt-6 flex items-center justify-between gap-4 border-t border-[var(--hairline)] pt-5">
             <div>
               <span className="text-[14px] text-[var(--text-primary)]">Motion</span>
               <p className="text-[12px] text-[var(--text-tertiary)]">
-                Transitions and map animations
+                Transitions and path animations
               </p>
             </div>
             <Toggle
@@ -155,13 +151,13 @@ export default function SettingsPage() {
               label="Motion"
             />
           </label>
-          <label className="flex items-center justify-between gap-4 border-t border-[var(--hairline)] pt-5">
+          <label className="mt-5 flex items-center justify-between gap-4">
             <div>
               <span className="text-[14px] text-[var(--text-primary)]">
                 Paper lesson default
               </span>
               <p className="text-[12px] text-[var(--text-tertiary)]">
-                Open lessons in warm paper theme
+                Open lessons on warm paper
               </p>
             </div>
             <Toggle
@@ -170,37 +166,33 @@ export default function SettingsPage() {
               label="Paper lesson default"
             />
           </label>
-        </section>
+        </Plate>
 
-        <section className="surface-card mt-4 p-5">
-          <p className="text-[12px] font-medium text-[var(--text-tertiary)]">
-            Sessions
+        <Plate className="mt-5">
+          <p className="text-[15px] font-medium">Sittings</p>
+          <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+            Minutes used when filling today&apos;s queue
           </p>
-          <p className="mt-3 text-[14px] text-[var(--text-primary)]">
-            Default session length
-          </p>
-          <p className="mb-3 text-[12px] text-[var(--text-tertiary)]">
-            Minutes used when packing today&apos;s queue
-          </p>
-          <SegmentedControl
-            ariaLabel="Default session minutes"
-            value={String(prefs.sessionMinutes)}
-            onChange={(v) => update({ sessionMinutes: Number(v) })}
-            options={[
-              { value: "15", label: "15" },
-              { value: "25", label: "25" },
-              { value: "45", label: "45" },
-              { value: "60", label: "60" },
-            ]}
-          />
+          <div className="mt-4">
+            <SegmentedControl
+              ariaLabel="Default sitting minutes"
+              value={String(prefs.sessionMinutes)}
+              onChange={(v) => update({ sessionMinutes: Number(v) })}
+              options={[
+                { value: "15", label: "15" },
+                { value: "25", label: "25" },
+                { value: "45", label: "45" },
+                { value: "60", label: "60" },
+              ]}
+            />
+          </div>
           <p className="mt-3 text-[12px] text-[var(--text-tertiary)]">
             Current:{" "}
             <span className="tabular text-[var(--text-secondary)]">
               {prefs.sessionMinutes} min
-            </span>{" "}
-            packs
+            </span>
           </p>
-        </section>
+        </Plate>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <p className="text-[12px] text-[var(--text-tertiary)]">
@@ -211,16 +203,16 @@ export default function SettingsPage() {
             disabled={!prefsDirty(prefs)}
             onClick={resetToDefaults}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-[12px] transition-colors",
+              "rounded-full px-3 py-1.5 text-[12px] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
               prefsDirty(prefs)
-                ? "border-[var(--hairline)] text-[var(--text-secondary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-primary)]"
-                : "cursor-not-allowed border-[var(--hairline)] text-[var(--text-disabled)]",
+                ? "text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                : "cursor-not-allowed text-[var(--text-disabled)]",
             )}
           >
             Reset defaults
           </button>
         </div>
-      </div>
+      </DeskPage>
     </AppShell>
   );
 }

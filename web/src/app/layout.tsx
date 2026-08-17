@@ -2,12 +2,12 @@
 
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { Geist_Mono, Manrope, Source_Serif_4 } from "next/font/google";
 import { THEME_BOOT_SCRIPT } from "@/lib/prefs";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -27,25 +27,25 @@ export const metadata: Metadata = {
     template: "%s · GuidedLearning",
   },
   description:
-    "Turn textbooks and lecture PDFs into adaptive unit–lesson paths with grounded lessons and spaced review.",
+    "Turn textbooks and lecture PDFs into a study path with grounded lessons and spaced review.",
   applicationName: "GuidedLearning",
   openGraph: {
     title: "GuidedLearning",
     description:
-      "From PDFs to a living course path — grounded lessons and adaptive spaced review.",
+      "Upload your PDFs. Confirm the path. Study what is due today.",
     type: "website",
   },
   other: {
-    "color-scheme": "dark light",
+    "color-scheme": "light dark",
   },
 };
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f4f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#07070a" },
+    { media: "(prefers-color-scheme: light)", color: "#e4e6ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#101216" },
   ],
-  colorScheme: "dark light" as const,
+  colorScheme: "light dark" as const,
 };
 
 export default function RootLayout({
@@ -56,9 +56,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="dark"
+      data-theme="light"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
+      className={`${manrope.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Script

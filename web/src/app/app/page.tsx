@@ -1,14 +1,17 @@
-// Home / library: list courses from the API (any subject).
+// Desk: pick up today's work.
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { AppShell } from "@/components/shell/app-shell";
-import { MasteryRing } from "@/components/ui/mastery-ring";
+import { CtaLink } from "@/components/ui/cta-link";
+import { DeskPage, Plate } from "@/components/ui/plate";
 import { DEMO_COURSE_ID, listCourses } from "@/lib/api";
+import { courseHomeHref } from "@/lib/next-action";
 import type { CourseSummary } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Library",
+  title: "Desk",
 };
 
 export const dynamic = "force-dynamic";
@@ -24,9 +27,10 @@ function pickActive(courses: CourseSummary[]): CourseSummary | undefined {
   return best;
 }
 
-function courseHref(course: CourseSummary) {
-  if (course.lifecycle === "activated") return `/app/courses/${course.id}`;
-  return `/app/courses/${course.id}/confirm`;
+function continueLabel(course: CourseSummary) {
+  if (course.lifecycle !== "activated") return "Review the path";
+  if (course.dueCount > 0) return "Open today";
+  return "Continue";
 }
 
 export default async function AppHomePage() {
@@ -35,35 +39,36 @@ export default async function AppHomePage() {
   try {
     courses = await listCourses();
   } catch {
-    apiError =
-      "Could not reach the API. Start the server, then refresh.";
+    apiError = "Could not reach the API. Start the server, then refresh.";
   }
 
   const active = pickActive(courses);
-  const total = active?.lessonCount ?? 0;
-  const dueCount = active?.dueCount ?? 0;
-  const weakCount = active?.weakCount ?? 0;
-  const mastered = active?.masteredCount ?? 0;
-  const progress = total ? mastered / total : 0;
-  const packReady = dueCount + weakCount > 0;
-
   let libraryDue = 0;
+  let libraryPractice = 0;
   for (const course of courses) {
     libraryDue += course.dueCount;
+    libraryPractice += course.weakCount;
   }
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-        <h1 className="text-[28px] font-semibold tracking-tight">Library</h1>
-        <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-          Any subject from PDFs ·{" "}
-          <span className="tabular">{libraryDue}</span> due across library
+      <DeskPage>
+        <h1 className="text-[2rem] font-semibold tracking-[-0.03em] md:text-[2.5rem]">
+          Desk
+        </h1>
+        <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+          {courses.length === 0
+            ? "Sit down. The next page will be marked here."
+            : libraryDue > 0
+              ? `${libraryDue} due across your courses.`
+              : libraryPractice > 0
+                ? `${libraryPractice} topic${libraryPractice === 1 ? "" : "s"} to practice.`
+                : "Nothing is waiting. Continue the path when you are ready."}
         </p>
 
         {apiError ? (
           <p
-            className="mt-6 rounded-[var(--radius-lg)] border border-[var(--warning)]/30 bg-[rgba(251,191,36,0.08)] px-4 py-3 text-[13px] text-[var(--warning)]"
+            className="mt-6 rounded-[var(--radius-lg)] bg-[color-mix(in_srgb,var(--warning)_12%,var(--surface-1))] px-4 py-3 text-[13px] text-[var(--warning)]"
             role="alert"
           >
             {apiError}
@@ -71,151 +76,149 @@ export default async function AppHomePage() {
         ) : null}
 
         {active ? (
-          <section
-            className="mt-8 rounded-[var(--radius-xl)] border border-[var(--accent)]/30 bg-[var(--surface-1)] p-6 shadow-[0_0_0_1px_var(--accent-muted)] transition-shadow duration-[var(--duration-med)] hover:shadow-[0_0_0_1px_var(--accent-muted),var(--shadow-card)]"
+          <Link
+            href={courseHomeHref(active)}
+            className="group mt-8 block"
             aria-labelledby="continue-heading"
           >
-            <p
-              id="continue-heading"
-              className="text-[12px] font-medium text-[var(--accent)]"
-            >
-              Continue
-            </p>
-            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-[22px] font-semibold tracking-tight">
-                  {active.title}
-                </h2>
-                <p className="mt-1 text-[14px] text-[var(--text-secondary)]">
-                  <span className="tabular text-[var(--state-due)]">
-                    {dueCount}
-                  </span>{" "}
-                  due
-                  {weakCount > 0 && (
-                    <>
-                      {" · "}
-                      <span className="tabular text-[var(--state-weak)]">
-                        {weakCount}
-                      </span>{" "}
-                      weak
-                    </>
-                  )}
-                  {" · "}
-                  <span className="tabular">{mastered}</span>/{total} mastered
-                  {packReady ? " · pack ready" : " · nothing due"}
-                </p>
+            <Plate className="transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5 group-hover:shadow-[var(--shadow-lift)]">
+              <p
+                id="continue-heading"
+                className="text-[12px] font-medium text-[var(--accent)]"
+              >
+                Continue
+              </p>
+              <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <h2 className="text-[1.75rem] font-semibold tracking-[-0.025em]">
+                    {active.title}
+                  </h2>
+                  <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+                    {active.lifecycle !== "activated" ? (
+                      "Draft · confirm the path to start tracking"
+                    ) : (
+                      <>
+                        <span className="tabular text-[var(--state-due)]">
+                          {active.dueCount}
+                        </span>{" "}
+                        due
+                        {active.weakCount > 0 ? (
+                          <>
+                            {" · "}
+                            <span className="tabular text-[var(--state-weak)]">
+                              {active.weakCount}
+                            </span>{" "}
+                            to practice
+                          </>
+                        ) : null}
+                        {" · "}
+                        <span className="tabular">{active.masteredCount}</span>/
+                        {active.lessonCount} mastered
+                      </>
+                    )}
+                  </p>
+                </div>
+                <span className="cta-primary pointer-events-none">
+                  <span>{continueLabel(active)}</span>
+                  <span className="cta-icon" aria-hidden>
+                    <ArrowUpRight size={15} weight="bold" />
+                  </span>
+                </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <MasteryRing value={progress} size={40} />
-                {packReady && active.lifecycle === "activated" ? (
-                  <Link
-                    href={`/app/courses/${active.id}/session`}
-                    className="cta-primary"
-                  >
-                    Start session
-                  </Link>
-                ) : null}
-                <Link
-                  href={courseHref(active)}
-                  className={
-                    packReady && active.lifecycle === "activated"
-                      ? "cta-secondary"
-                      : "cta-primary"
-                  }
-                >
-                  {active.lifecycle === "activated"
-                    ? "Open atlas"
-                    : "Confirm map"}
-                </Link>
-                {active.lifecycle === "activated" ? (
-                  <Link
-                    href={`/app/courses/${active.id}/diagnostic`}
-                    className="cta-secondary"
-                  >
-                    Diagnostic
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          </section>
+            </Plate>
+          </Link>
         ) : !apiError ? (
-          <section className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-[var(--surface-0)] px-6 py-12 text-center">
-            <p className="text-[15px] font-medium text-[var(--text-secondary)]">
-              No courses yet
+          <Plate className="mt-8" innerClassName="px-6 py-12 text-center md:py-16">
+            <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+              Nothing on the desk yet
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-[14px] text-[var(--text-secondary)]">
+              Upload a textbook or lecture slides. We will draft a path you can
+              confirm, then mark what to study today.
             </p>
-            <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-              Upload textbooks or lecture slides for any subject.
-            </p>
-            <Link href="/app/courses/new" className="cta-primary mt-5">
+            <CtaLink href="/app/courses/new" className="mt-6">
               New course from PDFs
-            </Link>
-          </section>
+            </CtaLink>
+          </Plate>
         ) : null}
 
-        <section className="mt-10">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[16px] font-medium">Courses</h2>
+        <section className="mt-12">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="text-[16px] font-semibold tracking-[-0.02em]">
+              On this desk
+            </h2>
             <Link
               href="/app/courses/new"
-              className="text-[13px] text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)] hover:underline"
+              className="text-[13px] text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
             >
               New course
             </Link>
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
             {courses.map((c) => {
-              const t = c.lessonCount;
               const isActive = active ? c.id === active.id : false;
               return (
                 <li key={c.id}>
                   <Link
-                    href={courseHref(c)}
-                    className={
-                      isActive
-                        ? "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--accent)]/25 bg-[var(--surface-1)] p-4 shadow-[0_0_0_1px_var(--accent-muted)] transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)] active:scale-[0.995]"
-                        : "group flex items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-all duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)] active:scale-[0.995]"
-                    }
+                    href={courseHomeHref(c)}
+                    className="group block h-full"
                   >
-                    <MasteryRing value={t ? c.masteredCount / t : 0} size={36} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate font-medium transition-colors group-hover:text-[var(--text-primary)]">
-                          {c.title}
+                    <Plate
+                      className={
+                        isActive
+                          ? "h-full transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5"
+                          : "h-full transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5"
+                      }
+                      innerClassName="flex h-full items-center gap-4 p-4 md:p-5"
+                    >
+                      <div
+                        className="h-10 w-1 shrink-0 rounded-full"
+                        style={{
+                          background: isActive
+                            ? "var(--accent)"
+                            : "var(--surface-3)",
+                        }}
+                        aria-hidden
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[15px] font-semibold tracking-[-0.015em]">
+                            {c.title}
+                          </p>
+                          {c.id === DEMO_COURSE_ID ? (
+                            <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] text-[var(--text-tertiary)]">
+                              Sample
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+                          {c.lifecycle === "activated" ? (
+                            <>
+                              <span className="tabular text-[var(--state-due)]">
+                                {c.dueCount}
+                              </span>{" "}
+                              due
+                            </>
+                          ) : (
+                            "Draft"
+                          )}
                         </p>
-                        {isActive ? (
-                          <span className="shrink-0 rounded-full bg-[var(--accent-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent)]">
-                            Active
-                          </span>
-                        ) : null}
-                        {c.id === DEMO_COURSE_ID ? (
-                          <span className="shrink-0 rounded-full border border-[var(--hairline)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
-                            Sample
-                          </span>
-                        ) : null}
                       </div>
-                      <p className="text-[13px] text-[var(--text-tertiary)]">
-                        <span className="tabular text-[var(--state-due)]">
-                          {c.dueCount}
-                        </span>{" "}
-                        due ·{" "}
-                        {c.lifecycle === "activated" ? "Active path" : "Draft"}
-                      </p>
-                    </div>
+                    </Plate>
                   </Link>
                 </li>
               );
             })}
             <li>
-              <Link
-                href="/app/courses/new"
-                className="flex h-full min-h-[76px] items-center justify-center rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-transparent p-4 text-[14px] text-[var(--text-tertiary)] transition-all duration-[var(--duration-fast)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent-muted)]/30 hover:text-[var(--accent)] active:scale-[0.995]"
-              >
-                + New course from PDFs
+              <Link href="/app/courses/new" className="block h-full min-h-[88px]">
+                <div className="flex h-full min-h-[88px] items-center justify-center rounded-[var(--radius-2xl)] border border-dashed border-[var(--hairline-strong)] px-4 text-[14px] text-[var(--text-tertiary)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]">
+                  New course from PDFs
+                </div>
               </Link>
             </li>
           </ul>
         </section>
-      </div>
+      </DeskPage>
     </AppShell>
   );
 }

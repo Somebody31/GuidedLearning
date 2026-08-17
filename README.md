@@ -64,7 +64,7 @@ Set `CORS_ORIGIN` to the website origin (comma-separated if you still hit the AP
 
 ## Status
 
-- **UI:** talks to the API — any subject from PDFs (library, upload, confirm, atlas, lesson, quiz, session, sources, insights, settings, diagnostic).
+- **UI:** talks to the API — any subject from PDFs (desk, upload, confirm path, today, lesson, quiz, sitting, sources, progress, settings, optional placement).
 - **API:** upload/parse/chunk, draft graph, activate, lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI`. Sample course `cn-kurose` is one seeded demo, not the product.
 
 Design specs stay **local** under `docs/` (gitignores all `.md` except this README).

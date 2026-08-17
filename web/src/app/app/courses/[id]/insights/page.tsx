@@ -4,11 +4,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
+import { CtaLink } from "@/components/ui/cta-link";
+import { Plate } from "@/components/ui/plate";
 import { StateBadge } from "@/components/ui/state-badge";
 import { api, getCourse } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "Insights",
+  title: "Progress",
 };
 
 export const dynamic = "force-dynamic";
@@ -49,51 +51,38 @@ export default async function InsightsPage({
   const needsPack = due > 0 || weak > 0;
 
   return (
-    <AppShell courseId={course.id} courseTitle={course.title} activeNav="insights">
-      <div className="mx-auto max-w-3xl px-4 py-10 md:px-6">
+    <AppShell courseId={course.id} courseTitle={course.title} activeNav="progress">
+      <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-[28px] font-semibold tracking-tight">Insights</h1>
-            <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-              Learner health + honest model signals
+            <h1 className="text-[2rem] font-semibold tracking-[-0.03em]">Progress</h1>
+            <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+              What needs work, and how well lessons stay grounded.
             </p>
           </div>
           {needsPack ? (
-            <Link
-              href={`/app/courses/${id}/session`}
-              className="cta-primary"
-            >
-              Start session
-            </Link>
+            <CtaLink href={`/app/courses/${id}/session`}>Start sitting</CtaLink>
           ) : (
-            <Link
-              href={`/app/courses/${id}`}
-              className="cta-secondary text-[14px] text-[var(--text-primary)]"
-            >
-              Browse atlas
-            </Link>
+            <CtaLink href={`/app/courses/${id}`} variant="secondary">
+              Back to today
+            </CtaLink>
           )}
         </div>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-3">
-          {[
-            ["Due", due, "var(--state-due)"],
-            ["Weak", weak, "var(--state-weak)"],
-            ["Mastered", mastered, "var(--state-mastered)"],
-          ].map(([label, n, color]) => (
-            <div
-              key={String(label)}
-              className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-4 transition-colors hover:border-[var(--hairline-strong)]"
-            >
-              <p className="text-[12px] text-[var(--text-tertiary)]">{label}</p>
-              <p className="tabular mt-1 text-[28px] font-semibold" style={{ color: String(color) }}>
-                {n}
-              </p>
-            </div>
-          ))}
+        <section className="mt-8">
+          <Plate>
+            <p className="text-[14px] text-[var(--text-secondary)]">
+              <span className="tabular font-medium text-[var(--state-due)]">{due}</span> due
+              <span className="mx-2 text-[var(--text-disabled)]">·</span>
+              <span className="tabular font-medium text-[var(--state-weak)]">{weak}</span> weak
+              <span className="mx-2 text-[var(--text-disabled)]">·</span>
+              <span className="tabular font-medium text-[var(--state-mastered)]">{mastered}</span> mastered
+            </p>
+          </Plate>
         </section>
 
-        <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+        <section className="mt-5">
+          <Plate>
           <h2 className="text-[15px] font-medium">Needs attention</h2>
           {needsPack ? (
             <ul className="mt-3 space-y-2">
@@ -119,9 +108,11 @@ export default async function InsightsPage({
               lessons; reviews will land here after quizzes.
             </p>
           )}
+          </Plate>
         </section>
 
-        <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+        <section className="mt-5">
+          <Plate>
           <h2 className="text-[15px] font-medium">Mastery by unit</h2>
           <ul className="mt-4 space-y-3">
             {course.units.map((u, i) => {
@@ -149,48 +140,33 @@ export default async function InsightsPage({
               );
             })}
           </ul>
+          </Plate>
         </section>
 
-        <section className="mt-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
-          <h2 className="text-[15px] font-medium">Model / eval (honest)</h2>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div>
-              <dt className="text-[12px] text-[var(--text-tertiary)]">Source coverage</dt>
-              <dd className="tabular text-[22px] font-semibold">
+        <section className="mt-5">
+          <Plate>
+          <h2 className="text-[15px] font-medium">Grounding</h2>
+          <dl className="mt-4 space-y-3">
+            <div className="flex items-baseline justify-between gap-3 text-[14px]">
+              <dt className="text-[var(--text-secondary)]">Source coverage</dt>
+              <dd className="tabular font-medium">
                 {Math.round(coverage * 100)}%
               </dd>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                <div
-                  className="bar-fill h-full rounded-full bg-[var(--info)]"
-                  style={{ width: `${Math.max(coverage * 100, 2)}%` }}
-                />
-              </div>
             </div>
-            <div>
-              <dt className="text-[12px] text-[var(--text-tertiary)]">
+            <div className="flex items-baseline justify-between gap-3 text-[14px]">
+              <dt className="text-[var(--text-secondary)]">
                 Faithfulness sample
               </dt>
-              <dd className="tabular text-[22px] font-semibold">
+              <dd className="tabular font-medium">
                 {faithfulRate === null ? "—" : `${Math.round(faithfulness * 100)}%`}
               </dd>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                <div
-                  className="bar-fill h-full rounded-full bg-[var(--accent)]"
-                  style={{
-                    width:
-                      faithfulRate === null
-                        ? "0%"
-                        : `${Math.max(faithfulness * 100, 2)}%`,
-                    animationDelay: "80ms",
-                  }}
-                />
-              </div>
             </div>
           </dl>
           <p className="mt-3 text-[13px] text-[var(--text-tertiary)]">
             Coverage = lessons with citations. Faithfulness is sampled after
             content exists — not a fake 99.9%.
           </p>
+          </Plate>
         </section>
 
         <p className="mt-8 text-[13px]">
@@ -198,7 +174,7 @@ export default async function InsightsPage({
             href={`/app/courses/${id}`}
             className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
           >
-            Back to atlas
+            Back to today
           </Link>
         </p>
       </div>

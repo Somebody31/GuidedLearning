@@ -1,9 +1,9 @@
-// Course atlas page (map of units and lessons).
+// Course home: Today — the next sitting, then the path.
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
-import { AtlasView } from "@/components/atlas/atlas-view";
+import { CourseToday } from "@/components/desk/course-today";
 import { getCourse } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  let title = "Course";
+  let title = "Today";
   try {
     const course = await getCourse(id);
     if (course) title = course.title;
@@ -24,7 +24,7 @@ export async function generateMetadata({
   return { title };
 }
 
-export default async function CourseAtlasPage({
+export default async function CourseTodayPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -42,9 +42,9 @@ export default async function CourseAtlasPage({
     <AppShell
       courseId={course.id}
       courseTitle={course.title}
-      activeNav="atlas"
+      activeNav="today"
     >
-      <AtlasView course={course} />
+      <CourseToday course={course} />
     </AppShell>
   );
 }

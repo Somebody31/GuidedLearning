@@ -12,7 +12,7 @@ export type GlPrefs = {
 };
 
 export const DEFAULT_PREFS: GlPrefs = {
-  theme: "dark",
+  theme: "light",
   motion: true,
   paperDefault: false,
   sessionMinutes: 25,
@@ -21,7 +21,7 @@ export const DEFAULT_PREFS: GlPrefs = {
 const SESSION_OPTIONS = new Set([15, 25, 45, 60]);
 
 function normalizeTheme(value: unknown): GlTheme {
-  return value === "light" ? "light" : "dark";
+  return value === "dark" ? "dark" : "light";
 }
 
 export function readPrefs(): GlPrefs {
@@ -83,7 +83,7 @@ export function applyThemeAttr(theme: GlTheme) {
   root.style.colorScheme = t;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) {
-    meta.setAttribute("content", t === "light" ? "#f4f4f6" : "#07070a");
+    meta.setAttribute("content", t === "light" ? "#e4e6ec" : "#101216");
   }
 }
 
@@ -93,4 +93,4 @@ export function applyPrefsAttrs(prefs: Pick<GlPrefs, "theme" | "motion">) {
 }
 
 /** Inline boot snippet — keep in sync with PREFS_KEY / theme values. */
-export const THEME_BOOT_SCRIPT = `(function(){try{var r=document.documentElement;var p=JSON.parse(localStorage.getItem(${JSON.stringify(PREFS_KEY)})||"{}");var t=p.theme==="light"?"light":"dark";r.dataset.theme=t;r.style.colorScheme=t;if(p.motion===false)r.dataset.motion="off";else r.dataset.motion="on";}catch(e){document.documentElement.dataset.theme="dark";document.documentElement.dataset.motion="on";}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){try{var r=document.documentElement;var p=JSON.parse(localStorage.getItem(${JSON.stringify(PREFS_KEY)})||"{}");var t=p.theme==="dark"?"dark":"light";r.dataset.theme=t;r.style.colorScheme=t;if(p.motion===false)r.dataset.motion="off";else r.dataset.motion="on";}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.motion="on";}})();`;

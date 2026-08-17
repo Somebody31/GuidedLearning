@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen } from "@phosphor-icons/react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
 import { api, getLesson, wait } from "@/lib/api";
@@ -147,14 +147,14 @@ export default function LessonPage() {
           Lesson missing
         </h1>
         <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
-          This lesson is not in the course map. It may have been renamed or not
-          yet activated.
+          This lesson is not in the path. It may have been renamed or not yet
+          confirmed.
         </p>
         <Link
           href={`/app/courses/${courseId}`}
           className="cta-primary mt-2"
         >
-          Back to atlas
+          Back to today
         </Link>
       </div>
     );
@@ -199,29 +199,29 @@ export default function LessonPage() {
         />
       )}
 
-      <header
-        className={cn(
-          "sticky top-0 z-[var(--z-raised)] border-b",
-          paper
-            ? "border-[var(--paper-line)] bg-[var(--paper)]"
-            : "border-[var(--hairline)] bg-[var(--canvas)]/90 backdrop-blur-md",
-        )}
-      >
-        <div className="mx-auto flex h-14 max-w-[42rem] items-center justify-between gap-3 px-4">
+      <header className="sticky top-0 z-[var(--z-raised)] px-3 pt-3">
+        <div
+          className={cn(
+            "mx-auto flex h-12 max-w-[42rem] items-center justify-between gap-3 rounded-full px-3",
+            paper
+              ? "bg-[var(--paper-surface)] shadow-[inset_0_0_0_1px_var(--paper-line)]"
+              : "island",
+          )}
+        >
           <Link
             href={`/app/courses/${courseId}`}
             className={cn(
-              "inline-flex items-center gap-1.5 text-[13px] transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[13px] transition-colors",
               paper
                 ? "text-[var(--paper-muted)] hover:text-[var(--paper-ink)]"
                 : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
             )}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Exit
+            <ArrowLeft size={16} weight="bold" />
+            Today
           </Link>
-          <div className="flex items-center gap-3">
-            <MasteryRing value={lesson.mastery} size={24} />
+          <div className="flex items-center gap-2">
+            <MasteryRing value={lesson.mastery} size={22} />
             <StateBadge status={lesson.status} />
             <button
               type="button"
@@ -229,19 +229,19 @@ export default function LessonPage() {
               aria-pressed={paper}
               title="Toggle paper mode (P)"
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors",
+                "rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors",
                 paper
-                  ? "border-[var(--paper-line)] bg-[var(--paper-surface)] text-[var(--paper-accent)]"
-                  : "border-[var(--hairline)] text-[var(--text-tertiary)] hover:border-[var(--hairline-strong)] hover:text-[var(--text-secondary)]",
+                  ? "bg-[var(--paper)] text-[var(--paper-accent)]"
+                  : "text-[var(--text-tertiary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-secondary)]",
               )}
             >
-              {paper ? "Dark" : "Paper"}
+              {paper ? "Desk" : "Paper"}
             </button>
           </div>
         </div>
         <div
           className={cn(
-            "h-0.5 w-full",
+            "mx-auto mt-2 h-0.5 max-w-[42rem] overflow-hidden rounded-full",
             paper ? "bg-[var(--paper-line)]" : "bg-[var(--surface-3)]",
           )}
           role="progressbar"
@@ -252,7 +252,7 @@ export default function LessonPage() {
         >
           <div
             className={cn(
-              "h-full transition-[width] duration-100 ease-out",
+              "h-full transition-[width] duration-100 ease-[var(--ease-out-soft)]",
               paper ? "bg-[var(--paper-accent)]" : "bg-[var(--accent)]",
             )}
             style={{ width: `${readPct}%` }}
@@ -263,7 +263,7 @@ export default function LessonPage() {
       <article className="mx-auto max-w-[42rem] px-4 py-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
         <p
           className={cn(
-            "text-[12px] uppercase tracking-[0.08em]",
+            "text-[13px]",
             paper ? "text-[var(--paper-muted)]" : "text-[var(--text-tertiary)]",
           )}
         >
@@ -287,7 +287,7 @@ export default function LessonPage() {
         ) : null}
 
         <section className="mt-8">
-          <h2 className="text-[13px] font-medium uppercase tracking-[0.06em] opacity-70">
+          <h2 className="text-[13px] font-medium text-[var(--text-tertiary)]">
             Objectives
           </h2>
           <ul className="lesson-serif mt-3 list-disc space-y-1.5 pl-5 text-[17px] leading-relaxed">
@@ -306,7 +306,7 @@ export default function LessonPage() {
 
         {lesson.citations.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-[13px] font-medium uppercase tracking-[0.06em] opacity-70">
+            <h2 className="text-[13px] font-medium text-[var(--text-tertiary)]">
               Citations
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -334,26 +334,26 @@ export default function LessonPage() {
         )}
       </article>
 
-      <footer
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-[var(--z-raised)] flex flex-wrap items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-          paper
-            ? "border-[var(--paper-line)] bg-[var(--paper)]"
-            : "border-[var(--hairline)] bg-[var(--canvas)]",
-        )}
-      >
-        <div className="mx-auto flex w-full max-w-[42rem] flex-wrap items-center justify-between gap-3">
+      <footer className="fixed inset-x-3 bottom-3 z-[var(--z-raised)] pb-[env(safe-area-inset-bottom)]">
+        <div
+          className={cn(
+            "mx-auto flex h-14 max-w-[42rem] items-center justify-between gap-3 rounded-full px-3",
+            paper
+              ? "bg-[var(--paper-surface)] shadow-[inset_0_0_0_1px_var(--paper-line)]"
+              : "island",
+          )}
+        >
           <button
             type="button"
             onClick={() => setSourceOpen(lesson.citations[0]?.id ?? null)}
             className={cn(
-              "inline-flex min-h-10 items-center gap-2 rounded-full px-1 text-[13px] transition-colors",
+              "inline-flex min-h-10 items-center gap-2 rounded-full px-2 text-[13px] transition-colors",
               paper
                 ? "text-[var(--paper-muted)] hover:text-[var(--paper-ink)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
             )}
           >
-            <BookOpen className="h-4 w-4 shrink-0" />
+            <BookOpen size={16} weight="regular" className="shrink-0" />
             <span>Open sources</span>
           </button>
           <div className="flex items-center gap-2">
@@ -373,18 +373,21 @@ export default function LessonPage() {
                 </span>
                 <Link
                   href={`/app/courses/${courseId}/lessons/${lessonId}/quiz`}
-                  className="paper-cta cta-primary"
+                  className="paper-cta cta-primary h-10"
                 >
-                  Take quiz →
+                  <span>Take quiz</span>
+                  <span className="cta-icon" aria-hidden>
+                    <ArrowUpRight size={15} weight="bold" />
+                  </span>
                 </Link>
               </>
             ) : (
               <button
                 type="button"
-                className="inline-flex h-10 items-center rounded-full border border-[var(--hairline)] px-5 text-[14px] text-[var(--text-tertiary)]"
+                className="inline-flex h-10 items-center rounded-full px-4 text-[13px] text-[var(--text-tertiary)]"
                 disabled
               >
-                Quiz not ready · retry later
+                Quiz not ready
               </button>
             )}
           </div>

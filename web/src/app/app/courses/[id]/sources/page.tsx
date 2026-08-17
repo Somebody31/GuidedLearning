@@ -5,8 +5,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FileText } from "lucide-react";
+import { FileText } from "@phosphor-icons/react";
 import { AppShell } from "@/components/shell/app-shell";
+import { DeskPage, Plate } from "@/components/ui/plate";
 import { FileStatusChip } from "@/components/ui/file-status-chip";
 import { api, getCourse } from "@/lib/api";
 import { useCourse } from "@/lib/use-course";
@@ -69,7 +70,7 @@ export default function SourcesPage() {
             Course not found
           </h1>
           <Link href="/app" className="cta-primary mt-2">
-            Library
+            Desk
           </Link>
         </div>
       </AppShell>
@@ -80,13 +81,13 @@ export default function SourcesPage() {
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title} activeNav="sources">
-      <div className="mx-auto max-w-3xl px-4 py-10 md:px-6">
+      <DeskPage width="read">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-[28px] font-semibold tracking-tight">Sources</h1>
-            <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-              Grounding corpus for this course ·{" "}
-              <span className="tabular text-[var(--text-secondary)]">
+            <h1 className="text-[2rem] font-semibold tracking-[-0.03em]">Sources</h1>
+            <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+              Files this course is grounded in ·{" "}
+              <span className="tabular">
                 {ready}/{course.sources.length}
               </span>{" "}
               ready
@@ -116,48 +117,48 @@ export default function SourcesPage() {
           <p className="mt-4 text-[13px] text-[var(--danger)]">{uploadError}</p>
         ) : null}
         {course.sources.length === 0 ? (
-          <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-[var(--surface-0)] px-6 py-12 text-center">
-            <p className="text-[15px] font-medium text-[var(--text-secondary)]">
-              No sources yet
-            </p>
-            <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+          <Plate className="mt-8" innerClassName="px-6 py-12 text-center">
+            <p className="text-[15px] font-medium">No sources yet</p>
+            <p className="mt-2 text-[13px] text-[var(--text-tertiary)]">
               Add a PDF to ground lessons for this subject.
             </p>
-          </div>
+          </Plate>
         ) : (
-          <ul className="mt-8 space-y-2">
-            {course.sources.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] px-4 py-3 transition-all duration-[var(--duration-fast)] hover:-translate-y-px hover:border-[var(--hairline-strong)] hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-card)]"
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
-                  aria-hidden
+          <Plate className="mt-8" innerClassName="p-2 md:p-3">
+            <ul>
+              {course.sources.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-[var(--radius-lg)] px-3 py-3"
                 >
-                  <FileText className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{s.name}</p>
-                  <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                    {s.pages} pages
-                    {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
-                  </p>
-                </div>
-                <FileStatusChip status={s.status} />
-              </li>
-            ))}
-          </ul>
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                    aria-hidden
+                  >
+                    <FileText size={16} weight="regular" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{s.name}</p>
+                    <p className="tabular text-[12px] text-[var(--text-tertiary)]">
+                      {s.pages} pages
+                      {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
+                    </p>
+                  </div>
+                  <FileStatusChip status={s.status} />
+                </li>
+              ))}
+            </ul>
+          </Plate>
         )}
         <p className="mt-8 text-[13px] text-[var(--text-tertiary)]">
           <Link
             href={`/app/courses/${id}`}
             className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
           >
-            Back to atlas
+            Back to today
           </Link>
         </p>
-      </div>
+      </DeskPage>
     </AppShell>
   );
 }

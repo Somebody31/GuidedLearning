@@ -39,7 +39,7 @@ export function SegmentedControl<T extends string>({
         }
       }}
       className={cn(
-        "inline-flex items-center rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] p-0.5",
+        "inline-flex items-center rounded-full bg-[var(--surface-0)] p-0.5 shadow-[inset_0_0_0_1px_var(--hairline)]",
         className,
       )}
     >
@@ -56,7 +56,7 @@ export function SegmentedControl<T extends string>({
             className={cn(
               "min-w-[3rem] rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-[13px] transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
               selected
-                ? "bg-[var(--surface-2)] font-medium text-[var(--text-primary)] shadow-[inset_0_0_0_1px_var(--hairline-strong),var(--shadow-card)] ring-1 ring-[var(--accent)]/20"
+                ? "bg-[var(--surface-1)] font-medium text-[var(--text-primary)] shadow-[var(--shadow-card)]"
                 : "text-[var(--text-tertiary)] hover:bg-[var(--surface-1)] hover:text-[var(--text-secondary)]",
             )}
           >

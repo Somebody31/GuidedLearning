@@ -13,12 +13,12 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
-        That route isn&apos;t part of the app. Head back to your library or the
+        That route isn&apos;t part of the app. Head back to the desk or the
         sample course.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <Link href="/app" className="cta-primary">
-          Library
+          Desk
         </Link>
         <Link
           href={`/app/courses/${DEMO_COURSE_ID}`}

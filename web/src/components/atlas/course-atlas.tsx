@@ -25,12 +25,12 @@ function useThemeCanvasColors() {
   const [colors, setColors] = useState({
     gridDot: "rgba(255,255,255,0.04)",
     minimapMask: "rgba(7,7,10,0.72)",
-    accent: "#2dd4bf",
-    due: "#fbbf24",
-    weak: "#fb7185",
-    mastered: "#34d399",
-    locked: "#6b6b76",
-    progress: "#38bdf8",
+    accent: "#c4312b",
+    due: "#b45309",
+    weak: "#be185d",
+    mastered: "#1f7a4d",
+    locked: "#8b8f9a",
+    progress: "#2f5fbf",
   });
 
   useEffect(() => {
@@ -41,12 +41,12 @@ function useThemeCanvasColors() {
       setColors({
         gridDot: get("--grid-dot", "rgba(255,255,255,0.04)"),
         minimapMask: get("--minimap-mask", "rgba(7,7,10,0.72)"),
-        accent: get("--accent", "#2dd4bf"),
-        due: get("--state-due", "#fbbf24"),
-        weak: get("--state-weak", "#fb7185"),
-        mastered: get("--state-mastered", "#34d399"),
-        locked: get("--state-locked", "#6b6b76"),
-        progress: get("--state-progress", "#38bdf8"),
+        accent: get("--accent", "#c4312b"),
+        due: get("--state-due", "#b45309"),
+        weak: get("--state-weak", "#be185d"),
+        mastered: get("--state-mastered", "#1f7a4d"),
+        locked: get("--state-locked", "#8b8f9a"),
+        progress: get("--state-progress", "#2f5fbf"),
       });
     };
     read();
@@ -149,7 +149,7 @@ export function CourseAtlas({
   const onPaneClick = useCallback(() => onSelect(null), [onSelect]);
 
   return (
-    <div className="path-wash h-full min-h-[280px] w-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] md:min-h-[420px]">
+    <div className="path-wash h-full min-h-[280px] w-full overflow-hidden rounded-[calc(var(--radius-2xl)-6px)] md:min-h-[420px]">
       <ReactFlow
         nodes={nodes}
         edges={edges}

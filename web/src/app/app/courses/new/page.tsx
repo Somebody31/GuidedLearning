@@ -5,13 +5,14 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, FileUp, X } from "lucide-react";
+import { FileText, UploadSimple, X } from "@phosphor-icons/react";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import {
   FileStatusChip,
   type FileParseStatus,
 } from "@/components/ui/file-status-chip";
+import { DeskPage, Plate } from "@/components/ui/plate";
 import { api, wait } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import type { Course } from "@/lib/types";
@@ -50,7 +51,11 @@ export default function NewCoursePage() {
     const next: FileRow[] = [];
     for (const file of incoming) {
       const name = file.name.toLowerCase();
-      if (!name.endsWith(".pdf") && !name.endsWith(".txt") && !name.endsWith(".md")) {
+      if (
+        !name.endsWith(".pdf") &&
+        !name.endsWith(".txt") &&
+        !name.endsWith(".md")
+      ) {
         continue;
       }
       next.push({
@@ -67,7 +72,7 @@ export default function NewCoursePage() {
     setFiles((prev) => [...prev, ...next]);
   }
 
-  async function buildMap() {
+  async function buildPath() {
     if (!canBuild) return;
     setBusy(true);
     setError("");
@@ -107,7 +112,9 @@ export default function NewCoursePage() {
         );
         if (sources.length > 0 && ready + failed === sources.length) {
           if (ready === 0) {
-            throw new Error("The PDF could not be parsed. Try a text-based PDF.");
+            throw new Error(
+              "The PDF could not be parsed. Try a text-based PDF.",
+            );
           }
           sourcesReady = true;
           break;
@@ -128,7 +135,7 @@ export default function NewCoursePage() {
         }
         await wait(800);
       }
-      throw new Error("Timed out building the course map.");
+      throw new Error("Timed out building the course path.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Build failed");
       setBusy(false);
@@ -137,149 +144,155 @@ export default function NewCoursePage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-2xl px-4 py-10 pb-28 sm:pb-10 md:px-6">
-        <h1 className="text-[28px] font-semibold tracking-tight">New course</h1>
-        <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-          Any subject · PDFs of textbooks and lecture slides work best
+      <DeskPage width="narrow" className="pb-28 sm:pb-16">
+        <h1 className="text-[1.75rem] font-semibold tracking-[-0.025em] md:text-[2rem]">
+          New course
+        </h1>
+        <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+          Any subject. PDFs of textbooks and lecture slides work best.
         </p>
 
-        <label className="mt-8 block text-[13px] text-[var(--text-secondary)]">
-          <span className="flex items-center justify-between gap-2">
-            <span>Course title</span>
-            <span
-              className={cn(
-                "tabular text-[11px]",
-                title.length >= 72
-                  ? "text-[var(--warning)]"
-                  : "text-[var(--text-tertiary)]",
-              )}
-            >
-              {title.length}/80
+        <Plate className="mt-8">
+          <label className="block text-[13px] text-[var(--text-secondary)]">
+            <span className="flex items-center justify-between gap-2">
+              <span>Course title</span>
+              <span
+                className={cn(
+                  "tabular text-[11px]",
+                  title.length >= 72
+                    ? "text-[var(--warning)]"
+                    : "text-[var(--text-tertiary)]",
+                )}
+              >
+                {title.length}/80
+              </span>
             </span>
-          </span>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Organic Chemistry"
+              autoComplete="off"
+              maxLength={80}
+              disabled={busy}
+              className="field mt-1.5"
+            />
+          </label>
+          {files.length > 0 && !title.trim() ? (
+            <p className="mt-1.5 text-[12px] text-[var(--warning)]" role="alert">
+              Add a title before building the path
+            </p>
+          ) : null}
+
           <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Organic Chemistry"
-            autoComplete="off"
-            maxLength={80}
-            disabled={busy}
-            className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
+            multiple
+            className="sr-only"
+            onChange={(e) => {
+              if (e.target.files) addPdfs(e.target.files);
+              e.target.value = "";
+            }}
           />
-        </label>
-        {!title.trim() ? (
-          <p className="mt-1.5 text-[12px] text-[var(--warning)]" role="alert">
-            Add a title before building the map
-          </p>
-        ) : null}
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
-          multiple
-          className="sr-only"
-          onChange={(e) => {
-            if (e.target.files) addPdfs(e.target.files);
-            e.target.value = "";
-          }}
-        />
-
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            setDropHot(true);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDropHot(true);
-          }}
-          onDragLeave={() => setDropHot(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDropHot(false);
-            if (e.dataTransfer.files) addPdfs(e.dataTransfer.files);
-          }}
-          className={cn(
-            "mt-6 flex w-full flex-col items-center justify-center rounded-[var(--radius-xl)] border border-dashed px-6 py-14 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
-            dropHot
-              ? "border-[var(--accent)] bg-[var(--accent-muted)] scale-[1.01]"
-              : "border-[var(--hairline-strong)] bg-[var(--surface-0)] hover:border-[var(--accent)] hover:bg-[var(--surface-1)]",
-            busy && "pointer-events-none opacity-60",
-          )}
-        >
-          <span
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDropHot(true);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDropHot(true);
+            }}
+            onDragLeave={() => setDropHot(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDropHot(false);
+              if (e.dataTransfer.files) addPdfs(e.dataTransfer.files);
+            }}
             className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
-              dropHot ? "bg-[var(--accent)]/20" : "bg-[var(--accent-muted)]",
+              "mt-6 flex w-full flex-col items-center justify-center rounded-[var(--radius-xl)] px-6 py-12 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
+              dropHot
+                ? "bg-[var(--accent-muted)]"
+                : "bg-[var(--surface-0)] hover:bg-[var(--surface-2)]",
+              busy && "pointer-events-none opacity-60",
             )}
           >
-            <FileUp className="h-5 w-5 text-[var(--accent)]" />
-          </span>
-          <span className="mt-3 text-[15px] font-medium">
-            Drop PDFs or click to upload
-          </span>
-          <span className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-            Real files · any subject
-          </span>
-        </button>
+            <span
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-full",
+                dropHot ? "bg-[var(--accent)]/15" : "bg-[var(--accent-muted)]",
+              )}
+            >
+              <UploadSimple
+                size={20}
+                weight="light"
+                className="text-[var(--accent)]"
+              />
+            </span>
+            <span className="mt-3 text-[15px] font-medium">
+              Drop PDFs or click to upload
+            </span>
+            <span className="mt-1 text-[13px] text-[var(--text-tertiary)]">
+              .pdf, .txt, or .md · any subject
+            </span>
+          </button>
+        </Plate>
 
         {files.length > 0 ? (
-          <>
-            <div className="mt-6 flex items-center justify-between">
-              <p className="text-[13px] text-[var(--text-tertiary)]">
-                Sources ·{" "}
-                <span className="tabular text-[var(--text-secondary)]">
-                  {files.filter((f) => f.status === "ready").length}/
-                  {files.length}
-                </span>{" "}
-                ready
-                {busy ? (
-                  <span className="text-[var(--info)]"> · working…</span>
-                ) : null}
-              </p>
-            </div>
+          <div className="mt-6">
+            <p className="text-[13px] text-[var(--text-tertiary)]">
+              Sources ·{" "}
+              <span className="tabular text-[var(--text-secondary)]">
+                {files.filter((f) => f.status === "ready").length}/{files.length}
+              </span>{" "}
+              ready
+              {busy ? (
+                <span className="text-[var(--info)]"> · working…</span>
+              ) : null}
+            </p>
             <ul className="mt-3 space-y-2">
               {files.map((f) => (
-                <li
-                  key={f.id}
-                  className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 transition-colors hover:border-[var(--hairline-strong)]"
-                >
-                  <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
-                    aria-hidden
-                  >
-                    <FileText className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium">{f.file.name}</p>
-                    <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                      {fileSize(f.file.size)}
-                      {f.status === "parsing" ? " · extracting text" : null}
-                    </p>
-                  </div>
-                  <FileStatusChip status={f.status} />
-                  <button
-                    type="button"
-                    aria-label={`Remove ${f.file.name}`}
-                    disabled={busy}
-                    className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-40"
-                    onClick={() =>
-                      setFiles((prev) => prev.filter((x) => x.id !== f.id))
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                <li key={f.id}>
+                  <Plate innerClassName="flex items-center gap-3 p-3 md:p-3">
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--text-tertiary)]"
+                      aria-hidden
+                    >
+                      <FileText size={16} weight="light" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-medium">
+                        {f.file.name}
+                      </p>
+                      <p className="tabular text-[12px] text-[var(--text-tertiary)]">
+                        {fileSize(f.file.size)}
+                        {f.status === "parsing" ? " · extracting text" : null}
+                      </p>
+                    </div>
+                    <FileStatusChip status={f.status} />
+                    <button
+                      type="button"
+                      aria-label={`Remove ${f.file.name}`}
+                      disabled={busy}
+                      className="rounded-full p-1.5 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                      onClick={() =>
+                        setFiles((prev) => prev.filter((x) => x.id !== f.id))
+                      }
+                    >
+                      <X size={16} weight="light" />
+                    </button>
+                  </Plate>
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         ) : (
           <p className="mt-6 text-[13px] text-[var(--text-tertiary)]">
-            No sources yet — drop at least one PDF to unlock Build.
+            Drop at least one file to unlock Build.
           </p>
         )}
 
@@ -308,27 +321,24 @@ export default function NewCoursePage() {
                     ? "Building…"
                     : undefined
             }
-            onClick={() => void buildMap()}
+            onClick={() => void buildPath()}
           >
-            {busy ? "Building course map…" : "Build course map"}
+            {busy ? "Building the path…" : "Build the path"}
           </Button>
         </div>
-      </div>
+      </DeskPage>
 
-      <div className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
-          <Link
-            href="/app"
-            className="text-[13px] text-[var(--text-tertiary)]"
-          >
+      <div className="fixed inset-x-3 bottom-3 z-[var(--z-raised)] pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="island flex items-center justify-between gap-3 rounded-full px-4 py-2">
+          <Link href="/app" className="text-[13px] text-[var(--text-tertiary)]">
             Cancel
           </Link>
           <Button
             size="lg"
             disabled={!canBuild}
-            onClick={() => void buildMap()}
+            onClick={() => void buildPath()}
           >
-            {busy ? "Building…" : "Build course map"}
+            {busy ? "Building…" : "Build the path"}
           </Button>
         </div>
       </div>

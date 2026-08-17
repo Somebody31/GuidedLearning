@@ -25,7 +25,7 @@ export default function ConfirmCoursePage() {
   const [activating, setActivating] = useState(false);
 
   useEffect(() => {
-    document.title = "Confirm course map · GuidedLearning";
+    document.title = "Review the path · GuidedLearning";
   }, []);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function ConfirmCoursePage() {
     return (
       <AppShell>
         <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
-          Loading course map…
+          Loading the path…
         </div>
       </AppShell>
     );
@@ -133,7 +133,7 @@ export default function ConfirmCoursePage() {
             Course not found
           </h1>
           <Link href="/app" className="cta-primary mt-2">
-            Library
+            Desk
           </Link>
         </div>
       </AppShell>
@@ -145,7 +145,7 @@ export default function ConfirmCoursePage() {
       <AppShell courseId={course.id} courseTitle={course.title} activeNav="confirm">
         <div className="mx-auto max-w-lg px-4 py-16 text-center">
           <h1 className="text-[22px] font-semibold tracking-tight">
-            Building the course map
+            Building the path
           </h1>
           <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
             Extracting units and lessons from your PDFs. This page will update
@@ -175,11 +175,11 @@ export default function ConfirmCoursePage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-semibold tracking-tight">
-              Confirm course map
+              Review the path
             </h1>
             <p className="mt-1 max-w-xl text-[14px] text-[var(--text-tertiary)]">
-              Edit until this matches how you want to study. Draft saves to the
-              server — spaced review starts only after activate.
+              Edit titles until this matches how you want to study. The draft
+              saves as you type. Tracking starts only after you confirm.
             </p>
             <p className="mt-2 tabular text-[12px] text-[var(--text-tertiary)]">
               <span className="text-[var(--text-secondary)]">{unitCount}</span>{" "}
@@ -189,36 +189,42 @@ export default function ConfirmCoursePage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={
-                saveState === "error"
-                  ? "inline-flex items-center rounded-full border border-[var(--danger)]/30 bg-[rgba(248,113,113,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--danger)]"
-                  : saveState === "saving"
-                    ? "inline-flex items-center rounded-full border border-[var(--info)]/30 bg-[rgba(56,189,248,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--info)]"
-                    : "inline-flex items-center rounded-full border border-[var(--hairline-strong)] bg-[var(--surface-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--text-tertiary)]"
-              }
-            >
-              {saveState === "saving" && "Draft · saving…"}
-              {saveState === "saved" && "Draft · saved"}
-              {saveState === "error" && "Couldn't save · retry"}
-            </span>
-            <Button
-              size="lg"
-              className="hidden sm:inline-flex"
-              disabled={!canActivate}
-              title={
-                alreadyOn
-                  ? "Already activated"
-                  : emptyTitles > 0
-                    ? `${emptyTitles} lesson title${emptyTitles === 1 ? "" : "s"} empty`
-                    : saveState === "error"
-                      ? "Fix save error first"
-                      : undefined
-              }
-              onClick={() => setShowActivate(true)}
-            >
-              {alreadyOn ? "Already activated" : "Activate course"}
-            </Button>
+            {alreadyOn ? (
+              <span className="inline-flex items-center rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)]">
+                Tracking on
+              </span>
+            ) : (
+              <>
+                <span
+                  className={
+                    saveState === "error"
+                      ? "inline-flex items-center rounded-full bg-[rgba(248,113,113,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--danger)]"
+                      : saveState === "saving"
+                        ? "inline-flex items-center rounded-full bg-[rgba(56,189,248,0.1)] px-2.5 py-1 text-[12px] font-medium text-[var(--info)]"
+                        : "inline-flex items-center rounded-full bg-[var(--surface-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--text-tertiary)]"
+                  }
+                >
+                  {saveState === "saving" && "Draft · saving…"}
+                  {saveState === "saved" && "Draft · saved"}
+                  {saveState === "error" && "Couldn't save · retry"}
+                </span>
+                <Button
+                  size="lg"
+                  className="hidden sm:inline-flex"
+                  disabled={!canActivate}
+                  title={
+                    emptyTitles > 0
+                      ? `${emptyTitles} lesson title${emptyTitles === 1 ? "" : "s"} empty`
+                      : saveState === "error"
+                        ? "Fix save error first"
+                        : undefined
+                  }
+                  onClick={() => setShowActivate(true)}
+                >
+                  Start tracking
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -226,8 +232,9 @@ export default function ConfirmCoursePage() {
           {course.units.map((unit) => (
             <section
               key={unit.id}
-              className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5"
+              className="plate-shell"
             >
+              <div className="plate-inner p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-[16px] font-semibold">{unit.title}</h2>
                 <span className="tabular text-[12px] text-[var(--text-tertiary)]">
@@ -252,11 +259,7 @@ export default function ConfirmCoursePage() {
                       aria-invalid={
                         !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim()
                       }
-                      className={
-                        !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim()
-                          ? "min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--warning)]/50 bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--warning)] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.15)]"
-                          : "min-w-0 flex-1 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-0)] px-3 py-2 text-[14px] outline-none transition-colors focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
-                      }
+                      className="field min-w-0 flex-1 py-2 text-[14px]"
                     />
                     <span className="tabular shrink-0 text-[12px] text-[var(--text-tertiary)]">
                       {course.lessons[lid]?.estMinutes ?? "—"} min
@@ -264,6 +267,7 @@ export default function ConfirmCoursePage() {
                   </li>
                 ))}
               </ul>
+              </div>
             </section>
           ))}
         </div>
@@ -273,18 +277,18 @@ export default function ConfirmCoursePage() {
             href={`/app/courses/${id}`}
             className="text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
           >
-            Back to atlas
+            Back to today
           </Link>
           {" · "}
           You can still add sources later.
         </p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+      <div className="fixed inset-x-3 bottom-20 z-[var(--z-raised)] pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="island mx-auto flex max-w-4xl items-center justify-between gap-3 rounded-full px-4 py-2">
           <span className="text-[12px] text-[var(--text-tertiary)]">
             {alreadyOn
-              ? "Activated"
+              ? "Tracking on"
               : emptyTitles > 0
                 ? `${emptyTitles} empty title${emptyTitles === 1 ? "" : "s"}`
                 : saveState === "saved"
@@ -293,13 +297,22 @@ export default function ConfirmCoursePage() {
                     ? "Saving…"
                     : "Save error"}
           </span>
-          <Button
-            size="lg"
-            disabled={!canActivate}
-            onClick={() => setShowActivate(true)}
-          >
-            {alreadyOn ? "Already activated" : "Activate course"}
-          </Button>
+          {alreadyOn ? (
+            <Link
+              href={`/app/courses/${id}`}
+              className="cta-secondary"
+            >
+              Back to today
+            </Link>
+          ) : (
+            <Button
+              size="lg"
+              disabled={!canActivate}
+              onClick={() => setShowActivate(true)}
+            >
+              Start tracking
+            </Button>
+          )}
         </div>
       </div>
 
@@ -316,13 +329,14 @@ export default function ConfirmCoursePage() {
             className="absolute inset-0 bg-[var(--overlay-strong)] backdrop-blur-[2px]"
             onClick={() => setShowActivate(false)}
           />
-          <div className="animate-fade-up relative z-10 w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--hairline-strong)] bg-[var(--surface-1)] p-6 shadow-[var(--shadow-modal)]">
+          <div className="animate-fade-up plate-shell relative z-10 w-full max-w-md">
+            <div className="plate-inner p-6">
             <h2 id="activate-title" className="text-[18px] font-semibold">
-              Activate course and start tracking mastery?
+              Start tracking this path?
             </h2>
             <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-secondary)]">
               Spaced review will use this structure. Lesson IDs freeze after
-              activate.
+              you confirm.
             </p>
             <div className="mt-6 flex items-center justify-end gap-2">
               <span className="mr-auto hidden text-[11px] text-[var(--text-tertiary)] sm:inline">
@@ -333,14 +347,15 @@ export default function ConfirmCoursePage() {
                 <kbd className="rounded border border-[var(--hairline)] px-1 font-mono">
                   Enter
                 </kbd>{" "}
-                activate
+                confirm
               </span>
               <Button variant="ghost" onClick={() => setShowActivate(false)}>
                 Keep editing
               </Button>
               <Button disabled={activating} onClick={() => void activate()}>
-                {activating ? "Activating…" : "Activate"}
+                {activating ? "Confirming…" : "Confirm"}
               </Button>
+            </div>
             </div>
           </div>
         </div>

@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CtaLink } from "@/components/ui/cta-link";
+import { Plate } from "@/components/ui/plate";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { api, getLesson, wait } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -142,10 +144,10 @@ export default function QuizPage() {
           Lesson missing
         </h1>
         <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
-          This quiz has no matching lesson in the course map.
+          This quiz has no matching lesson in the path.
         </p>
         <Link href={`/app/courses/${courseId}`} className="cta-primary mt-2">
-          Back to atlas
+          Back to today
         </Link>
       </div>
     );
@@ -183,16 +185,16 @@ export default function QuizPage() {
     const score = Math.round((correctCount / questions.length) * 100);
     return (
       <div className="animate-fade-up mx-auto flex min-h-full max-w-lg flex-col justify-center px-4 py-16">
-        <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+        <p className="text-[12px] font-medium text-[var(--accent)]">
           What changed
         </p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+        <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.025em]">
           Quiz complete
         </h1>
         <p className="mt-2 tabular text-[15px] text-[var(--text-secondary)]">
           Score {score}% · attempt {attempt}/3
         </p>
-        <div className="mt-8 space-y-4 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--surface-1)] p-5">
+        <Plate className="mt-8">
           <div className="flex items-center justify-between gap-3">
             <span className="text-[14px] text-[var(--text-secondary)]">
               Mastery
@@ -205,7 +207,7 @@ export default function QuizPage() {
               <MasteryRing value={masteryAfter} />
             </div>
           </div>
-          <div className="border-t border-[var(--hairline)] pt-4">
+          <div className="mt-4 border-t border-[var(--hairline)] pt-4">
             <p className="text-[14px] text-[var(--text-secondary)]">
               Next review{" "}
               <span className="text-[var(--text-primary)]">
@@ -228,11 +230,9 @@ export default function QuizPage() {
               </p>
             )}
           </div>
-        </div>
+        </Plate>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href={`/app/courses/${courseId}`} className="cta-primary">
-            Back to path
-          </Link>
+          <CtaLink href={`/app/courses/${courseId}`}>Back to today</CtaLink>
           {attempt < 3 && score < 100 && (
             <Button
               variant="secondary"
@@ -254,7 +254,7 @@ export default function QuizPage() {
             href={`/app/courses/${courseId}/session`}
             className="cta-secondary"
           >
-            Next in session
+            Next in sitting
           </Link>
           <Link
             href={`/app/courses/${courseId}/lessons/${lessonId}`}
@@ -302,33 +302,35 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="mx-auto min-h-full max-w-lg px-4 py-10">
-      <div className="sticky top-0 z-[var(--z-raised)] -mx-4 mb-6 border-b border-[var(--hairline)] bg-[var(--canvas)] px-4 py-3">
-        <div className="flex items-center justify-between gap-3 text-[13px] text-[var(--text-tertiary)]">
-          <span className="min-w-0 truncate">{lesson.title}</span>
-          <span className="tabular shrink-0">
-            Q {index + 1} of {questions.length}
-            {correctCount > 0 || revealed ? (
-              <span className="ml-2 text-[var(--text-disabled)]">
-                · {correctCount} right
-              </span>
-            ) : null}
-          </span>
-        </div>
-        <div
-          className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={questions.length}
-          aria-valuenow={index + (revealed ? 1 : 0)}
-          aria-label="Quiz progress"
-        >
+    <div className="mx-auto min-h-full max-w-lg px-4 pb-10 pt-3">
+      <div className="sticky top-3 z-[var(--z-raised)] mb-8">
+        <div className="island rounded-[1.25rem] px-4 py-3">
+          <div className="flex items-center justify-between gap-3 text-[13px] text-[var(--text-tertiary)]">
+            <span className="min-w-0 truncate">{lesson.title}</span>
+            <span className="tabular shrink-0">
+              Q {index + 1} of {questions.length}
+              {correctCount > 0 || revealed ? (
+                <span className="ml-2 text-[var(--text-disabled)]">
+                  · {correctCount} right
+                </span>
+              ) : null}
+            </span>
+          </div>
           <div
-            className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
-            style={{
-              width: `${((index + (revealed ? 1 : 0)) / questions.length) * 100}%`,
-            }}
-          />
+            className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={questions.length}
+            aria-valuenow={index + (revealed ? 1 : 0)}
+            aria-label="Quiz progress"
+          >
+            <div
+              className="h-full bg-[var(--accent)] transition-all duration-[var(--duration-med)] ease-[var(--ease-out-soft)]"
+              style={{
+                width: `${((index + (revealed ? 1 : 0)) / questions.length) * 100}%`,
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -381,9 +383,10 @@ export default function QuizPage() {
 
       {revealed && (
         <div
-          className="animate-fade-up mt-4 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5"
+          className="animate-fade-up plate-shell mt-4"
           aria-live="polite"
         >
+          <div className="plate-inner px-4 py-3">
           <p
             className={cn(
               "text-[12px] font-medium",
@@ -397,6 +400,7 @@ export default function QuizPage() {
           <p className="mt-1 text-[14px] leading-relaxed text-[var(--text-secondary)]">
             {q.explanation}
           </p>
+          </div>
         </div>
       )}
 
@@ -432,8 +436,8 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+      <div className="fixed inset-x-3 bottom-3 z-[var(--z-raised)] pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="island mx-auto flex max-w-lg items-center justify-between gap-3 rounded-full px-4 py-2">
           <span className="tabular text-[12px] text-[var(--text-tertiary)]">
             Q {index + 1}/{questions.length}
           </span>
