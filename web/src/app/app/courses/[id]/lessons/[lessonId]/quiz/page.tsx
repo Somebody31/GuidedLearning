@@ -7,15 +7,17 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MasteryRing } from "@/components/ui/mastery-ring";
-import { getCourse } from "@/lib/mock-data";
+import { api, getLesson, wait } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import type { Lesson } from "@/lib/types";
 
 export default function QuizPage() {
   const params = useParams();
   const courseId = String(params.id);
   const lessonId = String(params.lessonId);
-  const course = getCourse(courseId);
-  const lesson = course?.lessons[lessonId];
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [missing, setMissing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -23,17 +25,51 @@ export default function QuizPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [attempt, setAttempt] = useState(1);
   const [done, setDone] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [serverMastery, setServerMastery] = useState<number | null>(null);
+
+  useEffect(() => {
+    let stop = false;
+    setLoading(true);
+    setMissing(false);
+    async function load() {
+      for (let n = 0; n < 20 && !stop; n++) {
+        try {
+          const data = await getLesson(courseId, lessonId);
+          if (stop) return;
+          setLesson(data.lesson);
+          if (data.lesson.quizReady && data.lesson.quiz.length > 0) {
+            setLoading(false);
+            return;
+          }
+        } catch {
+          if (!stop) {
+            setMissing(true);
+            setLoading(false);
+          }
+          return;
+        }
+        await wait(1000);
+      }
+      if (!stop) setLoading(false);
+    }
+    void load();
+    return () => {
+      stop = true;
+    };
+  }, [courseId, lessonId]);
 
   const questions = lesson?.quiz ?? [];
   const q = questions[index];
   const masteryBefore = lesson?.mastery ?? 0;
 
   const masteryAfter = useMemo(() => {
+    if (serverMastery !== null) return serverMastery;
     if (!done || questions.length === 0) return masteryBefore;
     const score = correctCount / questions.length;
     if (attempt > 1) return masteryBefore;
     return Math.min(1, masteryBefore * 0.4 + score * 0.6 + 0.1);
-  }, [done, correctCount, questions.length, masteryBefore, attempt]);
+  }, [done, correctCount, questions.length, masteryBefore, attempt, serverMastery]);
 
   const quizReady = Boolean(lesson?.quizReady && questions.length > 0);
 
@@ -76,8 +112,9 @@ export default function QuizPage() {
         return;
       }
       if (index + 1 >= questions.length) {
-        setDone(true);
+        void finishQuiz({ ...answers, [q.id]: selected });
       } else {
+        setAnswers((prev) => ({ ...prev, [q.id]: selected }));
         setIndex((i) => i + 1);
         setSelected(null);
         setRevealed(false);
@@ -85,9 +122,17 @@ export default function QuizPage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [done, quizReady, selected, revealed, index, q, questions.length]);
+  }, [done, quizReady, selected, revealed, index, q, questions.length, answers]);
 
-  if (!course || !lesson) {
+  if (loading) {
+    return (
+      <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
+        Loading quiz…
+      </div>
+    );
+  }
+
+  if (missing || !lesson) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
         <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
@@ -197,6 +242,8 @@ export default function QuizPage() {
                 setSelected(null);
                 setRevealed(false);
                 setCorrectCount(0);
+                setAnswers({});
+                setServerMastery(null);
                 setDone(false);
               }}
             >
@@ -220,6 +267,22 @@ export default function QuizPage() {
     );
   }
 
+  async function finishQuiz(allAnswers: Record<string, string>) {
+    setAnswers(allAnswers);
+    try {
+      const result = await api<{
+        lesson?: { mastery: number };
+      }>(`/v1/courses/${courseId}/lessons/${lessonId}/quiz/submit`, {
+        method: "POST",
+        body: JSON.stringify({ answers: allAnswers }),
+      });
+      if (result.lesson) setServerMastery(result.lesson.mastery);
+    } catch {
+      /* still show local score */
+    }
+    setDone(true);
+  }
+
   function submit() {
     if (!q || !selected) return;
     if (!revealed) {
@@ -227,9 +290,11 @@ export default function QuizPage() {
       if (selected === q.correctOptionId) setCorrectCount((c) => c + 1);
       return;
     }
+    const nextAnswers = { ...answers, [q.id]: selected };
     if (index + 1 >= questions.length) {
-      setDone(true);
+      void finishQuiz(nextAnswers);
     } else {
+      setAnswers(nextAnswers);
       setIndex((i) => i + 1);
       setSelected(null);
       setRevealed(false);

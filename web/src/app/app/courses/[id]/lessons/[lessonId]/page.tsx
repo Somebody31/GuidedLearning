@@ -8,18 +8,20 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
-import { getCourse, unitForLesson } from "@/lib/mock-data";
+import { api, getLesson, wait } from "@/lib/api";
 import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
 import { cn } from "@/lib/cn";
+import type { Lesson, Unit } from "@/lib/types";
 
 export default function LessonPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = String(params.id);
   const lessonId = String(params.lessonId);
-  const course = getCourse(courseId);
-  const lesson = course?.lessons[lessonId];
-  const unit = course ? unitForLesson(course, lessonId) : undefined;
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [unit, setUnit] = useState<Unit | null>(null);
+  const [missing, setMissing] = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const [paper, setPaper] = useState(false);
   const [sourceOpen, setSourceOpen] = useState<string | null>(null);
   const [flipping, setFlipping] = useState(false);
@@ -30,6 +32,46 @@ export default function LessonPage() {
     applyPrefsAttrs(p);
     setPaper(p.paperDefault);
   }, []);
+
+  useEffect(() => {
+    let stop = false;
+    setMissing(false);
+    setWaiting(true);
+    async function load() {
+      try {
+        await api(`/v1/courses/${courseId}/lessons/${lessonId}/open`, {
+          method: "POST",
+          body: JSON.stringify({}),
+        });
+      } catch {
+        /* locked or already open — still try GET */
+      }
+      for (let n = 0; n < 30 && !stop; n++) {
+        try {
+          const data = await getLesson(courseId, lessonId);
+          if (stop) return;
+          setLesson(data.lesson);
+          setUnit(data.unit);
+          if (data.lesson.sections.length > 0 || data.lesson.quizReady) {
+            setWaiting(false);
+            return;
+          }
+        } catch {
+          if (!stop) {
+            setMissing(true);
+            setWaiting(false);
+          }
+          return;
+        }
+        await wait(1000);
+      }
+      if (!stop) setWaiting(false);
+    }
+    void load();
+    return () => {
+      stop = true;
+    };
+  }, [courseId, lessonId]);
 
   useEffect(() => {
     if (lesson) {
@@ -95,7 +137,7 @@ export default function LessonPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [lessonId]);
 
-  if (!course || !lesson || !unit) {
+  if (missing) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
         <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
@@ -114,6 +156,14 @@ export default function LessonPage() {
         >
           Back to atlas
         </Link>
+      </div>
+    );
+  }
+
+  if (!lesson || !unit) {
+    return (
+      <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
+        {waiting ? "Writing lesson from your PDFs…" : "Loading lesson…"}
       </div>
     );
   }
@@ -230,6 +280,11 @@ export default function LessonPage() {
         >
           {lesson.estMinutes} min · reading keeps in progress · quiz completes
         </p>
+        {waiting && lesson.sections.length === 0 ? (
+          <p className="mt-4 text-[13px] text-[var(--info)]">
+            Writing this lesson from your PDFs…
+          </p>
+        ) : null}
 
         <section className="mt-8">
           <h2 className="text-[13px] font-medium uppercase tracking-[0.06em] opacity-70">

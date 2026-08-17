@@ -76,6 +76,20 @@ export interface Course {
   sessionDefaultMinutes: number;
 }
 
+// List endpoint returns counts, not the full lesson map.
+export interface CourseSummary {
+  id: string;
+  title: string;
+  lifecycle: CourseLifecycle;
+  lastStudiedAt: string | null;
+  createdAt: string;
+  sessionDefaultMinutes: number;
+  lessonCount: number;
+  dueCount: number;
+  weakCount: number;
+  masteredCount: number;
+}
+
 export interface SessionPackItem {
   lessonId: string;
   kind: "review" | "new" | "weak" | "resume";

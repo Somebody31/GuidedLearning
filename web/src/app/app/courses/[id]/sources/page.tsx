@@ -1,25 +1,77 @@
+"use client";
+
 // List of uploaded PDFs for this course.
 
-import type { Metadata } from "next";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FileText } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { FileStatusChip } from "@/components/ui/file-status-chip";
-import { getCourse } from "@/lib/mock-data";
+import { api, getCourse } from "@/lib/api";
+import { useCourse } from "@/lib/use-course";
 
-export const metadata: Metadata = {
-  title: "Sources",
-};
+export default function SourcesPage() {
+  const params = useParams();
+  const id = String(params.id);
+  const { course, loading, error, setCourse } = useCourse(id);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
-export default async function SourcesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const course = getCourse(id);
-  if (!course) notFound();
+  useEffect(() => {
+    document.title = "Sources · GuidedLearning";
+  }, []);
+
+  async function addPdfs(list: FileList) {
+    if (!course) return;
+    const form = new FormData();
+    let count = 0;
+    for (const file of Array.from(list)) {
+      if (!file.name.toLowerCase().endsWith(".pdf")) continue;
+      form.append("files", file);
+      count += 1;
+    }
+    if (count === 0) {
+      setUploadError("PDFs only.");
+      return;
+    }
+    setBusy(true);
+    setUploadError("");
+    try {
+      await api(`/v1/courses/${id}/sources`, { method: "POST", body: form });
+      const next = await getCourse(id);
+      if (next) setCourse(next);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed");
+    }
+    setBusy(false);
+  }
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
+          Loading sources…
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!course || error === "not-found") {
+    return (
+      <AppShell>
+        <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <h1 className="text-[22px] font-semibold tracking-tight">
+            Course not found
+          </h1>
+          <Link href="/app" className="cta-primary mt-2">
+            Library
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   const ready = course.sources.filter((s) => s.status === "ready").length;
 
@@ -30,32 +82,43 @@ export default async function SourcesPage({
           <div>
             <h1 className="text-[28px] font-semibold tracking-tight">Sources</h1>
             <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-              Grounding corpus for RAG ·{" "}
+              Grounding corpus for this course ·{" "}
               <span className="tabular text-[var(--text-secondary)]">
                 {ready}/{course.sources.length}
               </span>{" "}
               ready
             </p>
           </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            multiple
+            className="sr-only"
+            onChange={(e) => {
+              if (e.target.files) void addPdfs(e.target.files);
+              e.target.value = "";
+            }}
+          />
           <button
             type="button"
-            disabled
-            title="Upload lands in the next backend pass"
-            aria-disabled="true"
-            className="inline-flex h-9 cursor-not-allowed items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-disabled)]"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            className="inline-flex h-9 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)] disabled:opacity-50"
           >
-            Add PDF
-            <span className="ml-1.5 hidden text-[10px] sm:inline">Soon</span>
+            {busy ? "Uploading…" : "Add PDF"}
           </button>
         </div>
+        {uploadError ? (
+          <p className="mt-4 text-[13px] text-[var(--danger)]">{uploadError}</p>
+        ) : null}
         {course.sources.length === 0 ? (
           <div className="mt-8 rounded-[var(--radius-xl)] border border-dashed border-[var(--hairline-strong)] bg-[var(--surface-0)] px-6 py-12 text-center">
             <p className="text-[15px] font-medium text-[var(--text-secondary)]">
               No sources yet
             </p>
             <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-              Upload lands in the next backend pass. Demo course ships with
-              textbooks and lecture PDFs.
+              Add a PDF to ground lessons for this subject.
             </p>
           </div>
         ) : (

@@ -2,35 +2,42 @@
 
 // Timed study session: work through a packed list of lessons.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { StateBadge } from "@/components/ui/state-badge";
-import { buildSessionPack, getCourse } from "@/lib/mock-data";
+import { buildSessionPack } from "@/lib/course-utils";
+import { useCourse } from "@/lib/use-course";
 import type { SessionPackItem } from "@/lib/types";
 
 export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = String(params.id);
-  const course = getCourse(courseId);
-  // Prefer a full pack for the runner so skip-cap (2) is reachable with queue left.
-  const initialPack = useMemo(
-    () =>
-      course
-        ? buildSessionPack(
-            course,
-            Math.max(course.sessionDefaultMinutes, 45),
-          )
-        : [],
-    [course],
-  );
-  const [queue, setQueue] = useState<SessionPackItem[]>(initialPack);
+  const { course, loading, error } = useCourse(courseId);
+  const [initialPack, setInitialPack] = useState<SessionPackItem[]>([]);
+  const [queue, setQueue] = useState<SessionPackItem[]>([]);
+  const [packed, setPacked] = useState(false);
   const [skips, setSkips] = useState(0);
   const [deferred, setDeferred] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (loading || packed) return;
+    if (!course) {
+      setPacked(true);
+      return;
+    }
+    const pack = buildSessionPack(
+      course,
+      Math.max(course.sessionDefaultMinutes, 45),
+    );
+    setInitialPack(pack);
+    setQueue(pack);
+    setPacked(true);
+  }, [course, packed, loading]);
 
   const current = queue[0];
   const lesson = current && course ? course.lessons[current.lessonId] : null;
@@ -85,7 +92,17 @@ export default function SessionPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [done, course, current, lesson, skipDisabled, router]);
 
-  if (!course) {
+  if (loading || !packed) {
+    return (
+      <AppShell>
+        <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
+          Loading session…
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!course || error === "not-found") {
     return (
       <AppShell>
         <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">

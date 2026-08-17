@@ -52,8 +52,6 @@ const STOP = new Set([
   "lesson",
   "chapter",
   "section",
-  "network",
-  "computer",
 ]);
 
 function tokenize(s: string): string[] {

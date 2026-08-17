@@ -34,11 +34,20 @@ async function drainQueue() {
       await runJob(job.id);
     } catch (err) {
       console.error("job failed", job.id, err);
+      const message = err instanceof Error ? err.message : String(err);
       store.updateJob(job.id, {
         status: "failed",
-        error: err instanceof Error ? err.message : String(err),
+        error: message,
         progress: 1,
       });
+      if (job.sourceId) {
+        const course = store.getCourseMutable(job.courseId);
+        const source = course?.sources.find((s) => s.id === job.sourceId);
+        if (source) {
+          source.status = "failed";
+          source.error = message;
+        }
+      }
     } finally {
       processing.delete(job.id);
     }

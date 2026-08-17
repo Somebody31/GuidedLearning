@@ -1,7 +1,7 @@
 // Unknown URL.
 
 import Link from "next/link";
-import { CN_COURSE_ID } from "@/lib/mock-data";
+import { DEMO_COURSE_ID } from "@/lib/api";
 
 export default function NotFound() {
   return (
@@ -13,18 +13,18 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
-        That route isn&apos;t part of the demo. Head back to your library or the
-        Computer Networks atlas.
+        That route isn&apos;t part of the app. Head back to your library or the
+        sample course.
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <Link href="/app" className="cta-primary">
           Library
         </Link>
         <Link
-          href={`/app/courses/${CN_COURSE_ID}`}
+          href={`/app/courses/${DEMO_COURSE_ID}`}
           className="cta-secondary text-[14px]"
         >
-          Open demo atlas
+          Open sample course
         </Link>
         <Link href="/" className="text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]">
           Marketing

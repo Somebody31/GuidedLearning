@@ -11,7 +11,7 @@ import { SessionPackBar } from "./session-pack-bar";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StateBadge } from "@/components/ui/state-badge";
 import { MasteryRing } from "@/components/ui/mastery-ring";
-import { buildSessionPack, unitForLesson } from "@/lib/mock-data";
+import { buildSessionPack, unitForLesson } from "@/lib/course-utils";
 import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
 import type { Course } from "@/lib/types";
 

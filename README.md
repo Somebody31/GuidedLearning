@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — demo course atlas at `/app/courses/cn-kurose`.
+Open [http://localhost:3000](http://localhost:3000) — start a course from any PDFs, or open the sample at `/app/courses/cn-kurose`.
 
 ## Quick start — API (Bun + Hono)
 
@@ -40,14 +40,14 @@ cd server && bun test
 | HTTP | Hono |
 | LLM | DeepSeek V4 Flash (`deepseek-v4-flash`) |
 | Embeddings | Qwen3 Embedding |
-| Store (now) | In-memory + local uploads (`cn-kurose` seed) |
+| Store (now) | In-memory + local uploads (optional `cn-kurose` sample) |
 | Store (next) | Postgres + pgvector · S3 for PDFs |
 
 **Offline by default:** `USE_LIVE_AI=false` in `server/.env` — full pipeline uses mock embed/LLM so demos cost **zero** API credits. Set `USE_LIVE_AI=true` and keys only when you want live generation. Optional `AUTH_TOKEN` enables Bearer auth.
 
 ## Status
 
-- **UI:** P0–P1 mock surfaces (library, upload, confirm, atlas, lesson, quiz, session, sources, insights, settings, diagnostic, light/dark).
-- **API:** B0–B5 offline pipeline — upload/parse/chunk, draft graph, activate, mock lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI`.
+- **UI:** talks to the API — any subject from PDFs (library, upload, confirm, atlas, lesson, quiz, session, sources, insights, settings, diagnostic).
+- **API:** upload/parse/chunk, draft graph, activate, lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI`. Sample course `cn-kurose` is one seeded demo, not the product.
 
 Design specs stay **local** under `docs/` (gitignores all `.md` except this README).

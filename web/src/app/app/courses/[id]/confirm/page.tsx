@@ -7,55 +7,96 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
-import { getCourse } from "@/lib/mock-data";
-
-const STORAGE_KEY = "gl-confirm-draft";
+import { api, getCourse, wait } from "@/lib/api";
+import { useCourse } from "@/lib/use-course";
 
 export default function ConfirmCoursePage() {
   const params = useParams();
   const router = useRouter();
   const id = String(params.id);
-  const course = getCourse(id);
+  const { course, loading, error, setCourse } = useCourse(id);
 
   const [titles, setTitles] = useState<Record<string, string>>({});
+  const [booted, setBooted] = useState(false);
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">(
     "saved",
   );
   const [showActivate, setShowActivate] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   useEffect(() => {
     document.title = "Confirm course map · GuidedLearning";
   }, []);
 
   useEffect(() => {
-    if (!course) return;
-    const raw = localStorage.getItem(`${STORAGE_KEY}:${id}`);
-    if (raw) {
-      try {
-        setTitles(JSON.parse(raw) as Record<string, string>);
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
+    if (!course || Object.keys(course.lessons).length === 0) return;
+    if (booted) return;
     const init: Record<string, string> = {};
-    for (const l of Object.values(course.lessons)) init[l.id] = l.title;
+    for (const lesson of Object.values(course.lessons)) {
+      init[lesson.id] = lesson.title;
+    }
     setTitles(init);
-  }, [course, id]);
+    setBooted(true);
+  }, [course, booted]);
 
   useEffect(() => {
-    if (!course || Object.keys(titles).length === 0) return;
+    if (!course || Object.keys(course.lessons).length > 0) return;
+    let stop = false;
+    async function poll() {
+      for (let i = 0; i < 40 && !stop; i++) {
+        await wait(1000);
+        const next = await getCourse(id);
+        if (stop) return;
+        if (next && Object.keys(next.lessons).length > 0) {
+          setCourse(next);
+          return;
+        }
+      }
+    }
+    void poll();
+    return () => {
+      stop = true;
+    };
+  }, [course, id, setCourse]);
+
+  useEffect(() => {
+    if (!booted) return;
+    if (course?.lifecycle === "activated") {
+      setSaveState("saved");
+      return;
+    }
     setSaveState("saving");
     const t = setTimeout(() => {
-      try {
-        localStorage.setItem(`${STORAGE_KEY}:${id}`, JSON.stringify(titles));
-        setSaveState("saved");
-      } catch {
-        setSaveState("error");
-      }
+      api(`/v1/courses/${id}/graph`, {
+        method: "PATCH",
+        body: JSON.stringify({ lessonTitles: titles }),
+      })
+        .then(() => setSaveState("saved"))
+        .catch(() => setSaveState("error"));
     }, 400);
     return () => clearTimeout(t);
-  }, [titles, course, id]);
+  }, [titles, booted, id, course?.lifecycle]);
+
+  async function activate() {
+    if (activating) return;
+    setActivating(true);
+    try {
+      if (course?.lifecycle !== "activated") {
+        await api(`/v1/courses/${id}/graph`, {
+          method: "PATCH",
+          body: JSON.stringify({ lessonTitles: titles }),
+        });
+      }
+      await api(`/v1/courses/${id}/activate`, { method: "POST" });
+      setShowActivate(false);
+      router.push(`/app/courses/${id}`);
+    } catch (e) {
+      setActivating(false);
+      setSaveState("error");
+      setShowActivate(false);
+      console.error(e);
+    }
+  }
 
   useEffect(() => {
     if (!showActivate) return;
@@ -63,15 +104,25 @@ export default function ConfirmCoursePage() {
       if (e.key === "Escape") setShowActivate(false);
       if (e.key === "Enter") {
         e.preventDefault();
-        setShowActivate(false);
-        router.push(`/app/courses/${id}`);
+        void activate();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showActivate, router, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- activate closes over titles
+  }, [showActivate, titles, id]);
 
-  if (!course) {
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
+          Loading course map…
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!course || error === "not-found") {
     return (
       <AppShell>
         <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
@@ -89,6 +140,22 @@ export default function ConfirmCoursePage() {
     );
   }
 
+  if (Object.keys(course.lessons).length === 0) {
+    return (
+      <AppShell courseId={course.id} courseTitle={course.title} activeNav="confirm">
+        <div className="mx-auto max-w-lg px-4 py-16 text-center">
+          <h1 className="text-[22px] font-semibold tracking-tight">
+            Building the course map
+          </h1>
+          <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
+            Extracting units and lessons from your PDFs. This page will update
+            when the draft is ready.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
   const lessonCount = Object.keys(course.lessons).length;
   const unitCount = course.units.length;
   const totalMin = Object.values(course.lessons).reduce(
@@ -98,7 +165,8 @@ export default function ConfirmCoursePage() {
   const emptyTitles = Object.keys(course.lessons).filter(
     (lid) => !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim(),
   ).length;
-  const canActivate = saveState !== "error" && emptyTitles === 0;
+  const canActivate =
+    saveState !== "error" && emptyTitles === 0 && !activating;
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title} activeNav="confirm">
@@ -109,8 +177,8 @@ export default function ConfirmCoursePage() {
               Confirm course map
             </h1>
             <p className="mt-1 max-w-xl text-[14px] text-[var(--text-tertiary)]">
-              Edit until this matches how you want to study. Draft autosaves
-              locally — spaced review starts only after activate.
+              Edit until this matches how you want to study. Draft saves to the
+              server — spaced review starts only after activate.
             </p>
             <p className="mt-2 tabular text-[12px] text-[var(--text-tertiary)]">
               <span className="text-[var(--text-secondary)]">{unitCount}</span>{" "}
@@ -149,25 +217,6 @@ export default function ConfirmCoursePage() {
               Activate course
             </Button>
           </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="rounded-full border border-[var(--hairline)] bg-[var(--accent-muted)] px-3 py-1 text-[12px] text-[var(--accent)] transition-colors hover:border-[var(--accent)]/40"
-            onClick={() => {
-              /* demo merge suggestion */
-              const a = "l-delay";
-              const b = "l-layers";
-              setTitles((prev) => ({
-                ...prev,
-                [a]: "Delay, layers & edge concepts",
-                [b]: prev[b],
-              }));
-            }}
-          >
-            Suggestion · merge intro dense pair → 1
-          </button>
         </div>
 
         <div className="mt-8 space-y-8">
@@ -228,7 +277,6 @@ export default function ConfirmCoursePage() {
         </p>
       </div>
 
-      {/* Sit above mobile course nav (h-14 + safe area) */}
       <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <span className="text-[12px] text-[var(--text-tertiary)]">
@@ -285,13 +333,8 @@ export default function ConfirmCoursePage() {
               <Button variant="ghost" onClick={() => setShowActivate(false)}>
                 Keep editing
               </Button>
-              <Button
-                onClick={() => {
-                  setShowActivate(false);
-                  router.push(`/app/courses/${id}`);
-                }}
-              >
-                Activate
+              <Button disabled={activating} onClick={() => void activate()}>
+                {activating ? "Activating…" : "Activate"}
               </Button>
             </div>
           </div>

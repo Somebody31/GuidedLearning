@@ -52,10 +52,10 @@ async function main() {
   const h1 = await page.locator("h1").first().textContent();
   if (!h1?.includes("PDFs")) note("fail", "marketing", `Unexpected h1: ${h1}`);
   else note("ok", "marketing", "Hero headline present");
-  const demoLink = page.getByRole("link", { name: /Open demo/i });
-  if ((await demoLink.count()) === 0)
-    note("fail", "marketing", "Missing demo CTA");
-  else note("ok", "marketing", "Demo CTA present");
+  const startLink = page.getByRole("link", { name: /Start from your PDFs/i });
+  if ((await startLink.count()) === 0)
+    note("fail", "marketing", "Missing start-from-PDFs CTA");
+  else note("ok", "marketing", "Start-from-PDFs CTA present");
 
   // ---- 2. Library ----
   console.log("\n=== Library /app ===");
@@ -297,12 +297,13 @@ async function main() {
   console.log("\n=== Upload ===");
   await page.goto(`${BASE}/app/courses/new`, { waitUntil: "networkidle" });
   await shot(page, "16-upload");
-  await page.getByRole("button", { name: /Drop PDFs/i }).click();
-  await page.waitForTimeout(1400);
-  await shot(page, "17-upload-after-mock");
-  if ((await page.getByText(/ready|parsing/i).count()) === 0)
-    note("warn", "upload", "Parse status not visible after mock upload");
-  else note("ok", "upload", "Mock upload/parse status");
+  const titleBox = page.getByPlaceholder(/Organic Chemistry|Computer Networks/i);
+  if ((await titleBox.count()) === 0)
+    note("fail", "upload", "Course title field missing");
+  else note("ok", "upload", "Course title field present");
+  if ((await page.getByRole("button", { name: /Drop PDFs/i }).count()) === 0)
+    note("fail", "upload", "PDF drop zone missing");
+  else note("ok", "upload", "PDF drop zone present");
 
   // ---- 9. Sources / Insights / Settings / Diagnostic ----
   console.log("\n=== Supporting pages ===");

@@ -98,7 +98,7 @@ function extractStructuredOutline(text: string): {
       continue;
     }
 
-    // Section: "3.2 ERROR DETECTION…, 202" or "1.1 Uses of Computer Networks"
+    // Section: "3.2 ERROR DETECTION…, 202" or "1.1 Uses of the Topic"
     m = line.match(
       /^(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?\s+(.+?)(?:,\s*\d+)?$/,
     );
@@ -343,8 +343,8 @@ export function mockGenerateQuiz(opts: {
       options: [
         { id: "a", text: "An unrelated historical anecdote" },
         { id: "b", text: `Core ideas around: ${snippet.slice(0, 48)}…` },
-        { id: "c", text: "Only physical-layer signaling" },
-        { id: "d", text: "Only application UI design" },
+        { id: "c", text: "Something this lesson does not cover" },
+        { id: "d", text: "A tool or product unrelated to the topic" },
       ],
       correctOptionId: "b",
       explanation: `Grounded (mock) on lesson content for ${opts.title}.`,
@@ -366,7 +366,7 @@ export function mockGenerateQuiz(opts: {
       stem: `A common pitfall for ${opts.title} is…`,
       options: [
         { id: "a", text: "Confusing adjacent concepts" },
-        { id: "b", text: "Using only one layer’s vocabulary for everything" },
+        { id: "b", text: "Treating every detail as equally important" },
         { id: "c", text: "Ignoring units in numerical answers" },
         { id: "d", text: "All of the above can appear on exams" },
       ],

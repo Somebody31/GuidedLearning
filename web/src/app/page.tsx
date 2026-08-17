@@ -2,7 +2,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CN_COURSE_ID } from "@/lib/mock-data";
+import { DEMO_COURSE_ID } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "From PDFs to a living course path",
@@ -26,10 +26,10 @@ export default function MarketingPage() {
         </span>
         <nav className="flex items-center gap-4">
           <Link
-            href={`/app/courses/${CN_COURSE_ID}`}
+            href={`/app/courses/${DEMO_COURSE_ID}`}
             className="hidden text-[13px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)] sm:inline"
           >
-            Demo
+            Sample
           </Link>
           <Link
             href="/app"
@@ -57,10 +57,10 @@ export default function MarketingPage() {
         </p>
         <div className="animate-fade-up mt-10 flex flex-wrap gap-3 [animation-delay:220ms]">
           <Link
-            href={`/app/courses/${CN_COURSE_ID}`}
+            href="/app/courses/new"
             className="cta-primary h-11 px-6 text-[15px] hover:shadow-[0_0_24px_var(--accent-muted)]"
           >
-            Open demo · Computer Networks
+            Start from your PDFs
           </Link>
           <Link
             href="/app"
@@ -125,14 +125,14 @@ export default function MarketingPage() {
         <footer className="animate-fade-up mt-24 border-t border-[var(--hairline)] pt-8 [animation-delay:520ms]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[12px] text-[var(--text-tertiary)]">
-              Atlas Noir UI demo · mock CN data · no backend yet
+              Any subject · upload PDFs · sample course included
             </p>
             <div className="flex flex-wrap items-center gap-4 text-[12px]">
               <Link
-                href={`/app/courses/${CN_COURSE_ID}`}
+                href={`/app/courses/${DEMO_COURSE_ID}`}
                 className="text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
               >
-                Demo atlas
+                Sample course
               </Link>
               <Link
                 href="/app"

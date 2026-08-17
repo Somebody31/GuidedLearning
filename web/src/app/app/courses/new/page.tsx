@@ -1,8 +1,8 @@
 "use client";
 
-// Upload PDFs and start a new course (demo UI).
+// Upload PDFs and build a course for any subject.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, FileUp, X } from "lucide-react";
@@ -12,63 +12,125 @@ import {
   FileStatusChip,
   type FileParseStatus,
 } from "@/components/ui/file-status-chip";
-import { CN_COURSE_ID } from "@/lib/mock-data";
+import { api, wait } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import type { Course } from "@/lib/types";
 
 type FileRow = {
   id: string;
-  name: string;
-  size: string;
+  file: File;
   status: FileParseStatus;
 };
 
+function fileSize(bytes: number) {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function NewCoursePage() {
   const router = useRouter();
-  const [title, setTitle] = useState("Computer Networks");
-  const [files, setFiles] = useState<FileRow[]>([
-    {
-      id: "1",
-      name: "Kurose-Ross-ch3-transport.pdf",
-      size: "4.2 MB",
-      status: "ready",
-    },
-    {
-      id: "2",
-      name: "Lecture-05-TCP.pdf",
-      size: "1.8 MB",
-      status: "ready",
-    },
-  ]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [title, setTitle] = useState("");
+  const [files, setFiles] = useState<FileRow[]>([]);
   const [dropHot, setDropHot] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     document.title = "New course · GuidedLearning";
   }, []);
 
-  const readyCount = files.filter((f) => f.status === "ready").length;
-  const parsing = files.some((f) => f.status === "parsing");
-  const canBuild = readyCount > 0 && !parsing && Boolean(title.trim());
+  const readyCount = files.filter((f) => f.status !== "failed").length;
+  const canBuild = readyCount > 0 && Boolean(title.trim()) && !busy;
 
-  function addMockFiles() {
-    const id = String(Date.now());
-    setFiles((prev) => [
-      ...prev,
-      {
-        id,
-        name: "Lecture-notes-upload.pdf",
-        size: "2.1 MB",
-        status: "parsing",
-      },
-    ]);
-    setTimeout(() => {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === id && f.status === "parsing"
-            ? { ...f, status: "ready" }
-            : f,
-        ),
-      );
-    }, 1200);
+  function addPdfs(list: FileList | File[]) {
+    const incoming = Array.from(list);
+    const next: FileRow[] = [];
+    for (const file of incoming) {
+      const name = file.name.toLowerCase();
+      if (!name.endsWith(".pdf")) continue;
+      next.push({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        file,
+        status: "queued",
+      });
+    }
+    if (next.length === 0) {
+      setError("PDFs only — pick a .pdf file.");
+      return;
+    }
+    setError("");
+    setFiles((prev) => [...prev, ...next]);
+  }
+
+  async function buildMap() {
+    if (!canBuild) return;
+    setBusy(true);
+    setError("");
+    try {
+      const created = await api<{ course: Course }>("/v1/courses", {
+        method: "POST",
+        body: JSON.stringify({ title: title.trim() }),
+      });
+      const courseId = created.course.id;
+
+      const form = new FormData();
+      for (const row of files) {
+        form.append("files", row.file);
+      }
+      await api(`/v1/courses/${courseId}/sources`, {
+        method: "POST",
+        body: form,
+      });
+      setFiles((prev) => prev.map((row) => ({ ...row, status: "parsing" })));
+
+      let sourcesReady = false;
+      for (let i = 0; i < 60; i++) {
+        const data = await api<{ course: Course }>(`/v1/courses/${courseId}`);
+        const sources = data.course.sources;
+        let ready = 0;
+        let failed = 0;
+        for (const source of sources) {
+          if (source.status === "ready") ready += 1;
+          if (source.status === "failed") failed += 1;
+        }
+        setFiles((prev) =>
+          prev.map((row) => {
+            const match = sources.find((s) => s.name === row.file.name);
+            if (!match) return row;
+            return { ...row, status: match.status };
+          }),
+        );
+        if (sources.length > 0 && ready + failed === sources.length) {
+          if (ready === 0) {
+            throw new Error("The PDF could not be parsed. Try a text-based PDF.");
+          }
+          sourcesReady = true;
+          break;
+        }
+        await wait(800);
+      }
+      if (!sourcesReady) {
+        throw new Error("Timed out waiting for PDFs to parse.");
+      }
+
+      await api(`/v1/courses/${courseId}/build`, { method: "POST" });
+
+      for (let i = 0; i < 60; i++) {
+        const data = await api<{ course: Course }>(`/v1/courses/${courseId}`);
+        if (Object.keys(data.course.lessons).length > 0) {
+          router.push(`/app/courses/${courseId}/confirm`);
+          return;
+        }
+        await wait(800);
+      }
+      throw new Error("Timed out building the course map.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Build failed");
+      setBusy(false);
+    }
   }
 
   return (
@@ -76,7 +138,7 @@ export default function NewCoursePage() {
       <div className="mx-auto max-w-2xl px-4 py-10 pb-28 sm:pb-10 md:px-6">
         <h1 className="text-[28px] font-semibold tracking-tight">New course</h1>
         <p className="mt-1 text-[14px] text-[var(--text-tertiary)]">
-          PDFs only in v1 · textbooks and lecture slides work best
+          Any subject · PDFs of textbooks and lecture slides work best
         </p>
 
         <label className="mt-8 block text-[13px] text-[var(--text-secondary)]">
@@ -96,9 +158,10 @@ export default function NewCoursePage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Computer Networks"
+            placeholder="e.g. Organic Chemistry"
             autoComplete="off"
             maxLength={80}
+            disabled={busy}
             className="mt-1.5 w-full rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-1)] px-3 py-2.5 text-[15px] text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-disabled)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-muted)]"
           />
         </label>
@@ -108,9 +171,22 @@ export default function NewCoursePage() {
           </p>
         ) : null}
 
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          className="sr-only"
+          onChange={(e) => {
+            if (e.target.files) addPdfs(e.target.files);
+            e.target.value = "";
+          }}
+        />
+
         <button
           type="button"
-          onClick={addMockFiles}
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
           onDragEnter={(e) => {
             e.preventDefault();
             setDropHot(true);
@@ -123,13 +199,14 @@ export default function NewCoursePage() {
           onDrop={(e) => {
             e.preventDefault();
             setDropHot(false);
-            addMockFiles();
+            if (e.dataTransfer.files) addPdfs(e.dataTransfer.files);
           }}
           className={cn(
             "mt-6 flex w-full flex-col items-center justify-center rounded-[var(--radius-xl)] border border-dashed px-6 py-14 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out-soft)]",
             dropHot
               ? "border-[var(--accent)] bg-[var(--accent-muted)] scale-[1.01]"
               : "border-[var(--hairline-strong)] bg-[var(--surface-0)] hover:border-[var(--accent)] hover:bg-[var(--surface-1)]",
+            busy && "pointer-events-none opacity-60",
           )}
         >
           <span
@@ -144,7 +221,7 @@ export default function NewCoursePage() {
             Drop PDFs or click to upload
           </span>
           <span className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-            Demo: adds a mock parse job
+            Real files · any subject
           </span>
         </button>
 
@@ -154,11 +231,12 @@ export default function NewCoursePage() {
               <p className="text-[13px] text-[var(--text-tertiary)]">
                 Sources ·{" "}
                 <span className="tabular text-[var(--text-secondary)]">
-                  {readyCount}/{files.length}
+                  {files.filter((f) => f.status === "ready").length}/
+                  {files.length}
                 </span>{" "}
                 ready
-                {parsing ? (
-                  <span className="text-[var(--info)]"> · parsing…</span>
+                {busy ? (
+                  <span className="text-[var(--info)]"> · working…</span>
                 ) : null}
               </p>
             </div>
@@ -175,17 +253,18 @@ export default function NewCoursePage() {
                     <FileText className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-medium">{f.name}</p>
+                    <p className="truncate text-[14px] font-medium">{f.file.name}</p>
                     <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                      {f.size}
+                      {fileSize(f.file.size)}
                       {f.status === "parsing" ? " · extracting text" : null}
                     </p>
                   </div>
                   <FileStatusChip status={f.status} />
                   <button
                     type="button"
-                    aria-label={`Remove ${f.name}`}
-                    className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                    aria-label={`Remove ${f.file.name}`}
+                    disabled={busy}
+                    className="rounded-[var(--radius-sm)] p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] disabled:opacity-40"
                     onClick={() =>
                       setFiles((prev) => prev.filter((x) => x.id !== f.id))
                     }
@@ -202,6 +281,12 @@ export default function NewCoursePage() {
           </p>
         )}
 
+        {error ? (
+          <p className="mt-4 text-[13px] text-[var(--danger)]" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="mt-10 hidden items-center justify-between gap-3 sm:flex">
           <Link
             href="/app"
@@ -216,16 +301,14 @@ export default function NewCoursePage() {
               !title.trim()
                 ? "Add a course title"
                 : readyCount === 0
-                  ? "Add at least one ready PDF"
-                  : parsing
-                    ? "Wait for parsing to finish"
+                  ? "Add at least one PDF"
+                  : busy
+                    ? "Building…"
                     : undefined
             }
-            onClick={() =>
-              router.push(`/app/courses/${CN_COURSE_ID}/confirm`)
-            }
+            onClick={() => void buildMap()}
           >
-            {parsing ? "Parsing sources…" : "Build course map"}
+            {busy ? "Building course map…" : "Build course map"}
           </Button>
         </div>
       </div>
@@ -241,11 +324,9 @@ export default function NewCoursePage() {
           <Button
             size="lg"
             disabled={!canBuild}
-            onClick={() =>
-              router.push(`/app/courses/${CN_COURSE_ID}/confirm`)
-            }
+            onClick={() => void buildMap()}
           >
-            {parsing ? "Parsing…" : "Build course map"}
+            {busy ? "Building…" : "Build course map"}
           </Button>
         </div>
       </div>

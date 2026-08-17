@@ -48,9 +48,15 @@ export async function embedTexts(
   try {
     return await embedViaHttp(endpoint, texts, opts?.inputType ?? "document");
   } catch (err) {
-    // Local mode should fail loudly. Silent mock vectors made RAG look random.
+    const msg = err instanceof Error ? err.message : String(err);
+    const sidecarDown =
+      env.EMBEDDING_MODE === "local" &&
+      /connect|ECONNREFUSED|Unable to connect/i.test(msg);
+    // Remote (and a down local sidecar) can keep parsing with mock vectors.
     const allowMock =
-      opts?.allowMockFallback === true || env.EMBEDDING_MODE === "remote";
+      opts?.allowMockFallback === true ||
+      env.EMBEDDING_MODE === "remote" ||
+      sidecarDown;
     if (!allowMock) {
       if (err instanceof Error) throw err;
       throw new Error(`Embedding backend failed: ${String(err)}`);

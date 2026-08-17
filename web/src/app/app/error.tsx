@@ -26,7 +26,7 @@ export default function AppError({
         Couldn&apos;t render this screen
       </h1>
       <p className="max-w-sm text-[14px] text-[var(--text-secondary)]">
-        Demo UI hit an unexpected error. Retry, or head back to the library.
+        This screen hit an unexpected error. Retry, or head back to the library.
       </p>
       {error.digest ? (
         <p className="font-mono text-[11px] text-[var(--text-tertiary)]">

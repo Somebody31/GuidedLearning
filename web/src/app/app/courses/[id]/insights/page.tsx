@@ -5,10 +5,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { StateBadge } from "@/components/ui/state-badge";
-import { getCourse } from "@/lib/mock-data";
+import { api, getCourse } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Insights",
+};
+
+export const dynamic = "force-dynamic";
+
+type InsightsPayload = {
+  insights: {
+    eval: { faithfulRate: number | null; note: string };
+  };
 };
 
 export default async function InsightsPage({
@@ -17,15 +25,27 @@ export default async function InsightsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const course = getCourse(id);
+  let course = null;
+  let faithfulRate: number | null = null;
+  try {
+    course = await getCourse(id);
+    const data = await api<InsightsPayload>(`/v1/courses/${id}/insights`);
+    faithfulRate = data.insights.eval.faithfulRate;
+  } catch {
+    course = course;
+  }
   if (!course) notFound();
 
   const lessons = Object.values(course.lessons);
   const due = lessons.filter((l) => l.status === "due").length;
   const weak = lessons.filter((l) => l.status === "weak").length;
   const mastered = lessons.filter((l) => l.status === "mastered").length;
-  const coverage = 0.78;
-  const faithfulness = 0.91;
+  let cited = 0;
+  for (const l of lessons) {
+    if (l.citations.length > 0) cited += 1;
+  }
+  const coverage = lessons.length ? cited / lessons.length : 0;
+  const faithfulness = faithfulRate ?? 0;
   const needsPack = due > 0 || weak > 0;
 
   return (
@@ -151,13 +171,16 @@ export default async function InsightsPage({
                 Faithfulness sample
               </dt>
               <dd className="tabular text-[22px] font-semibold">
-                {Math.round(faithfulness * 100)}%
+                {faithfulRate === null ? "—" : `${Math.round(faithfulness * 100)}%`}
               </dd>
               <div className="mt-2 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
                 <div
                   className="bar-fill h-full rounded-full bg-[var(--accent)]"
                   style={{
-                    width: `${Math.max(faithfulness * 100, 2)}%`,
+                    width:
+                      faithfulRate === null
+                        ? "0%"
+                        : `${Math.max(faithfulness * 100, 2)}%`,
                     animationDelay: "80ms",
                   }}
                 />
@@ -165,7 +188,8 @@ export default async function InsightsPage({
             </div>
           </dl>
           <p className="mt-3 text-[13px] text-[var(--text-tertiary)]">
-            Not a fake 99.9% — sampled grounded claims vs retrieved chunks.
+            Coverage = lessons with citations. Faithfulness is sampled after
+            content exists — not a fake 99.9%.
           </p>
         </section>
 
