@@ -31,7 +31,10 @@ function readYesNo(name: string, fallback: boolean): boolean {
 
 export const env = {
   PORT: readNumber("PORT", 8787),
-  CORS_ORIGIN: readText("CORS_ORIGIN", "http://localhost:3000"),
+  CORS_ORIGIN: readText(
+    "CORS_ORIGIN",
+    "http://localhost:3000,http://127.0.0.1:3000",
+  ),
   AUTH_TOKEN: process.env.AUTH_TOKEN,
   DATABASE_URL: process.env.DATABASE_URL,
 
@@ -56,7 +59,7 @@ export const env = {
   S3_SECRET_KEY: process.env.S3_SECRET_KEY,
   S3_REGION: readText("S3_REGION", "auto"),
 
-  DATA_STORE: readText("DATA_STORE", "memory") as "memory" | "postgres",
+  DATA_STORE: readText("DATA_STORE", "file") as "memory" | "file",
   DATA_DIR: readText("DATA_DIR", "data"),
 
   // Live AI costs money. Default is off.

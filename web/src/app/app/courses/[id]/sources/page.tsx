@@ -28,12 +28,15 @@ export default function SourcesPage() {
     const form = new FormData();
     let count = 0;
     for (const file of Array.from(list)) {
-      if (!file.name.toLowerCase().endsWith(".pdf")) continue;
+      const name = file.name.toLowerCase();
+      if (!name.endsWith(".pdf") && !name.endsWith(".txt") && !name.endsWith(".md")) {
+        continue;
+      }
       form.append("files", file);
       count += 1;
     }
     if (count === 0) {
-      setUploadError("PDFs only.");
+      setUploadError("Use a .pdf, .txt, or .md file.");
       return;
     }
     setBusy(true);
@@ -92,7 +95,7 @@ export default function SourcesPage() {
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
             multiple
             className="sr-only"
             onChange={(e) => {

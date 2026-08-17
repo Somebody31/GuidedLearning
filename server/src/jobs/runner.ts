@@ -50,6 +50,7 @@ async function drainQueue() {
       }
     } finally {
       processing.delete(job.id);
+      store.scheduleSave();
     }
   }
 }

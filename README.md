@@ -40,10 +40,27 @@ cd server && bun test
 | HTTP | Hono |
 | LLM | DeepSeek V4 Flash (`deepseek-v4-flash`) |
 | Embeddings | Qwen3 Embedding |
-| Store (now) | In-memory + local uploads (optional `cn-kurose` sample) |
-| Store (next) | Postgres + pgvector · S3 for PDFs |
+| Store | JSON file under `server/data/` (`DATA_STORE=file`) + local uploads. Sample course `cn-kurose` is always seeded. |
 
 **Offline by default:** `USE_LIVE_AI=false` in `server/.env` — full pipeline uses mock embed/LLM so demos cost **zero** API credits. Set `USE_LIVE_AI=true` and keys only when you want live generation. Optional `AUTH_TOKEN` enables Bearer auth.
+
+The website proxies `/v1` and `/health` to the API. Do **not** set `NEXT_PUBLIC_API_URL` in production — the browser should call same-origin `/v1`. Point Next at the API with `API_URL` (default `http://127.0.0.1:8787`).
+
+## Production
+
+```bash
+# API — persists courses to server/data/store.json
+cd server
+# DATA_STORE=file  CORS_ORIGIN=https://your-app.example
+bun run start
+
+# Website
+cd web
+# API_URL=http://127.0.0.1:8787
+npm run build && npm start
+```
+
+Set `CORS_ORIGIN` to the website origin (comma-separated if you still hit the API cross-origin). Keep `DATA_STORE=file` so a restart does not wipe courses.
 
 ## Status
 

@@ -36,7 +36,7 @@ export default async function AppHomePage() {
     courses = await listCourses();
   } catch {
     apiError =
-      "Could not reach the API at localhost:8787. Start the server, then refresh.";
+      "Could not reach the API. Start the server, then refresh.";
   }
 
   const active = pickActive(courses);

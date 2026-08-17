@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { StateBadge } from "@/components/ui/state-badge";
-import { buildSessionPack } from "@/lib/course-utils";
+import { patchSession, startSession } from "@/lib/api";
 import { useCourse } from "@/lib/use-course";
 import type { SessionPackItem } from "@/lib/types";
 
@@ -20,9 +20,11 @@ export default function SessionPage() {
   const [initialPack, setInitialPack] = useState<SessionPackItem[]>([]);
   const [queue, setQueue] = useState<SessionPackItem[]>([]);
   const [packed, setPacked] = useState(false);
+  const [sessionId, setSessionId] = useState("");
   const [skips, setSkips] = useState(0);
   const [deferred, setDeferred] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     if (loading || packed) return;
@@ -30,18 +32,54 @@ export default function SessionPage() {
       setPacked(true);
       return;
     }
-    const pack = buildSessionPack(
-      course,
-      Math.max(course.sessionDefaultMinutes, 45),
-    );
-    setInitialPack(pack);
-    setQueue(pack);
-    setPacked(true);
-  }, [course, packed, loading]);
+    let cancelled = false;
+    startSession(courseId, Math.max(course.sessionDefaultMinutes, 45))
+      .then(({ session }) => {
+        if (cancelled) return;
+        setSessionId(session.id);
+        setInitialPack(session.pack);
+        setQueue(session.pack);
+        setSkips(session.skips);
+        setDeferred(session.deferredIds);
+        if (session.pack.length === 0) setDone(true);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setActionError(e instanceof Error ? e.message : "Could not start session");
+      })
+      .finally(() => {
+        if (!cancelled) setPacked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [course, packed, loading, courseId]);
 
   const current = queue[0];
   const lesson = current && course ? course.lessons[current.lessonId] : null;
   const skipDisabled = skips >= 2;
+
+  async function applyAction(
+    action: "skip" | "complete_item" | "finish",
+    lessonId?: string,
+  ) {
+    if (!sessionId) return;
+    setActionError("");
+    try {
+      const { session } = await patchSession(sessionId, action, lessonId);
+      setQueue(session.pack);
+      setSkips(session.skips);
+      setDeferred(session.deferredIds);
+      if (session.completedAt || session.pack.length === 0) setDone(true);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Session update failed");
+    }
+  }
+
+  function skip() {
+    if (!current || skipDisabled) return;
+    void applyAction("skip", current.lessonId);
+  }
 
   useEffect(() => {
     if (done) {
@@ -79,24 +117,34 @@ export default function SessionPage() {
       }
       if ((e.key === "k" || e.key === "K") && !skipDisabled) {
         e.preventDefault();
-        setSkips((s) => s + 1);
-        setDeferred((d) => [...d, current!.lessonId]);
-        setQueue((q) => {
-          const next = q.slice(1);
-          if (next.length === 0) setDone(true);
-          return next;
-        });
+        void skip();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [done, course, current, lesson, skipDisabled, router]);
+  }, [done, course, current, lesson, skipDisabled, router, skip]);
 
   if (loading || !packed) {
     return (
       <AppShell>
         <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
           Loading session…
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (packed && actionError && !sessionId) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <h1 className="text-[22px] font-semibold tracking-tight">
+            Could not start session
+          </h1>
+          <p className="text-[14px] text-[var(--text-secondary)]">{actionError}</p>
+          <Link href={`/app/courses/${courseId}`} className="cta-primary mt-2">
+            Back to atlas
+          </Link>
         </div>
       </AppShell>
     );
@@ -118,14 +166,6 @@ export default function SessionPage() {
         </div>
       </AppShell>
     );
-  }
-
-  function skip() {
-    if (!current || skipDisabled) return;
-    setSkips((s) => s + 1);
-    setDeferred((d) => [...d, current.lessonId]);
-    setQueue((q) => q.slice(1));
-    if (queue.length <= 1) setDone(true);
   }
 
   if (done || !current || !lesson) {
@@ -334,6 +374,11 @@ export default function SessionPage() {
               </span>
             </div>
           </div>
+          {actionError ? (
+            <p className="mt-4 text-[13px] text-[var(--warning)]" role="alert">
+              {actionError}
+            </p>
+          ) : null}
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] pt-5">
             <Button
               variant="ghost"
@@ -352,14 +397,14 @@ export default function SessionPage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
-                onClick={() => {
-                  setQueue((q) => q.slice(1));
-                  if (queue.length <= 1) setDone(true);
-                }}
+                onClick={() => void applyAction("complete_item", current.lessonId)}
               >
                 Mark done
               </Button>
-              <Button variant="ghost" onClick={() => setDone(true)}>
+              <Button
+                variant="ghost"
+                onClick={() => void applyAction("finish")}
+              >
                 End session
               </Button>
             </div>

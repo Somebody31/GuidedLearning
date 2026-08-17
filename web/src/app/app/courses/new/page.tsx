@@ -50,7 +50,9 @@ export default function NewCoursePage() {
     const next: FileRow[] = [];
     for (const file of incoming) {
       const name = file.name.toLowerCase();
-      if (!name.endsWith(".pdf")) continue;
+      if (!name.endsWith(".pdf") && !name.endsWith(".txt") && !name.endsWith(".md")) {
+        continue;
+      }
       next.push({
         id: `${file.name}-${file.size}-${file.lastModified}`,
         file,
@@ -58,7 +60,7 @@ export default function NewCoursePage() {
       });
     }
     if (next.length === 0) {
-      setError("PDFs only — pick a .pdf file.");
+      setError("Use a .pdf, .txt, or .md file.");
       return;
     }
     setError("");
@@ -174,7 +176,7 @@ export default function NewCoursePage() {
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf,.pdf"
+          accept="application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
           multiple
           className="sr-only"
           onChange={(e) => {

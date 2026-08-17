@@ -1,7 +1,6 @@
-// In-memory database for the demo.
-// Everything lives in Maps/arrays. Restart the server and the seed course comes back.
+// Course data lives in Maps. DATA_STORE=file writes a JSON snapshot so restarts keep work.
 
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { env } from "../env";
 import type {
@@ -21,7 +20,18 @@ function ensureDataDirs() {
   mkdirSync(join(env.DATA_DIR, "tmp"), { recursive: true });
 }
 
-class MemoryStore {
+export type StoreSnapshot = {
+  version: 1;
+  courses: Course[];
+  pages: [string, SourcePage[]][];
+  chunks: [string, Chunk[]][];
+  sessions: StudySession[];
+  attempts: QuizAttemptRecord[];
+  evals: EvalSample[];
+  attemptCounters: [string, number][];
+};
+
+export class MemoryStore {
   courses = new Map<string, Course>();
   jobs = new Map<string, Job>();
   pages = new Map<string, SourcePage[]>(); // sourceId -> pages
@@ -31,11 +41,99 @@ class MemoryStore {
   evals: EvalSample[] = [];
   /** `${courseId}:${lessonId}` -> attempts (soft counter; reset on open) */
   attemptCounters = new Map<string, number>();
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     ensureDataDirs();
+    if (env.DATA_STORE === "file") this.loadFromDisk();
+    this.ensureSeed();
+    if (env.DATA_STORE === "file") {
+      const flush = () => this.saveNow();
+      process.on("SIGINT", () => {
+        flush();
+        process.exit(0);
+      });
+      process.on("SIGTERM", () => {
+        flush();
+        process.exit(0);
+      });
+      process.on("beforeExit", flush);
+    }
+  }
+
+  ensureSeed() {
+    if (this.courses.has(CN_COURSE_ID)) return;
     const seed = createCnSeedCourse();
     this.courses.set(seed.id, structuredClone(seed));
+    this.scheduleSave();
+  }
+
+  dump(): StoreSnapshot {
+    return {
+      version: 1,
+      courses: [...this.courses.values()],
+      pages: [...this.pages.entries()],
+      chunks: [...this.chunks.entries()],
+      sessions: [...this.sessions.values()],
+      attempts: this.attempts,
+      evals: this.evals,
+      attemptCounters: [...this.attemptCounters.entries()],
+    };
+  }
+
+  hydrate(data: StoreSnapshot) {
+    this.courses = new Map((data.courses ?? []).map((c) => [c.id, c]));
+    this.pages = new Map(data.pages ?? []);
+    this.chunks = new Map(data.chunks ?? []);
+    this.sessions = new Map((data.sessions ?? []).map((s) => [s.id, s]));
+    this.attempts = data.attempts ?? [];
+    this.evals = data.evals ?? [];
+    this.attemptCounters = new Map(data.attemptCounters ?? []);
+    // Jobs are not persisted. Stuck parse rows become retryable.
+    for (const course of this.courses.values()) {
+      for (const source of course.sources) {
+        if (source.status === "queued" || source.status === "parsing") {
+          source.status = "failed";
+          source.error = "Server restarted during parse — retry";
+        }
+      }
+    }
+  }
+
+  snapshotPath() {
+    return join(env.DATA_DIR, "store.json");
+  }
+
+  loadFromDisk() {
+    try {
+      const raw = readFileSync(this.snapshotPath(), "utf8");
+      const data = JSON.parse(raw) as StoreSnapshot;
+      if (!data || !Array.isArray(data.courses)) return;
+      this.hydrate(data);
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code !== "ENOENT") console.error("store load failed", err);
+    }
+  }
+
+  saveNow() {
+    // ponytail: one JSON file, single process; split if you run multiple API workers
+    if (env.DATA_STORE !== "file") return;
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+    ensureDataDirs();
+    const dest = this.snapshotPath();
+    const tmp = dest + ".tmp";
+    writeFileSync(tmp, JSON.stringify(this.dump()));
+    renameSync(tmp, dest);
+  }
+
+  scheduleSave() {
+    if (env.DATA_STORE !== "file") return;
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.saveNow(), 400);
   }
 
   listCourses(): Course[] {

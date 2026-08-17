@@ -1,9 +1,13 @@
-// Tiny client for the GuidedLearning API (default: http://localhost:8787).
+// Browser calls same-origin /v1 (Next rewrites to the API). Server-side uses API_URL.
 
-import type { Course, CourseSummary, Lesson, Unit } from "./types";
+import type { Course, CourseSummary, Lesson, StudySession, Unit } from "./types";
 
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8787";
+  typeof window === "undefined"
+    ? (process.env.API_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://127.0.0.1:8787")
+    : "";
 
 // Seeded sample course. Any other subject is a new course from PDFs.
 export const DEMO_COURSE_ID = "cn-kurose";
@@ -66,4 +70,22 @@ export async function getLesson(courseId: string, lessonId: string) {
     courseId: string;
     courseTitle: string;
   }>(`/v1/courses/${courseId}/lessons/${lessonId}`);
+}
+
+export async function startSession(courseId: string, budgetMinutes: number) {
+  return api<{ session: StudySession }>(`/v1/courses/${courseId}/sessions`, {
+    method: "POST",
+    body: JSON.stringify({ budgetMinutes }),
+  });
+}
+
+export async function patchSession(
+  sessionId: string,
+  action: "skip" | "complete_item" | "finish",
+  lessonId?: string,
+) {
+  return api<{ session: StudySession }>(`/v1/sessions/${sessionId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action, lessonId }),
+  });
 }

@@ -11,7 +11,7 @@ import { LLM, EMBEDDING } from "./llm/models";
 import { embeddingMode } from "./embed/qwen";
 import { llmMode } from "./llm/client";
 import { liveBudgetSnapshot } from "./llm/budget";
-import { CN_COURSE_ID } from "./db/store";
+import { store, CN_COURSE_ID } from "./db/store";
 
 const app = new Hono();
 
@@ -74,6 +74,12 @@ app.get("/", (c) => {
 app.get("/health", (c) => c.json(healthInfo()));
 
 app.use("/v1/*", authMiddleware);
+app.use("/v1/*", async (c, next) => {
+  await next();
+  if (c.req.method !== "GET" && c.req.method !== "HEAD" && c.req.method !== "OPTIONS") {
+    store.scheduleSave();
+  }
+});
 app.route("/v1/courses", coursesRoutes);
 app.route("/v1/sessions", sessionsRoutes);
 
@@ -83,7 +89,11 @@ app.notFound((c) => {
 
 app.onError((err, c) => {
   console.error(err);
-  return c.json({ error: err.message || "Internal error" }, 500);
+  const exposed =
+    process.env.NODE_ENV === "production"
+      ? "Internal error"
+      : err.message || "Internal error";
+  return c.json({ error: exposed }, 500);
 });
 
 const port = env.PORT;

@@ -94,3 +94,14 @@ export interface SessionPackItem {
   lessonId: string;
   kind: "review" | "new" | "weak" | "resume";
 }
+
+export interface StudySession {
+  id: string;
+  courseId: string;
+  budgetMinutes: number;
+  pack: SessionPackItem[];
+  skips: number;
+  deferredIds: string[];
+  startedAt: string;
+  completedAt?: string;
+}

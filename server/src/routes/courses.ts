@@ -134,6 +134,10 @@ coursesRoutes.post("/:id/sources", async (c) => {
 
   const created = [];
   for (const file of files) {
+    const lower = file.name.toLowerCase();
+    if (!lower.endsWith(".pdf") && !lower.endsWith(".txt") && !lower.endsWith(".md")) {
+      return c.json({ error: `${file.name} must be a .pdf, .txt, or .md file` }, 400);
+    }
     if (file.size > 50 * 1024 * 1024) {
       return c.json({ error: `${file.name} exceeds 50MB` }, 400);
     }

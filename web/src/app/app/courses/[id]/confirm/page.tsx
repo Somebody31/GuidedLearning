@@ -165,8 +165,9 @@ export default function ConfirmCoursePage() {
   const emptyTitles = Object.keys(course.lessons).filter(
     (lid) => !(titles[lid] ?? course.lessons[lid]?.title ?? "").trim(),
   ).length;
+  const alreadyOn = course.lifecycle === "activated";
   const canActivate =
-    saveState !== "error" && emptyTitles === 0 && !activating;
+    !alreadyOn && saveState !== "error" && emptyTitles === 0 && !activating;
 
   return (
     <AppShell courseId={course.id} courseTitle={course.title} activeNav="confirm">
@@ -206,15 +207,17 @@ export default function ConfirmCoursePage() {
               className="hidden sm:inline-flex"
               disabled={!canActivate}
               title={
-                emptyTitles > 0
-                  ? `${emptyTitles} lesson title${emptyTitles === 1 ? "" : "s"} empty`
-                  : saveState === "error"
-                    ? "Fix save error first"
-                    : undefined
+                alreadyOn
+                  ? "Already activated"
+                  : emptyTitles > 0
+                    ? `${emptyTitles} lesson title${emptyTitles === 1 ? "" : "s"} empty`
+                    : saveState === "error"
+                      ? "Fix save error first"
+                      : undefined
               }
               onClick={() => setShowActivate(true)}
             >
-              Activate course
+              {alreadyOn ? "Already activated" : "Activate course"}
             </Button>
           </div>
         </div>
@@ -280,20 +283,22 @@ export default function ConfirmCoursePage() {
       <div className="fixed inset-x-0 bottom-14 z-[var(--z-raised)] border-t border-[var(--hairline)] bg-[var(--canvas)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <span className="text-[12px] text-[var(--text-tertiary)]">
-            {emptyTitles > 0
-              ? `${emptyTitles} empty title${emptyTitles === 1 ? "" : "s"}`
-              : saveState === "saved"
-                ? "Draft saved"
-                : saveState === "saving"
-                  ? "Saving…"
-                  : "Save error"}
+            {alreadyOn
+              ? "Activated"
+              : emptyTitles > 0
+                ? `${emptyTitles} empty title${emptyTitles === 1 ? "" : "s"}`
+                : saveState === "saved"
+                  ? "Draft saved"
+                  : saveState === "saving"
+                    ? "Saving…"
+                    : "Save error"}
           </span>
           <Button
             size="lg"
             disabled={!canActivate}
             onClick={() => setShowActivate(true)}
           >
-            Activate course
+            {alreadyOn ? "Already activated" : "Activate course"}
           </Button>
         </div>
       </div>
