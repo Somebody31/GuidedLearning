@@ -1,10 +1,10 @@
-/** Pinned model ids — live calls only when USE_LIVE_AI=true. */
+// Which AI models we use. Live calls only happen when USE_LIVE_AI=true.
 
 export const LLM = {
   provider: "deepseek",
   model: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
   baseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
-} as const;
+};
 
 export const EMBEDDING = {
   provider: "qwen3",
@@ -16,4 +16,4 @@ export const EMBEDDING = {
   dims: process.env.EMBEDDING_DIMS
     ? Number(process.env.EMBEDDING_DIMS)
     : 1024,
-} as const;
+};

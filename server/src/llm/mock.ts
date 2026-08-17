@@ -1,3 +1,6 @@
+// Fake AI used when live AI is off. Same shapes as the real generators,
+// so the rest of the app does not need two different code paths.
+
 import type {
   Chunk,
   Citation,
@@ -5,8 +8,6 @@ import type {
   QuizQuestion,
   Unit,
 } from "../types";
-
-/** Offline stand-ins for DeepSeek — free, deterministic, good enough for pipeline demos. */
 
 export function mockDraftGraph(opts: {
   courseTitle: string;

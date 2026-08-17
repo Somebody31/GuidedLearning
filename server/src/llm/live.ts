@@ -1,15 +1,15 @@
+// Ask DeepSeek for a short lesson or quiz. Used only when a student opens a lesson.
+
 import type { Chunk, Citation, QuizQuestion } from "../types";
 import { chatCompletion } from "./client";
 import { env } from "../env";
 
-/**
- * Frugal live generators — short prompts, tiny JSON, low max_tokens.
- * Call only for on-demand lesson open (not bulk course gen).
- */
-
 function clip(s: string, n: number) {
   const t = s.replace(/\s+/g, " ").trim();
-  return t.length <= n ? t : `${t.slice(0, n - 1)}…`;
+  if (t.length <= n) {
+    return t;
+  }
+  return `${t.slice(0, n - 1)}…`;
 }
 
 export async function liveGenerateLesson(opts: {

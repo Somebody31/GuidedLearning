@@ -1,5 +1,7 @@
 "use client";
 
+// Multiple-choice quiz for one lesson.
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

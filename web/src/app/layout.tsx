@@ -1,3 +1,5 @@
+// Root layout: fonts, theme script, and the HTML shell.
+
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";

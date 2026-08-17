@@ -1,3 +1,6 @@
+// Demo Computer Networks course used by the website.
+// Later this can be replaced with real API data.
+
 import type { Course, SessionPackItem } from "./types";
 
 export const CN_COURSE_ID = "cn-kurose";
@@ -588,14 +591,17 @@ export function listCourses(): Course[] {
 
 export function getActiveCourse(): Course {
   const courses = listCourses();
-  return [...courses].sort((a, b) => {
-    const ta = a.lastStudiedAt ?? a.createdAt;
-    const tb = b.lastStudiedAt ?? b.createdAt;
-    return tb.localeCompare(ta);
-  })[0];
+  let best = courses[0];
+  for (const course of courses) {
+    const a = best.lastStudiedAt ?? best.createdAt;
+    const b = course.lastStudiedAt ?? course.createdAt;
+    if (b > a) {
+      best = course;
+    }
+  }
+  return best;
 }
 
-/** Lesson study time only — quiz is assumed inside estMinutes for packing density. */
 export function lessonPackCost(lesson: { estMinutes: number }): number {
   return lesson.estMinutes;
 }
@@ -604,38 +610,31 @@ export function buildSessionPack(
   course: Course,
   budgetMinutes: number,
 ): SessionPackItem[] {
-  const lessons = Object.values(course.lessons);
-  const due = lessons.filter((l) => l.status === "due");
-  const weak = lessons.filter((l) => l.status === "weak");
-  const resume = lessons.filter((l) => l.status === "in_progress");
-  const available = lessons.filter((l) => l.status === "available");
+  const lessons = Object.values(course.lessons).slice();
+  lessons.sort((a, b) => a.estMinutes - b.estMinutes);
 
-  // Priority tiers; within each tier pack smallest first so the budget fills denser.
-  const tiers: SessionPackItem[][] = [
-    due
-      .slice()
-      .sort((a, b) => a.estMinutes - b.estMinutes)
-      .map((l) => ({ lessonId: l.id, kind: "review" as const })),
-    weak
-      .slice()
-      .sort((a, b) => a.estMinutes - b.estMinutes)
-      .map((l) => ({ lessonId: l.id, kind: "weak" as const })),
-    resume
-      .slice()
-      .sort((a, b) => a.estMinutes - b.estMinutes)
-      .map((l) => ({ lessonId: l.id, kind: "resume" as const })),
-    available
-      .slice()
-      .sort((a, b) => a.estMinutes - b.estMinutes)
-      .map((l) => ({ lessonId: l.id, kind: "new" as const })),
-  ];
+  const due: SessionPackItem[] = [];
+  const weak: SessionPackItem[] = [];
+  const resume: SessionPackItem[] = [];
+  const available: SessionPackItem[] = [];
 
+  for (const lesson of lessons) {
+    if (lesson.status === "due") {
+      due.push({ lessonId: lesson.id, kind: "review" });
+    } else if (lesson.status === "weak") {
+      weak.push({ lessonId: lesson.id, kind: "weak" });
+    } else if (lesson.status === "in_progress") {
+      resume.push({ lessonId: lesson.id, kind: "resume" });
+    } else if (lesson.status === "available") {
+      available.push({ lessonId: lesson.id, kind: "new" });
+    }
+  }
+
+  const tiers = [due, weak, resume, available];
   const pack: SessionPackItem[] = [];
-  let used = 0;
   const packed = new Set<string>();
+  let used = 0;
 
-  // Multi-pass: each pass may add smaller items that fit remaining budget
-  // (first pass always admits at least one item even if over budget).
   for (let pass = 0; pass < 3; pass++) {
     let added = false;
     for (const tier of tiers) {

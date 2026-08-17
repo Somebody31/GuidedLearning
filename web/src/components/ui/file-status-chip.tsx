@@ -1,3 +1,5 @@
+// Chip for PDF parse status (queued, ready, failed).
+
 import { cn } from "@/lib/cn";
 
 export type FileParseStatus = "queued" | "parsing" | "ready" | "failed";

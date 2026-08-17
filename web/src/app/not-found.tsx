@@ -1,3 +1,5 @@
+// Unknown URL.
+
 import Link from "next/link";
 import { CN_COURSE_ID } from "@/lib/mock-data";
 

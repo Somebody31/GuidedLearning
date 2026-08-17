@@ -1,5 +1,7 @@
 "use client";
 
+// Shared top bar and course navigation.
+
 import { useEffect } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";

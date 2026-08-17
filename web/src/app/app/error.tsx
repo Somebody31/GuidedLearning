@@ -1,5 +1,7 @@
 "use client";
 
+// Shown if a page in /app crashes.
+
 import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

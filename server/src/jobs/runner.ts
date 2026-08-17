@@ -1,3 +1,6 @@
+// Background jobs: parse a PDF, build a course map, write a lesson, write a quiz.
+// The API starts a job and this file actually does the work.
+
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { env, liveLlmEnabled } from "../env";
@@ -17,7 +20,7 @@ import type { Job, SourcePage } from "../types";
 
 const processing = new Set<string>();
 
-/** Fire-and-forget job processing (same process as API). */
+// Start any jobs that are waiting. Safe to call often.
 export function kickJobs() {
   void drainQueue();
 }

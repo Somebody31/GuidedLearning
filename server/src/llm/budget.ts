@@ -1,6 +1,8 @@
+// Stop us from spending too many paid AI calls.
+// These counters reset when you restart the server.
+
 import { env } from "../env";
 
-/** Process-local spend guard — reset on server restart. */
 let liveCalls = 0;
 let promptTokensApprox = 0;
 let completionTokensApprox = 0;
@@ -28,10 +30,13 @@ export function recordLiveCall(opts?: {
   completionChars?: number;
 }) {
   liveCalls += 1;
-  if (opts?.promptTokens != null) promptTokensApprox += opts.promptTokens;
-  else if (opts?.promptChars != null) {
+
+  if (opts?.promptTokens != null) {
+    promptTokensApprox += opts.promptTokens;
+  } else if (opts?.promptChars != null) {
     promptTokensApprox += Math.ceil(opts.promptChars / 4);
   }
+
   if (opts?.completionTokens != null) {
     completionTokensApprox += opts.completionTokens;
   } else if (opts?.completionChars != null) {

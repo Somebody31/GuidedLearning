@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+// Default Next.js settings. The website talks to the API at localhost:8787.
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

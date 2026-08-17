@@ -1,3 +1,5 @@
+// Shared shapes used by the website pages.
+
 export type LessonStatus =
   | "locked"
   | "available"

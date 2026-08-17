@@ -1,3 +1,5 @@
+// Split pages into smaller pieces, then turn each piece into a vector.
+
 import type { Chunk, SourcePage } from "../types";
 import { embedTexts } from "../embed/qwen";
 

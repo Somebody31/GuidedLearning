@@ -1,5 +1,7 @@
 "use client";
 
+// Two-or-more button group (map / list, dark / light).
+
 import { cn } from "@/lib/cn";
 
 export function SegmentedControl<T extends string>({

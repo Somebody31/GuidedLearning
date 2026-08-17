@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Local Qwen3 Embedding server (OpenAI-compatible /v1/embeddings).
+Small local embedding server.
 
-Default model: Qwen/Qwen3-Embedding-0.6B (smallest official Qwen3 embedding;
-there is no 0.8B in the series — sizes are 0.6B / 4B / 8B).
+The main Bun API sends text here and gets vectors back.
+Default model: Qwen/Qwen3-Embedding-0.6B
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ from urllib.parse import urlparse
 MODEL_ID = os.environ.get("EMBED_MODEL", "Qwen/Qwen3-Embedding-0.6B")
 HOST = os.environ.get("EMBED_HOST", "127.0.0.1")
 PORT = int(os.environ.get("EMBED_PORT", "8790"))
-# MRL: truncate/normalize to this dim (32–1024 for 0.6B). Default 1024 full.
 EMBED_DIMS = int(os.environ.get("EMBED_DIMS", "1024"))
-DEVICE = os.environ.get("EMBED_DEVICE", "auto")  # auto | cuda | cpu
+# cuda | cpu | auto
+DEVICE = os.environ.get("EMBED_DEVICE", "cuda")
 
 _model = None
 
@@ -30,7 +30,9 @@ def get_device() -> str:
     try:
         import torch
 
-        return "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            return "cuda"
+        return "cpu"
     except Exception:
         return "cpu"
 
@@ -41,16 +43,26 @@ def load_model():
         return _model
 
     from sentence_transformers import SentenceTransformer
+    import torch
 
     device = get_device()
+    if device.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError(
+            "EMBED_DEVICE=cuda but no GPU was found. "
+            "Install a CUDA torch build or set EMBED_DEVICE=cpu."
+        )
+
     print(f"[embed] loading {MODEL_ID} on {device} …", flush=True)
     _model = SentenceTransformer(MODEL_ID, device=device)
-    # left padding recommended for Qwen3 embedding
     try:
         _model.tokenizer.padding_side = "left"
     except Exception:
         pass
-    print(f"[embed] ready · dim_cap={EMBED_DIMS}", flush=True)
+
+    extra = ""
+    if torch.cuda.is_available():
+        extra = f" · gpu={torch.cuda.get_device_name(0)}"
+    print(f"[embed] ready · dim_cap={EMBED_DIMS}{extra}", flush=True)
     return _model
 
 
@@ -61,13 +73,16 @@ def encode_texts(texts: list[str], *, is_query: bool) -> list[list[float]]:
         "convert_to_numpy": True,
         "show_progress_bar": False,
     }
-    # Official usage: queries use prompt_name="query"; documents do not.
     if is_query:
         kwargs["prompt_name"] = "query"
 
-    # truncate long inputs for speed (docs allow 32k; we keep demos cheap)
     max_chars = int(os.environ.get("EMBED_MAX_CHARS", "4000"))
-    clipped = [t if len(t) <= max_chars else t[:max_chars] for t in texts]
+    clipped = []
+    for t in texts:
+        if len(t) <= max_chars:
+            clipped.append(t)
+        else:
+            clipped.append(t[:max_chars])
 
     vectors = model.encode(clipped, **kwargs)
     out: list[list[float]] = []
@@ -75,7 +90,6 @@ def encode_texts(texts: list[str], *, is_query: bool) -> list[list[float]]:
         v = row.tolist()
         if EMBED_DIMS and len(v) > EMBED_DIMS:
             v = v[:EMBED_DIMS]
-            # re-normalize after MRL truncate
             norm = sum(x * x for x in v) ** 0.5 or 1.0
             v = [x / norm for x in v]
         out.append(v)
@@ -100,13 +114,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path in ("/health", "/v1/health"):
-            device = get_device()
             self._json(
                 200,
                 {
                     "ok": True,
                     "model": MODEL_ID,
-                    "device": device,
+                    "device": get_device(),
                     "dims": EMBED_DIMS,
                     "loaded": _model is not None,
                 },
@@ -124,58 +137,57 @@ class Handler(BaseHTTPRequestHandler):
             self._json(400, {"error": "invalid json"})
             return
 
-        if path in ("/v1/embeddings", "/embeddings"):
-            try:
-                inp = body.get("input")
-                if isinstance(inp, str):
-                    texts = [inp]
-                elif isinstance(inp, list):
-                    texts = [str(x) for x in inp]
-                else:
-                    self._json(400, {"error": "input must be string or string[]"})
-                    return
-                if not texts:
-                    self._json(400, {"error": "empty input"})
-                    return
-                if len(texts) > 64:
-                    self._json(400, {"error": "max 64 texts per request"})
-                    return
+        if path not in ("/v1/embeddings", "/embeddings"):
+            self._json(404, {"error": "not found"})
+            return
 
-                # Optional: {"input_type": "query"|"document"} — default document
-                input_type = str(body.get("input_type") or body.get("type") or "document")
-                is_query = input_type.lower() in ("query", "q", "search")
+        try:
+            inp = body.get("input")
+            if isinstance(inp, str):
+                texts = [inp]
+            elif isinstance(inp, list):
+                texts = [str(x) for x in inp]
+            else:
+                self._json(400, {"error": "input must be string or string[]"})
+                return
+            if not texts:
+                self._json(400, {"error": "empty input"})
+                return
+            if len(texts) > 64:
+                self._json(400, {"error": "max 64 texts per request"})
+                return
 
-                vectors = encode_texts(texts, is_query=is_query)
-                data = [
+            input_type = str(body.get("input_type") or body.get("type") or "document")
+            is_query = input_type.lower() in ("query", "q", "search")
+
+            vectors = encode_texts(texts, is_query=is_query)
+            data = []
+            for i, vec in enumerate(vectors):
+                data.append(
                     {
                         "object": "embedding",
                         "index": i,
                         "embedding": vec,
                     }
-                    for i, vec in enumerate(vectors)
-                ]
-                self._json(
-                    200,
-                    {
-                        "object": "list",
-                        "model": body.get("model") or MODEL_ID,
-                        "data": data,
-                        "usage": {
-                            "prompt_tokens": sum(max(1, len(t) // 4) for t in texts),
-                            "total_tokens": sum(max(1, len(t) // 4) for t in texts),
-                        },
-                    },
                 )
-            except Exception as e:
-                traceback.print_exc()
-                self._json(500, {"error": str(e)})
-            return
-
-        self._json(404, {"error": "not found"})
+            self._json(
+                200,
+                {
+                    "object": "list",
+                    "model": body.get("model") or MODEL_ID,
+                    "data": data,
+                    "usage": {
+                        "prompt_tokens": sum(max(1, len(t) // 4) for t in texts),
+                        "total_tokens": sum(max(1, len(t) // 4) for t in texts),
+                    },
+                },
+            )
+        except Exception as e:
+            traceback.print_exc()
+            self._json(500, {"error": str(e)})
 
 
 def main() -> None:
-    # Eager load so first client request is fast
     load_model()
     httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"[embed] listening http://{HOST}:{PORT}  model={MODEL_ID}", flush=True)

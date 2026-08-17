@@ -1,5 +1,7 @@
 "use client";
 
+// XYFlow map of units and lessons.
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Background,

@@ -1,24 +1,32 @@
+// Turn text into a list of numbers (an embedding).
+// mock = fake hash vectors (free). local/remote = the real model.
+
 import { embeddingEndpoint, env, liveEmbedEnabled } from "../env";
 import { EMBEDDING } from "../llm/models";
 
-/**
- * Deterministic offline embedding — free, stable for cosine retrieval demos.
- * Local/remote Qwen via OpenAI-compatible /v1/embeddings when configured.
- */
 export function mockEmbed(text: string, dims = env.EMBEDDING_DIMS): number[] {
   const v = new Array<number>(dims).fill(0);
   const s = text.toLowerCase();
+
   for (let i = 0; i < s.length; i++) {
     const code = s.charCodeAt(i);
     v[i % dims]! += ((code * (i + 1)) % 97) / 97;
   }
-  // bag-of-tokenish signal
-  for (const tok of s.split(/[^a-z0-9]+/).filter(Boolean)) {
+
+  const tokens = s.split(/[^a-z0-9]+/).filter(Boolean);
+  for (const tok of tokens) {
     let h = 0;
-    for (let i = 0; i < tok.length; i++) h = (h * 31 + tok.charCodeAt(i)) >>> 0;
+    for (let i = 0; i < tok.length; i++) {
+      h = (h * 31 + tok.charCodeAt(i)) >>> 0;
+    }
     v[h % dims]! += 1;
   }
-  const norm = Math.sqrt(v.reduce((a, b) => a + b * b, 0)) || 1;
+
+  let sumSquares = 0;
+  for (const x of v) {
+    sumSquares += x * x;
+  }
+  const norm = Math.sqrt(sumSquares) || 1;
   return v.map((x) => x / norm);
 }
 
@@ -28,7 +36,9 @@ export async function embedTexts(
   texts: string[],
   opts?: { inputType?: EmbedInputType; allowMockFallback?: boolean },
 ): Promise<number[][]> {
-  if (texts.length === 0) return [];
+  if (texts.length === 0) {
+    return [];
+  }
 
   const endpoint = embeddingEndpoint();
   if (!endpoint || env.EMBEDDING_MODE === "mock") {
@@ -38,20 +48,18 @@ export async function embedTexts(
   try {
     return await embedViaHttp(endpoint, texts, opts?.inputType ?? "document");
   } catch (err) {
-    // Local mode: never silently mock — that produced random RAG on the CN book.
+    // Local mode should fail loudly. Silent mock vectors made RAG look random.
     const allowMock =
       opts?.allowMockFallback === true || env.EMBEDDING_MODE === "remote";
     if (!allowMock) {
-      throw err instanceof Error
-        ? err
-        : new Error(`Embedding backend failed: ${String(err)}`);
+      if (err instanceof Error) throw err;
+      throw new Error(`Embedding backend failed: ${String(err)}`);
     }
     console.warn("embedding backend failed, falling back to mock:", err);
     return texts.map((t) => mockEmbed(t));
   }
 }
 
-// Small batches keep 6GB GPUs from OOM on long textbook pages.
 const EMBED_BATCH = Math.max(
   1,
   Number.parseInt(process.env.EMBED_BATCH ?? "8", 10) || 8,
@@ -62,9 +70,7 @@ async function embedViaHttp(
   texts: string[],
   inputType: EmbedInputType,
 ): Promise<number[][]> {
-  const url = base.endsWith("/embeddings")
-    ? base
-    : `${base}/v1/embeddings`;
+  const url = base.endsWith("/embeddings") ? base : `${base}/v1/embeddings`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -94,17 +100,19 @@ async function embedViaHttp(
     const data = (await res.json()) as {
       data?: { embedding: number[]; index: number }[];
     };
-    if (!data.data?.length) throw new Error("Embedding response empty");
+    if (!data.data || data.data.length === 0) {
+      throw new Error("Embedding response empty");
+    }
 
-    const vectors = data.data
-      .slice()
-      .sort((a, b) => a.index - b.index)
-      .map((d) => d.embedding);
-    out.push(...vectors);
+    const rows = data.data.slice();
+    rows.sort((a, b) => a.index - b.index);
+    for (const row of rows) {
+      out.push(row.embedding);
+    }
+
     if (texts.length > EMBED_BATCH) {
-      console.log(
-        `embed batch ${Math.floor(i / EMBED_BATCH) + 1}/${Math.ceil(texts.length / EMBED_BATCH)} (${out.length}/${texts.length})`,
-      );
+      const done = Math.min(i + batch.length, texts.length);
+      console.log(`embed batch ${done}/${texts.length}`);
     }
   }
   return out;
@@ -117,7 +125,6 @@ export function embeddingConfigured(): boolean {
 export function embeddingMode(): "mock" | "local" | "remote" {
   if (env.EMBEDDING_MODE === "local") return "local";
   if (env.EMBEDDING_MODE === "remote") return "remote";
-  // legacy remote when keys present under USE_LIVE_AI
   if (liveEmbedEnabled() && env.EMBEDDING_BASE_URL) return "remote";
   return "mock";
 }

@@ -1,4 +1,4 @@
-/** Demo prefs — browser-local only until backend sync. */
+// Theme and session length saved in the browser (localStorage).
 
 export const PREFS_KEY = "gl:prefs";
 

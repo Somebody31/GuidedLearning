@@ -1,5 +1,7 @@
 "use client";
 
+// One lesson circle on the atlas map.
+
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Lock } from "lucide-react";

@@ -1,3 +1,5 @@
+// Circular progress for how well a lesson is known.
+
 import { cn } from "@/lib/cn";
 
 export function MasteryRing({

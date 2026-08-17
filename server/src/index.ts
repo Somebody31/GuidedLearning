@@ -1,3 +1,5 @@
+// Main API server. The website is a separate app at http://localhost:3000
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -23,8 +25,16 @@ app.use(
   }),
 );
 
-app.get("/health", (c) =>
-  c.json({
+// Simple status object so we can see if the server is running.
+function healthInfo() {
+  let note = "Offline mock AI (default) — no paid API calls";
+  if (env.USE_LIVE_AI && liveLlmEnabled()) {
+    note = "Live AI on — lessons generate when you open them";
+  } else if (env.USE_LIVE_AI) {
+    note = "USE_LIVE_AI=true but DEEPSEEK_API_KEY is missing — still mock";
+  }
+
+  return {
     ok: true,
     service: "guidedlearning-server",
     store: env.DATA_STORE,
@@ -47,19 +57,30 @@ app.get("/health", (c) =>
     },
     seedCourseId: CN_COURSE_ID,
     liveBudget: liveBudgetSnapshot(),
-    note: env.USE_LIVE_AI
-      ? liveLlmEnabled()
-        ? "Live AI on — lazy lesson/quiz only, hard call+token caps (see liveBudget)"
-        : "USE_LIVE_AI=true but DEEPSEEK_API_KEY missing — still mock"
-      : "Offline mock AI (default) — no paid API calls",
-  }),
-);
+    note,
+  };
+}
+
+// This is the API, not the website.
+app.get("/", (c) => {
+  return c.json({
+    ok: true,
+    message: "This is the API. Open the website at http://localhost:3000",
+    health: "/health",
+    courses: "/v1/courses",
+  });
+});
+
+app.get("/health", (c) => c.json(healthInfo()));
 
 app.use("/v1/*", authMiddleware);
 app.route("/v1/courses", coursesRoutes);
 app.route("/v1/sessions", sessionsRoutes);
 
-app.notFound((c) => c.json({ error: "Not found" }, 404));
+app.notFound((c) => {
+  return c.json({ error: "Not found" }, 404);
+});
+
 app.onError((err, c) => {
   console.error(err);
   return c.json({ error: err.message || "Internal error" }, 500);

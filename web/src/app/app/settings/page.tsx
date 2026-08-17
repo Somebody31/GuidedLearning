@@ -1,5 +1,7 @@
 "use client";
 
+// Theme, motion, and default session length.
+
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { SegmentedControl } from "@/components/ui/segmented-control";

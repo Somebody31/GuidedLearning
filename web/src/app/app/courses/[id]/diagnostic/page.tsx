@@ -1,5 +1,7 @@
 "use client";
 
+// Short placement quiz when you first activate a course.
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

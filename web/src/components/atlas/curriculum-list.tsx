@@ -1,3 +1,5 @@
+// Linear list of units and lessons (easier than the map).
+
 import Link from "next/link";
 import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";

@@ -1,3 +1,6 @@
+// Call DeepSeek to get a chat reply.
+// This only runs when USE_LIVE_AI=true and we still have budget left.
+
 import { env, liveLlmEnabled } from "../env";
 import {
   canSpendLiveCall,
@@ -11,10 +14,6 @@ export type ChatMessage = {
   content: string;
 };
 
-/**
- * DeepSeek chat — only when USE_LIVE_AI=true and DEEPSEEK_API_KEY set.
- * Always sends max_tokens; refuses if process call budget is spent.
- */
 export async function chatCompletion(opts: {
   messages: ChatMessage[];
   temperature?: number;
@@ -31,7 +30,22 @@ export async function chatCompletion(opts: {
   }
 
   const maxTokens = opts.maxTokens ?? env.LIVE_AI_MAX_OUTPUT_TOKENS;
-  const promptChars = opts.messages.reduce((n, m) => n + m.content.length, 0);
+
+  let promptChars = 0;
+  for (const message of opts.messages) {
+    promptChars += message.content.length;
+  }
+
+  const body: Record<string, unknown> = {
+    model: LLM.model,
+    messages: opts.messages,
+    temperature: opts.temperature ?? 0.2,
+    max_tokens: maxTokens,
+    thinking: { type: "disabled" },
+  };
+  if (opts.json) {
+    body.response_format = { type: "json_object" };
+  }
 
   const res = await fetch(`${LLM.baseUrl}/v1/chat/completions`, {
     method: "POST",
@@ -39,15 +53,7 @@ export async function chatCompletion(opts: {
       Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: LLM.model,
-      messages: opts.messages,
-      temperature: opts.temperature ?? 0.2,
-      max_tokens: maxTokens,
-      // V4 thinks by default; disable to keep completion tokens cheap.
-      thinking: { type: "disabled" },
-      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -59,8 +65,11 @@ export async function chatCompletion(opts: {
     choices?: { message?: { content?: string } }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
+
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("DeepSeek returned empty content");
+  if (!content) {
+    throw new Error("DeepSeek returned empty content");
+  }
 
   recordLiveCall({
     promptTokens: data.usage?.prompt_tokens,
@@ -74,5 +83,8 @@ export async function chatCompletion(opts: {
 }
 
 export function llmMode(): "mock" | "live" {
-  return liveLlmEnabled() ? "live" : "mock";
+  if (liveLlmEnabled()) {
+    return "live";
+  }
+  return "mock";
 }

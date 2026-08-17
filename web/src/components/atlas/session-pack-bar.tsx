@@ -1,5 +1,7 @@
 "use client";
 
+// Bottom bar showing what fits in this session.
+
 import Link from "next/link";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import type { Course, SessionPackItem } from "@/lib/types";

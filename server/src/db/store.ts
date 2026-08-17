@@ -1,3 +1,6 @@
+// In-memory database for the demo.
+// Everything lives in Maps/arrays. Restart the server and the seed course comes back.
+
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { env } from "../env";
@@ -44,7 +47,7 @@ class MemoryStore {
     return c ? structuredClone(c) : undefined;
   }
 
-  /** Mutable internal reference — use carefully inside services. */
+  // Same course object the server will change (not a copy).
   getCourseMutable(id: string): Course | undefined {
     return this.courses.get(id);
   }

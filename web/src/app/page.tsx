@@ -1,3 +1,5 @@
+// Landing page. The real app starts at /app.
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CN_COURSE_ID } from "@/lib/mock-data";

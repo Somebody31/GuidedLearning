@@ -1,3 +1,5 @@
+// Demo Computer Networks course loaded when the server starts.
+
 import type { Course, Lesson, LessonStatus } from "../types";
 
 export const CN_COURSE_ID = "cn-kurose";

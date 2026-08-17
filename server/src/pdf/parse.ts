@@ -1,10 +1,8 @@
+// Pull text out of a PDF or a .txt/.md file. No paid API.
+
 import { extractText } from "unpdf";
 
 export type ParsedPage = { page: number; text: string };
-
-/**
- * Extract text from PDF (or plain text) without any paid API.
- */
 export async function parseDocument(
   bytes: Uint8Array,
   filename: string,

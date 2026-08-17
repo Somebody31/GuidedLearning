@@ -1,82 +1,87 @@
-import { z } from "zod";
+// Read settings from environment variables (the .env file).
+// If a value is missing, we use a simple default.
 
-const envSchema = z.object({
-  PORT: z.coerce.number().default(8787),
-  CORS_ORIGIN: z.string().default("http://localhost:3000"),
-  AUTH_TOKEN: z.string().optional(),
-  DATABASE_URL: z.string().optional(),
-  DEEPSEEK_API_KEY: z.string().optional(),
-  DEEPSEEK_BASE_URL: z.string().default("https://api.deepseek.com"),
-  DEEPSEEK_MODEL: z.string().default("deepseek-v4-flash"),
-  EMBEDDING_API_KEY: z.string().optional(),
-  EMBEDDING_BASE_URL: z.string().optional(),
-  /**
-   * mock | local | remote
-   * - mock: free hash vectors (no model)
-   * - local: OpenAI-compatible sidecar (default URL http://127.0.0.1:8790)
-   * - remote: EMBEDDING_BASE_URL + EMBEDDING_API_KEY
-   */
-  EMBEDDING_MODE: z.enum(["mock", "local", "remote"]).default("mock"),
-  EMBEDDING_LOCAL_URL: z.string().default("http://127.0.0.1:8790"),
-  /** HF id / display name — local default is Qwen3-Embedding-0.6B */
-  EMBEDDING_MODEL: z.string().default("Qwen/Qwen3-Embedding-0.6B"),
-  /** Expected dims (0.6B full=1024; MRL truncate supported by sidecar) */
-  EMBEDDING_DIMS: z.coerce.number().default(1024),
-  S3_ENDPOINT: z.string().optional(),
-  S3_BUCKET: z.string().optional(),
-  S3_ACCESS_KEY: z.string().optional(),
-  S3_SECRET_KEY: z.string().optional(),
-  S3_REGION: z.string().default("auto"),
-  DATA_STORE: z.enum(["memory", "postgres"]).default("memory"),
-  DATA_DIR: z.string().default("data"),
-  /**
-   * Live AI is OFF by default to avoid spending credits.
-   * Set USE_LIVE_AI=true AND provide keys to call DeepSeek / Qwen3.
-   */
-  USE_LIVE_AI: z
-    .enum(["true", "false", "1", "0"])
-    .default("false")
-    .transform((v) => v === "true" || v === "1"),
-  /** Cap DeepSeek output tokens per request (keep low to save cost). */
-  LIVE_AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().min(64).max(2048).default(400),
-  /** Hard stop: max live chat calls per server process, then fall back to mock. */
-  LIVE_AI_MAX_CALLS: z.coerce.number().int().min(0).max(500).default(8),
-  /**
-   * When true (default), never bulk-generate a whole course with live AI.
-   * Lessons/quizzes only call the API when a user opens that lesson.
-   */
-  LIVE_AI_LAZY_ONLY: z
-    .enum(["true", "false", "1", "0"])
-    .default("true")
-    .transform((v) => v === "true" || v === "1"),
-});
-
-export type Env = z.infer<typeof envSchema>;
-
-export function loadEnv(
-  source: Record<string, string | undefined> = process.env,
-): Env {
-  const parsed = envSchema.safeParse(source);
-  if (!parsed.success) {
-    console.error(parsed.error.flatten().fieldErrors);
-    throw new Error("Invalid environment configuration");
+function readText(name: string, fallback: string): string {
+  const value = process.env[name];
+  if (value === undefined || value === "") {
+    return fallback;
   }
-  return parsed.data;
+  return value;
 }
 
-export const env = loadEnv();
+function readNumber(name: string, fallback: number): number {
+  const value = process.env[name];
+  if (value === undefined || value === "") {
+    return fallback;
+  }
+  const n = Number(value);
+  if (Number.isNaN(n)) {
+    return fallback;
+  }
+  return n;
+}
 
+function readYesNo(name: string, fallback: boolean): boolean {
+  const value = process.env[name];
+  if (value === undefined || value === "") {
+    return fallback;
+  }
+  return value === "true" || value === "1";
+}
+
+export const env = {
+  PORT: readNumber("PORT", 8787),
+  CORS_ORIGIN: readText("CORS_ORIGIN", "http://localhost:3000"),
+  AUTH_TOKEN: process.env.AUTH_TOKEN,
+  DATABASE_URL: process.env.DATABASE_URL,
+
+  DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+  DEEPSEEK_BASE_URL: readText("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+  DEEPSEEK_MODEL: readText("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+
+  EMBEDDING_API_KEY: process.env.EMBEDDING_API_KEY,
+  EMBEDDING_BASE_URL: process.env.EMBEDDING_BASE_URL,
+  // mock = fake vectors, local = Python sidecar, remote = paid API
+  EMBEDDING_MODE: readText("EMBEDDING_MODE", "mock") as
+    | "mock"
+    | "local"
+    | "remote",
+  EMBEDDING_LOCAL_URL: readText("EMBEDDING_LOCAL_URL", "http://127.0.0.1:8790"),
+  EMBEDDING_MODEL: readText("EMBEDDING_MODEL", "Qwen/Qwen3-Embedding-0.6B"),
+  EMBEDDING_DIMS: readNumber("EMBEDDING_DIMS", 1024),
+
+  S3_ENDPOINT: process.env.S3_ENDPOINT,
+  S3_BUCKET: process.env.S3_BUCKET,
+  S3_ACCESS_KEY: process.env.S3_ACCESS_KEY,
+  S3_SECRET_KEY: process.env.S3_SECRET_KEY,
+  S3_REGION: readText("S3_REGION", "auto"),
+
+  DATA_STORE: readText("DATA_STORE", "memory") as "memory" | "postgres",
+  DATA_DIR: readText("DATA_DIR", "data"),
+
+  // Live AI costs money. Default is off.
+  USE_LIVE_AI: readYesNo("USE_LIVE_AI", false),
+  LIVE_AI_MAX_OUTPUT_TOKENS: readNumber("LIVE_AI_MAX_OUTPUT_TOKENS", 400),
+  LIVE_AI_MAX_CALLS: readNumber("LIVE_AI_MAX_CALLS", 8),
+  // Only generate a lesson when the student opens it.
+  LIVE_AI_LAZY_ONLY: readYesNo("LIVE_AI_LAZY_ONLY", true),
+};
+
+export type Env = typeof env;
+
+// True when we should call DeepSeek.
 export function liveLlmEnabled(): boolean {
   return env.USE_LIVE_AI && Boolean(env.DEEPSEEK_API_KEY);
 }
 
-/** True when embeddings hit a real model (local sidecar or remote API). */
+// True when we should call a real embedding model.
 export function liveEmbedEnabled(): boolean {
-  if (env.EMBEDDING_MODE === "local") return true;
+  if (env.EMBEDDING_MODE === "local") {
+    return true;
+  }
   if (env.EMBEDDING_MODE === "remote") {
     return Boolean(env.EMBEDDING_API_KEY) && Boolean(env.EMBEDDING_BASE_URL);
   }
-  // legacy: remote when USE_LIVE_AI + keys, without explicit mode
   return (
     env.USE_LIVE_AI &&
     Boolean(env.EMBEDDING_API_KEY) &&
@@ -84,12 +89,16 @@ export function liveEmbedEnabled(): boolean {
   );
 }
 
+// URL of the embedding server, or null if we use fake vectors.
 export function embeddingEndpoint(): string | null {
   if (env.EMBEDDING_MODE === "local") {
     return env.EMBEDDING_LOCAL_URL.replace(/\/$/, "");
   }
   if (env.EMBEDDING_MODE === "remote" || liveEmbedEnabled()) {
-    return env.EMBEDDING_BASE_URL?.replace(/\/$/, "") ?? null;
+    if (!env.EMBEDDING_BASE_URL) {
+      return null;
+    }
+    return env.EMBEDDING_BASE_URL.replace(/\/$/, "");
   }
   return null;
 }

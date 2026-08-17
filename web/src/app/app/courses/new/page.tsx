@@ -1,5 +1,7 @@
 "use client";
 
+// Upload PDFs and start a new course (demo UI).
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

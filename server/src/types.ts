@@ -1,4 +1,4 @@
-/** Shared domain types — keep aligned with web/src/lib/types.ts */
+// Shared types for the API. Keep these names in sync with web/src/lib/types.ts
 
 export type LessonStatus =
   | "locked"

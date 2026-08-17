@@ -1,5 +1,7 @@
 "use client";
 
+// Timed study session: work through a packed list of lessons.
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

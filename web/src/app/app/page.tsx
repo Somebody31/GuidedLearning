@@ -1,3 +1,5 @@
+// Home / library: list courses and continue the last one you studied.
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppShell } from "@/components/shell/app-shell";
@@ -11,21 +13,25 @@ export const metadata: Metadata = {
 export default function AppHomePage() {
   const courses = listCourses();
   const active = getActiveCourse();
-  const dueCount = Object.values(active.lessons).filter(
-    (l) => l.status === "due",
-  ).length;
-  const weakCount = Object.values(active.lessons).filter(
-    (l) => l.status === "weak",
-  ).length;
-  const libraryDue = courses.reduce(
-    (n, c) =>
-      n + Object.values(c.lessons).filter((l) => l.status === "due").length,
-    0,
-  );
-  const mastered = Object.values(active.lessons).filter(
-    (l) => l.status === "mastered",
-  ).length;
-  const total = Object.keys(active.lessons).length;
+
+  let dueCount = 0;
+  let weakCount = 0;
+  let mastered = 0;
+  const activeLessons = Object.values(active.lessons);
+  for (const lesson of activeLessons) {
+    if (lesson.status === "due") dueCount += 1;
+    if (lesson.status === "weak") weakCount += 1;
+    if (lesson.status === "mastered") mastered += 1;
+  }
+
+  let libraryDue = 0;
+  for (const course of courses) {
+    for (const lesson of Object.values(course.lessons)) {
+      if (lesson.status === "due") libraryDue += 1;
+    }
+  }
+
+  const total = activeLessons.length;
   const progress = total ? mastered / total : 0;
   const packReady = dueCount + weakCount > 0;
 

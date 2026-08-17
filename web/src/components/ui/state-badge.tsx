@@ -1,3 +1,5 @@
+// Small pill that shows lesson status (due, weak, mastered).
+
 import { cn } from "@/lib/cn";
 import { STATUS_COLOR, STATUS_LABEL } from "@/lib/states";
 import type { LessonStatus } from "@/lib/types";

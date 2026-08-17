@@ -1,5 +1,6 @@
+// All course API routes: list, upload PDFs, build map, study, quiz.
+
 import { Hono } from "hono";
-import { z } from "zod";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { env } from "../env";
@@ -15,94 +16,118 @@ import {
 } from "../services/scheduler";
 import { buildInsights } from "../services/insights";
 import { mockDiagnosticItems } from "../llm/mock";
-import type { Lesson, StudySession } from "../types";
+import type { StudySession } from "../types";
 
 export const coursesRoutes = new Hono();
 
+// Try to read JSON. If the body is empty or invalid, return {}.
+async function readJson(c: { req: { json: () => Promise<unknown> } }) {
+  try {
+    return await c.req.json();
+  } catch {
+    return {};
+  }
+}
+
+function countStatus(lessons: Record<string, { status: string }>, status: string) {
+  let n = 0;
+  for (const lesson of Object.values(lessons)) {
+    if (lesson.status === status) n += 1;
+  }
+  return n;
+}
+
+// GET /v1/courses
 coursesRoutes.get("/", (c) => {
-  const courses = store.listCourses().map((course) => ({
-    id: course.id,
-    title: course.title,
-    lifecycle: course.lifecycle,
-    lastStudiedAt: course.lastStudiedAt,
-    createdAt: course.createdAt,
-    sessionDefaultMinutes: course.sessionDefaultMinutes,
-    lessonCount: Object.keys(course.lessons).length,
-    dueCount: Object.values(course.lessons).filter((l) => l.status === "due")
-      .length,
-    weakCount: Object.values(course.lessons).filter((l) => l.status === "weak")
-      .length,
-    masteredCount: Object.values(course.lessons).filter(
-      (l) => l.status === "mastered",
-    ).length,
-  }));
+  const courses = [];
+  for (const course of store.listCourses()) {
+    courses.push({
+      id: course.id,
+      title: course.title,
+      lifecycle: course.lifecycle,
+      lastStudiedAt: course.lastStudiedAt,
+      createdAt: course.createdAt,
+      sessionDefaultMinutes: course.sessionDefaultMinutes,
+      lessonCount: Object.keys(course.lessons).length,
+      dueCount: countStatus(course.lessons, "due"),
+      weakCount: countStatus(course.lessons, "weak"),
+      masteredCount: countStatus(course.lessons, "mastered"),
+    });
+  }
   return c.json({ courses });
 });
 
+// POST /v1/courses
 coursesRoutes.post("/", async (c) => {
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({ title: z.string().min(1).max(80).optional() })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body", details: parsed.error.flatten() }, 400);
+  const body = (await readJson(c)) as { title?: string };
+  let title = "Untitled course";
+  if (typeof body.title === "string" && body.title.trim()) {
+    title = body.title.trim().slice(0, 80);
   }
-  const course = store.createCourse(parsed.data.title ?? "Untitled course");
+  const course = store.createCourse(title);
   return c.json({ course }, 201);
 });
 
+// GET /v1/courses/:id
 coursesRoutes.get("/:id", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   return c.json({ course });
 });
 
+// PATCH /v1/courses/:id
 coursesRoutes.patch("/:id", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({
-      title: z.string().min(1).max(80).optional(),
-      sessionDefaultMinutes: z
-        .union([
-          z.literal(15),
-          z.literal(25),
-          z.literal(45),
-          z.literal(60),
-        ])
-        .optional(),
-    })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body", details: parsed.error.flatten() }, 400);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
   }
-  if (parsed.data.title !== undefined) course.title = parsed.data.title.trim();
-  if (parsed.data.sessionDefaultMinutes !== undefined) {
-    course.sessionDefaultMinutes = parsed.data.sessionDefaultMinutes;
+
+  const body = (await readJson(c)) as {
+    title?: string;
+    sessionDefaultMinutes?: number;
+  };
+
+  if (typeof body.title === "string" && body.title.trim()) {
+    course.title = body.title.trim().slice(0, 80);
   }
-  if (course.lifecycle === "draft") course.lifecycle = "draft_saved";
+
+  const allowedBudgets = [15, 25, 45, 60];
+  if (allowedBudgets.includes(body.sessionDefaultMinutes as number)) {
+    course.sessionDefaultMinutes = body.sessionDefaultMinutes as 15 | 25 | 45 | 60;
+  }
+
+  if (course.lifecycle === "draft") {
+    course.lifecycle = "draft_saved";
+  }
   return c.json({ course: structuredClone(course) });
 });
 
-// —— Sources / upload ——
+// GET /v1/courses/:id/sources
 coursesRoutes.get("/:id/sources", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   return c.json({ sources: course.sources });
 });
 
+// POST /v1/courses/:id/sources  (upload PDF files)
 coursesRoutes.post("/:id/sources", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
-  if (course.lifecycle === "activated") {
-    // v1: allow append as draft sources still (parse only); graph delta later
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
   }
 
   const form = await c.req.formData();
-  const files = form.getAll("files").filter((f): f is File => f instanceof File);
+  const files: File[] = [];
+  for (const item of form.getAll("files")) {
+    if (item instanceof File) files.push(item);
+  }
   const single = form.get("file");
   if (single instanceof File) files.push(single);
+
   if (files.length === 0) {
     return c.json({ error: "No files (use field files or file)" }, 400);
   }
@@ -112,6 +137,7 @@ coursesRoutes.post("/:id/sources", async (c) => {
     if (file.size > 50 * 1024 * 1024) {
       return c.json({ error: `${file.name} exceeds 50MB` }, 400);
     }
+
     const sourceId = `src-${crypto.randomUUID().slice(0, 8)}`;
     const storageKey = `uploads/${course.id}/${sourceId}-${file.name}`;
     const dir = join(env.DATA_DIR, "uploads", course.id);
@@ -135,15 +161,21 @@ coursesRoutes.post("/:id/sources", async (c) => {
     });
     created.push({ source, jobId: job.id });
   }
+
   kickJobs();
   return c.json({ uploaded: created }, 201);
 });
 
+// POST /v1/courses/:id/sources/:sid/retry
 coursesRoutes.post("/:id/sources/:sid/retry", (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const source = course.sources.find((s) => s.id === c.req.param("sid"));
-  if (!source) return c.json({ error: "Source not found" }, 404);
+  if (!source) {
+    return c.json({ error: "Source not found" }, 404);
+  }
   source.status = "queued";
   source.error = undefined;
   const job = store.enqueueJob({
@@ -155,17 +187,24 @@ coursesRoutes.post("/:id/sources/:sid/retry", (c) => {
   return c.json({ job });
 });
 
-// —— Build graph ——
+// POST /v1/courses/:id/build
 coursesRoutes.post("/:id/build", (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   if (course.lifecycle === "activated") {
     return c.json({ error: "Course already activated" }, 409);
   }
-  const ready = course.sources.filter((s) => s.status === "ready").length;
+
+  let ready = 0;
+  for (const source of course.sources) {
+    if (source.status === "ready") ready += 1;
+  }
   if (ready === 0) {
     return c.json({ error: "Need at least one ready source" }, 400);
   }
+
   const job = store.enqueueJob({
     type: "draft_graph",
     courseId: course.id,
@@ -174,93 +213,112 @@ coursesRoutes.post("/:id/build", (c) => {
   return c.json({ job }, 202);
 });
 
+// GET /v1/courses/:id/jobs
 coursesRoutes.get("/:id/jobs", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   return c.json({ jobs: store.listJobs(course.id) });
 });
 
-// —— Graph confirm ——
+// GET /v1/courses/:id/graph
 coursesRoutes.get("/:id/graph", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
+
+  const lessons: Record<string, { id: string; unitId: string; title: string; estMinutes: number }> = {};
+  for (const [id, lesson] of Object.entries(course.lessons)) {
+    lessons[id] = {
+      id: lesson.id,
+      unitId: lesson.unitId,
+      title: lesson.title,
+      estMinutes: lesson.estMinutes,
+    };
+  }
+
   return c.json({
     lifecycle: course.lifecycle,
     graphVersion: course.graphVersion,
     units: course.units,
-    lessons: Object.fromEntries(
-      Object.entries(course.lessons).map(([id, l]) => [
-        id,
-        { id: l.id, unitId: l.unitId, title: l.title, estMinutes: l.estMinutes },
-      ]),
-    ),
+    lessons,
   });
 });
 
+// PATCH /v1/courses/:id/graph
 coursesRoutes.patch("/:id/graph", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   if (course.lifecycle === "activated") {
     return c.json({ error: "Graph frozen after activate" }, 409);
   }
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({
-      units: z
-        .array(
-          z.object({
-            id: z.string(),
-            title: z.string().min(1).max(120),
-            order: z.number().int().nonnegative(),
-            lessonIds: z.array(z.string()),
-          }),
-        )
-        .optional(),
-      lessonTitles: z.record(z.string(), z.string().max(80)).optional(),
-      estMinutes: z.record(z.string(), z.number().int().min(5).max(120)).optional(),
-    })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body", details: parsed.error.flatten() }, 400);
+
+  const body = (await readJson(c)) as {
+    units?: typeof course.units;
+    lessonTitles?: Record<string, string>;
+    estMinutes?: Record<string, number>;
+  };
+
+  if (Array.isArray(body.units)) {
+    course.units = body.units;
   }
 
-  if (parsed.data.units) {
-    course.units = parsed.data.units;
-  }
-  if (parsed.data.lessonTitles) {
-    for (const [id, title] of Object.entries(parsed.data.lessonTitles)) {
+  if (body.lessonTitles && typeof body.lessonTitles === "object") {
+    for (const [id, title] of Object.entries(body.lessonTitles)) {
       const lesson = course.lessons[id];
-      if (lesson && title.trim()) lesson.title = title.trim();
+      if (lesson && typeof title === "string" && title.trim()) {
+        lesson.title = title.trim();
+      }
     }
   }
-  if (parsed.data.estMinutes) {
-    for (const [id, mins] of Object.entries(parsed.data.estMinutes)) {
+
+  if (body.estMinutes && typeof body.estMinutes === "object") {
+    for (const [id, mins] of Object.entries(body.estMinutes)) {
       const lesson = course.lessons[id];
-      if (lesson) lesson.estMinutes = mins;
+      if (lesson && typeof mins === "number" && mins >= 5 && mins <= 120) {
+        lesson.estMinutes = mins;
+      }
     }
   }
+
   course.lifecycle = "draft_saved";
+
+  let emptyTitles = 0;
+  for (const lesson of Object.values(course.lessons)) {
+    if (!lesson.title.trim()) emptyTitles += 1;
+  }
+
   return c.json({
     ok: true,
     lifecycle: course.lifecycle,
-    emptyTitles: Object.values(course.lessons).filter((l) => !l.title.trim())
-      .length,
+    emptyTitles,
   });
 });
 
+// POST /v1/courses/:id/activate
 coursesRoutes.post("/:id/activate", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   if (course.lifecycle === "activated") {
     return c.json({ course: structuredClone(course) });
   }
   if (Object.keys(course.lessons).length === 0) {
     return c.json({ error: "No lessons to activate" }, 400);
   }
-  const empty = Object.values(course.lessons).filter((l) => !l.title.trim());
-  if (empty.length) {
+
+  const emptyIds: string[] = [];
+  for (const lesson of Object.values(course.lessons)) {
+    if (!lesson.title.trim()) emptyIds.push(lesson.id);
+  }
+  if (emptyIds.length > 0) {
     return c.json(
-      { error: `${empty.length} empty lesson title(s)`, emptyIds: empty.map((l) => l.id) },
+      { error: `${emptyIds.length} empty lesson title(s)`, emptyIds },
       400,
     );
   }
@@ -270,41 +328,50 @@ coursesRoutes.post("/:id/activate", async (c) => {
   course.activatedAt = new Date().toISOString();
   course.graphVersion += 1;
 
-  // Ensure content exists
   store.enqueueJob({ type: "generate_course_content", courseId: course.id });
   kickJobs();
 
   return c.json({ course: structuredClone(course) });
 });
 
-// —— Session pack / sessions ——
+// GET /v1/courses/:id/session-pack
 coursesRoutes.get("/:id/session-pack", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
+
   const budgetRaw = c.req.query("budget");
   const budget = budgetRaw ? Number(budgetRaw) : course.sessionDefaultMinutes;
   if (!Number.isFinite(budget) || budget < 5 || budget > 180) {
     return c.json({ error: "budget must be 5–180 minutes" }, 400);
   }
+
   const pack = buildSessionPack(course, budget);
-  const usedMinutes = pack.reduce((sum, item) => {
+  let usedMinutes = 0;
+  for (const item of pack) {
     const lesson = course.lessons[item.lessonId];
-    return sum + (lesson?.estMinutes ?? 0);
-  }, 0);
+    if (lesson) usedMinutes += lesson.estMinutes;
+  }
   return c.json({ budgetMinutes: budget, usedMinutes, pack });
 });
 
+// POST /v1/courses/:id/sessions
 coursesRoutes.post("/:id/sessions", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({ budgetMinutes: z.number().int().min(5).max(180).optional() })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body" }, 400);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
   }
-  const budget = parsed.data.budgetMinutes ?? course.sessionDefaultMinutes;
+
+  const body = (await readJson(c)) as { budgetMinutes?: number };
+  let budget = course.sessionDefaultMinutes;
+  if (typeof body.budgetMinutes === "number") {
+    budget = body.budgetMinutes;
+  }
+  if (!Number.isFinite(budget) || budget < 5 || budget > 180) {
+    return c.json({ error: "budgetMinutes must be 5–180" }, 400);
+  }
+
   const pack = buildSessionPack(course, budget);
   const session: StudySession = {
     id: `ses-${crypto.randomUUID().slice(0, 8)}`,
@@ -320,12 +387,16 @@ coursesRoutes.post("/:id/sessions", async (c) => {
   return c.json({ session }, 201);
 });
 
-// —— Lessons ——
+// GET /v1/courses/:id/lessons/:lessonId
 coursesRoutes.get("/:id/lessons/:lessonId", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const lesson = course.lessons[c.req.param("lessonId")];
-  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  if (!lesson) {
+    return c.json({ error: "Lesson not found" }, 404);
+  }
   const unit = course.units.find((u) => u.id === lesson.unitId) ?? null;
   return c.json({
     lesson,
@@ -335,23 +406,25 @@ coursesRoutes.get("/:id/lessons/:lessonId", (c) => {
   });
 });
 
+// POST /v1/courses/:id/lessons/:lessonId/open
 coursesRoutes.post("/:id/lessons/:lessonId/open", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const lesson = course.lessons[c.req.param("lessonId")];
-  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  if (!lesson) {
+    return c.json({ error: "Lesson not found" }, 404);
+  }
   if (lesson.status === "locked") {
     return c.json({ error: "Lesson locked" }, 409);
   }
-  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
-  const force = body?.force === true || c.req.query("force") === "1";
 
-  if (
-    lesson.status === "available" ||
-    lesson.status === "due" ||
-    lesson.status === "weak"
-  ) {
-    if (lesson.status === "available") lesson.status = "in_progress";
+  const body = (await readJson(c)) as { force?: boolean };
+  const force = body.force === true || c.req.query("force") === "1";
+
+  if (lesson.status === "available") {
+    lesson.status = "in_progress";
   }
   course.lastStudiedAt = new Date().toISOString();
   store.resetAttemptCounter(course.id, lesson.id);
@@ -373,12 +446,16 @@ coursesRoutes.post("/:id/lessons/:lessonId/open", async (c) => {
     });
     kickJobs();
   }
+
   return c.json({ lesson: structuredClone(lesson), forced: force });
 });
 
+// POST /v1/courses/:id/reembed
 coursesRoutes.post("/:id/reembed", (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const chunks = store.getChunks(course.id);
   if (chunks.length === 0) {
     return c.json({ error: "No chunks to reembed" }, 400);
@@ -391,20 +468,30 @@ coursesRoutes.post("/:id/reembed", (c) => {
   return c.json({ job, chunkCount: chunks.length }, 202);
 });
 
+// GET /v1/courses/:id/lessons/:lessonId/quiz
 coursesRoutes.get("/:id/lessons/:lessonId/quiz", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const lesson = course.lessons[c.req.param("lessonId")];
-  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  if (!lesson) {
+    return c.json({ error: "Lesson not found" }, 404);
+  }
   if (!lesson.quizReady || lesson.quiz.length === 0) {
     return c.json({ error: "Quiz not ready", quizReady: false }, 409);
   }
-  // Omit correct answers for clients that grade server-side
-  const questions = lesson.quiz.map((q) => ({
-    id: q.id,
-    stem: q.stem,
-    options: q.options,
-  }));
+
+  // Do not send the correct answers before they submit.
+  const questions = [];
+  for (const q of lesson.quiz) {
+    questions.push({
+      id: q.id,
+      stem: q.stem,
+      options: q.options,
+    });
+  }
+
   return c.json({
     lessonId: lesson.id,
     title: lesson.title,
@@ -415,24 +502,26 @@ coursesRoutes.get("/:id/lessons/:lessonId/quiz", (c) => {
   });
 });
 
+// POST /v1/courses/:id/lessons/:lessonId/quiz/submit
 coursesRoutes.post("/:id/lessons/:lessonId/quiz/submit", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const lesson = course.lessons[c.req.param("lessonId")];
-  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  if (!lesson) {
+    return c.json({ error: "Lesson not found" }, 404);
+  }
   if (!lesson.quizReady) {
     return c.json({ error: "Quiz not ready" }, 409);
   }
 
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({
-      answers: z.record(z.string(), z.string()),
-      sessionId: z.string().optional(),
-    })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body", details: parsed.error.flatten() }, 400);
+  const body = (await readJson(c)) as {
+    answers?: Record<string, string>;
+    sessionId?: string;
+  };
+  if (!body.answers || typeof body.answers !== "object") {
+    return c.json({ error: "answers must be an object" }, 400);
   }
 
   const attemptIndex = store.bumpAttemptCounter(course.id, lesson.id);
@@ -440,7 +529,7 @@ coursesRoutes.post("/:id/lessons/:lessonId/quiz/submit", async (c) => {
     return c.json({ error: "Max 3 attempts per lesson session" }, 429);
   }
 
-  const score = scoreAnswers(lesson.quiz, parsed.data.answers);
+  const score = scoreAnswers(lesson.quiz, body.answers);
   const applied = applyQuizAttempt({
     lesson,
     score,
@@ -460,24 +549,27 @@ coursesRoutes.post("/:id/lessons/:lessonId/quiz/submit", async (c) => {
     id: `att-${crypto.randomUUID().slice(0, 8)}`,
     courseId: course.id,
     lessonId: lesson.id,
-    sessionId: parsed.data.sessionId,
+    sessionId: body.sessionId,
     attemptIndex,
     score,
-    answers: parsed.data.answers,
+    answers: body.answers,
     masteryBefore: applied.masteryBefore,
     masteryAfter: applied.masteryAfter,
     createdAt: new Date().toISOString(),
   };
   store.addAttempt(record);
 
-  // Reveal for result UI
-  const graded = lesson.quiz.map((q) => ({
-    id: q.id,
-    correctOptionId: q.correctOptionId,
-    explanation: q.explanation,
-    selected: parsed.data.answers[q.id] ?? null,
-    correct: parsed.data.answers[q.id] === q.correctOptionId,
-  }));
+  const graded = [];
+  for (const q of lesson.quiz) {
+    const selected = body.answers[q.id] ?? null;
+    graded.push({
+      id: q.id,
+      correctOptionId: q.correctOptionId,
+      explanation: q.explanation,
+      selected,
+      correct: selected === q.correctOptionId,
+    });
+  }
 
   return c.json({
     attemptIndex,
@@ -494,10 +586,12 @@ coursesRoutes.post("/:id/lessons/:lessonId/quiz/submit", async (c) => {
   });
 });
 
-// —— Diagnostic ——
+// POST /v1/courses/:id/diagnostic/start
 coursesRoutes.post("/:id/diagnostic/start", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   const titles = Object.values(course.lessons).map((l) => l.title);
   const lessonIds = Object.keys(course.lessons);
   const items = mockDiagnosticItems(titles).map((item, i) => ({
@@ -507,34 +601,39 @@ coursesRoutes.post("/:id/diagnostic/start", (c) => {
   return c.json({ items, note: "Offline diagnostic — no live LLM." });
 });
 
+// POST /v1/courses/:id/diagnostic/submit
 coursesRoutes.post("/:id/diagnostic/submit", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
-  const body = await c.req.json().catch(() => ({}));
-  const parsed = z
-    .object({
-      placements: z.array(
-        z.object({
-          lessonId: z.string(),
-          choice: z.enum(["strong", "ok", "weak", "skip"]),
-        }),
-      ),
-    })
-    .safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: "Invalid body", details: parsed.error.flatten() }, 400);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
   }
-  for (const p of parsed.data.placements) {
+
+  const body = (await readJson(c)) as {
+    placements?: { lessonId?: string; choice?: string }[];
+  };
+  if (!Array.isArray(body.placements)) {
+    return c.json({ error: "placements must be a list" }, 400);
+  }
+
+  const choices = ["strong", "ok", "weak", "skip"] as const;
+  for (const p of body.placements) {
+    if (!p.lessonId || !choices.includes(p.choice as (typeof choices)[number])) {
+      continue;
+    }
     const lesson = course.lessons[p.lessonId];
-    if (lesson) applyDiagnosticPlacement(lesson, p.choice);
+    if (lesson) {
+      applyDiagnosticPlacement(lesson, p.choice as (typeof choices)[number]);
+    }
   }
   return c.json({ course: structuredClone(course) });
 });
 
-// —— Insights ——
+// GET /v1/courses/:id/insights
 coursesRoutes.get("/:id/insights", (c) => {
   const course = store.getCourse(c.req.param("id"));
-  if (!course) return c.json({ error: "Course not found" }, 404);
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
   return c.json({
     insights: buildInsights(course, store.listEvals(course.id)),
   });

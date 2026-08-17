@@ -1,3 +1,5 @@
+// Brief placeholder while a page loads.
+
 export default function AppLoading() {
   return (
     <div

@@ -1,3 +1,5 @@
+// Shared button styles.
+
 import { cn } from "@/lib/cn";
 import type { ButtonHTMLAttributes } from "react";
 

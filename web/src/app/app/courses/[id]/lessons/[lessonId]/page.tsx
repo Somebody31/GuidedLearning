@@ -1,5 +1,7 @@
 "use client";
 
+// One lesson: read the notes, then go to the quiz.
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

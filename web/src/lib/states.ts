@@ -1,3 +1,5 @@
+// Labels and colors for each lesson status (due, weak, mastered, ...).
+
 import type { LessonStatus } from "./types";
 
 export const STATUS_LABEL: Record<LessonStatus, string> = {

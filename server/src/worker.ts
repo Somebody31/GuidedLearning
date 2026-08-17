@@ -1,7 +1,6 @@
-/**
- * Optional separate worker process. API also runs jobs in-process via kickJobs().
- * Run: bun run worker
- */
+// Optional extra process that keeps checking for jobs.
+// The main API already runs jobs itself. Start with: bun run worker
+
 import { env } from "./env";
 import { llmMode } from "./llm/client";
 import { embeddingMode } from "./embed/qwen";

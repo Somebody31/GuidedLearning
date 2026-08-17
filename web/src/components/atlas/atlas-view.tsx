@@ -1,5 +1,7 @@
 "use client";
 
+// Course atlas: map or list, plus the session pack bar.
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
