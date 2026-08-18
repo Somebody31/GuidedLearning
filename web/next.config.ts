@@ -4,6 +4,7 @@ const api = (process.env.API_URL || "http://127.0.0.1:8787").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  transpilePackages: ["@phosphor-icons/react"],
   turbopack: {
     root: process.cwd(),
   },

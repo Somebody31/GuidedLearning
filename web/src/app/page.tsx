@@ -2,7 +2,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/ssr";
 import { CtaLink, Wordmark } from "@/components/ui/cta-link";
 import { DEMO_COURSE_ID } from "@/lib/api";
 

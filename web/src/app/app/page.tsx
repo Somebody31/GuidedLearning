@@ -2,7 +2,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/ssr";
 import { AppShell } from "@/components/shell/app-shell";
 import { CtaLink } from "@/components/ui/cta-link";
 import { DeskPage, Plate } from "@/components/ui/plate";

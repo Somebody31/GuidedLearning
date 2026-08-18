@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/ssr";
 import { cn } from "@/lib/cn";
 
 export function CtaLink({
