@@ -54,7 +54,7 @@ export const env = {
     "ALLOW_LOCAL_PATH",
     process.env.NODE_ENV !== "production",
   ),
-  AGENT_TIMEOUT_MS: readNumber("AGENT_TIMEOUT_MS", 90_000),
+  AGENT_TIMEOUT_MS: readNumber("AGENT_TIMEOUT_MS", 180_000),
 
   EMBEDDING_API_KEY: process.env.EMBEDDING_API_KEY,
   EMBEDDING_BASE_URL: process.env.EMBEDDING_BASE_URL,

@@ -44,6 +44,9 @@ export async function opencodeComplete(opts: {
   ];
 
   const result = await runCommand(argv);
+  if (result.timedOut) {
+    throw new Error(`opencode timed out after ${env.AGENT_TIMEOUT_MS}ms`);
+  }
   if (result.code !== 0) {
     throw new Error(
       `opencode exited ${result.code}: ${(result.stderr || result.stdout).slice(0, 400)}`,

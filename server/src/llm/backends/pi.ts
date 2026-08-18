@@ -21,13 +21,17 @@ export async function piComplete(opts: {
   json?: boolean;
 }): Promise<string> {
   const { system, rest } = splitMessages(opts.messages);
-  const argv = [env.PI_BIN, "--print", "--no-tools", "--no-session"];
-  if (opts.json) argv.push("--mode", "json");
+  // `--mode json` is an NDJSON event stream, not the model payload.
+  // Text mode prints the assistant reply so we can extract JSON from it.
+  const argv = [env.PI_BIN, "--print", "--no-tools", "--no-session", "--mode", "text"];
   if (system) argv.push("--system-prompt", system);
   if (env.PI_MODEL) argv.push("--model", env.PI_MODEL);
   argv.push(rest || "Reply with the requested JSON.");
 
   const result = await runCommand(argv);
+  if (result.timedOut) {
+    throw new Error(`pi timed out after ${env.AGENT_TIMEOUT_MS}ms`);
+  }
   if (result.code !== 0) {
     throw new Error(
       `pi exited ${result.code}: ${(result.stderr || result.stdout).slice(0, 400)}`,

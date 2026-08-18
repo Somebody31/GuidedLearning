@@ -1,5 +1,6 @@
 // Headless `grok -p` using the already-logged-in grok.com session.
 
+import { tmpdir } from "node:os";
 import { env } from "../../env";
 import { extractJsonObject, runCommand } from "../spawn";
 import type { ChatMessage } from "../messages";
@@ -23,16 +24,22 @@ export async function grokComplete(opts: {
   json?: boolean;
 }): Promise<string> {
   const { system, rest } = splitMessages(opts.messages);
+  // Run outside the GuidedLearning repo. From this tree grok treats
+  // "README" as a file to open and burns its turn on read_file.
+  const isolatedCwd = tmpdir();
   const argv = [
     env.GROK_BIN,
     "-p",
     rest || "Reply with the requested JSON.",
+    "--cwd",
+    isolatedCwd,
     "--output-format",
     "json",
     "--max-turns",
-    "1",
-    "--disallowed-tools",
-    "run_terminal_cmd,search_replace,web_search,web_fetch,Agent",
+    "2",
+    "--tools",
+    "",
+    "--disable-web-search",
   ];
   if (system) {
     argv.push("--system-prompt-override", system);
@@ -44,8 +51,18 @@ export async function grokComplete(opts: {
     argv.push("-m", env.GROK_MODEL);
   }
 
-  const result = await runCommand(argv);
+  const result = await runCommand(argv, { cwd: isolatedCwd });
+  if (result.timedOut) {
+    throw new Error(`grok timed out after ${env.AGENT_TIMEOUT_MS}ms`);
+  }
   if (result.code !== 0) {
+    if (opts.json) {
+      try {
+        return extractJsonObject(result.stdout);
+      } catch {
+        /* fall through to the CLI error */
+      }
+    }
     throw new Error(
       `grok exited ${result.code}: ${(result.stderr || result.stdout).slice(0, 400)}`,
     );
