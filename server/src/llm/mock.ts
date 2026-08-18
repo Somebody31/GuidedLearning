@@ -381,7 +381,7 @@ export function mockDiagnosticItems(
 ): { lessonId: string; stem: string; options: { id: string; text: string }[]; correctOptionId: string }[] {
   return lessonTitles.slice(0, 6).map((title, i) => ({
     lessonId: `diag-${i}`,
-    stem: `How comfortable are you with: ${title}?`,
+    stem: `How comfortable are you with: ${title.replace(/[?？]+$/, "").trim()}?`,
     options: [
       { id: "a", text: "Strong — I’ve practiced this" },
       { id: "b", text: "Okay — I need a light review" },
