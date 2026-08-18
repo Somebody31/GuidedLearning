@@ -1,18 +1,19 @@
-// Call DeepSeek to get a chat reply.
-// This only runs when USE_LIVE_AI=true and we still have budget left.
+// One door for lesson/quiz generation. DeepSeek or a local CLI.
 
-import { env, liveLlmEnabled } from "../env";
+import { env } from "../env";
 import {
   canSpendLiveCall,
   liveBudgetExhaustedMessage,
   recordLiveCall,
 } from "./budget";
-import { LLM } from "./models";
+import { deepseekComplete } from "./backends/deepseek";
+import { grokComplete } from "./backends/grok";
+import { opencodeComplete } from "./backends/opencode";
+import { piComplete } from "./backends/pi";
+import type { ChatMessage } from "./messages";
+import { liveLlmEnabled, resolveBackend } from "./resolve";
 
-export type ChatMessage = {
-  role: "system" | "user" | "assistant";
-  content: string;
-};
+export type { ChatMessage };
 
 export async function chatCompletion(opts: {
   messages: ChatMessage[];
@@ -22,7 +23,7 @@ export async function chatCompletion(opts: {
 }): Promise<string> {
   if (!liveLlmEnabled()) {
     throw new Error(
-      "Live LLM disabled (USE_LIVE_AI=false). Use mock generators.",
+      "Live LLM disabled (no ready backend). Use mock generators.",
     );
   }
   if (!canSpendLiveCall()) {
@@ -30,61 +31,36 @@ export async function chatCompletion(opts: {
   }
 
   const maxTokens = opts.maxTokens ?? env.LIVE_AI_MAX_OUTPUT_TOKENS;
+  const backend = resolveBackend();
 
   let promptChars = 0;
   for (const message of opts.messages) {
     promptChars += message.content.length;
   }
 
-  const body: Record<string, unknown> = {
-    model: LLM.model,
-    messages: opts.messages,
-    temperature: opts.temperature ?? 0.2,
-    max_tokens: maxTokens,
-    thinking: { type: "disabled" },
-  };
-  if (opts.json) {
-    body.response_format = { type: "json_object" };
-  }
-
-  const res = await fetch(`${LLM.baseUrl}/v1/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`DeepSeek error ${res.status}: ${text.slice(0, 400)}`);
-  }
-
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number };
-  };
-
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error("DeepSeek returned empty content");
+  let content: string;
+  if (backend === "grok") {
+    content = await grokComplete(opts);
+  } else if (backend === "pi") {
+    content = await piComplete(opts);
+  } else if (backend === "opencode") {
+    content = await opencodeComplete(opts);
+  } else if (backend === "deepseek") {
+    content = await deepseekComplete({ ...opts, maxTokens });
+  } else {
+    throw new Error("Live LLM disabled. Use mock generators.");
   }
 
   recordLiveCall({
-    promptTokens: data.usage?.prompt_tokens,
-    completionTokens: data.usage?.completion_tokens,
-    promptChars: data.usage?.prompt_tokens == null ? promptChars : undefined,
-    completionChars:
-      data.usage?.completion_tokens == null ? content.length : undefined,
+    promptChars,
+    completionChars: content.length,
   });
 
   return content;
 }
 
 export function llmMode(): "mock" | "live" {
-  if (liveLlmEnabled()) {
-    return "live";
-  }
-  return "mock";
+  return liveLlmEnabled() ? "live" : "mock";
 }
+
+export { liveLlmEnabled, resolveBackend };

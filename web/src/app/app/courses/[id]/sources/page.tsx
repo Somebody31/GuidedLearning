@@ -1,6 +1,6 @@
 "use client";
 
-// List of uploaded PDFs for this course.
+// List of uploaded sources for this course.
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { DeskPage, Plate } from "@/components/ui/plate";
 import { FileStatusChip } from "@/components/ui/file-status-chip";
 import { api, getCourse } from "@/lib/api";
+import { courseKindOf } from "@/lib/course-utils";
 import { useCourse } from "@/lib/use-course";
 
 export default function SourcesPage() {
@@ -17,18 +18,51 @@ export default function SourcesPage() {
   const id = String(params.id);
   const { course, loading, error, setCourse } = useCourse(id);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dirRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const isCode = courseKindOf(course) === "code";
 
   useEffect(() => {
     document.title = "Sources · GuidedLearning";
   }, []);
 
-  async function addPdfs(list: FileList) {
+  async function addFiles(list: FileList) {
     if (!course) return;
     const form = new FormData();
     let count = 0;
     for (const file of Array.from(list)) {
+      const rel = (file.webkitRelativePath || file.name).replace(/\\/g, "/");
+      if (isCode) {
+        const lower = rel.toLowerCase();
+        const skip = rel
+          .split("/")
+          .some((part) =>
+            [
+              "node_modules",
+              ".git",
+              "dist",
+              "build",
+              ".next",
+              "__pycache__",
+            ].includes(part),
+          );
+        if (skip) continue;
+        if (
+          !lower.endsWith(".zip") &&
+          !/\.(ts|tsx|js|jsx|mjs|cjs|py|go|rs|java|kt|rb|php|c|h|cc|cpp|hpp|cs|swift|md|txt|json|toml|yml|yaml|sql|vue|svelte|html|css)$/i.test(
+            rel,
+          ) &&
+          !/^(Dockerfile|Makefile|CMakeLists\.txt)$/.test(
+            rel.split("/").pop() ?? "",
+          )
+        ) {
+          continue;
+        }
+        form.append("files", file, rel);
+        count += 1;
+        continue;
+      }
       const name = file.name.toLowerCase();
       if (!name.endsWith(".pdf") && !name.endsWith(".txt") && !name.endsWith(".md")) {
         continue;
@@ -37,7 +71,11 @@ export default function SourcesPage() {
       count += 1;
     }
     if (count === 0) {
-      setUploadError("Use a .pdf, .txt, or .md file.");
+      setUploadError(
+        isCode
+          ? "Use a source folder, a .zip, or a code file."
+          : "Use a .pdf, .txt, or .md file.",
+      );
       return;
     }
     setBusy(true);
@@ -86,7 +124,10 @@ export default function SourcesPage() {
           <div>
             <h1 className="text-[2rem] font-semibold tracking-[-0.03em]">Sources</h1>
             <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
-              Files this course is grounded in ·{" "}
+              {isCode
+                ? `${course.sources.length} files this course is grounded in`
+                : "Files this course is grounded in"}{" "}
+              ·{" "}
               <span className="tabular">
                 {ready}/{course.sources.length}
               </span>{" "}
@@ -96,22 +137,52 @@ export default function SourcesPage() {
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
+            accept={
+              isCode
+                ? ".zip,application/zip,.ts,.tsx,.js,.jsx,.py,.go,.rs,.java,.md,.txt,.json"
+                : "application/pdf,.pdf,.txt,.md,text/plain,text/markdown"
+            }
             multiple
             className="sr-only"
             onChange={(e) => {
-              if (e.target.files) void addPdfs(e.target.files);
+              if (e.target.files) void addFiles(e.target.files);
               e.target.value = "";
             }}
           />
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-            className="inline-flex h-9 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)] disabled:opacity-50"
-          >
-            {busy ? "Uploading…" : "Add PDF"}
-          </button>
+          <input
+            ref={dirRef}
+            type="file"
+            multiple
+            className="sr-only"
+            {...({
+              webkitdirectory: "",
+              directory: "",
+            } as Record<string, string>)}
+            onChange={(e) => {
+              if (e.target.files) void addFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            {isCode ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => dirRef.current?.click()}
+                className="inline-flex h-9 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)] disabled:opacity-50"
+              >
+                {busy ? "Uploading…" : "Add folder"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+              className="inline-flex h-9 items-center rounded-full border border-[var(--hairline)] px-4 text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)] disabled:opacity-50"
+            >
+              {busy ? "Uploading…" : isCode ? "Add files" : "Add PDF"}
+            </button>
+          </div>
         </div>
         {uploadError ? (
           <p className="mt-4 text-[13px] text-[var(--danger)]">{uploadError}</p>
@@ -120,7 +191,9 @@ export default function SourcesPage() {
           <Plate className="mt-8" innerClassName="px-6 py-12 text-center">
             <p className="text-[15px] font-medium">No sources yet</p>
             <p className="mt-2 text-[13px] text-[var(--text-tertiary)]">
-              Add a PDF to ground lessons for this subject.
+              {isCode
+                ? "Add a folder or zip to ground lessons in this tree."
+                : "Add a PDF to ground lessons for this subject."}
             </p>
           </Plate>
         ) : (
@@ -140,7 +213,7 @@ export default function SourcesPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{s.name}</p>
                     <p className="tabular text-[12px] text-[var(--text-tertiary)]">
-                      {s.pages} pages
+                      {isCode ? `${s.pages} slices` : `${s.pages} pages`}
                       {s.lastUsed ? ` · last used ${s.lastUsed}` : ""}
                     </p>
                   </div>

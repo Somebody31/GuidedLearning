@@ -27,12 +27,12 @@ export const metadata: Metadata = {
     template: "%s · GuidedLearning",
   },
   description:
-    "Turn textbooks and lecture PDFs into a study path with grounded lessons and spaced review.",
+    "Turn textbooks, lecture PDFs, or a folder of code into a study path with grounded lessons and spaced review.",
   applicationName: "GuidedLearning",
   openGraph: {
     title: "GuidedLearning",
     description:
-      "Upload your PDFs. Confirm the path. Study what is due today.",
+      "Upload your files. Confirm the path. Study what is due today.",
     type: "website",
   },
   other: {

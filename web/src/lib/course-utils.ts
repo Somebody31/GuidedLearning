@@ -1,6 +1,16 @@
 // Helpers used by Today and sitting pages. Subject-agnostic.
 
-import type { Course, SessionPackItem } from "./types";
+import type { Citation, Course, CourseKind, SessionPackItem } from "./types";
+
+export function courseKindOf(
+  course: { kind?: CourseKind } | null | undefined,
+): CourseKind {
+  return course?.kind === "code" ? "code" : "document";
+}
+
+export function citationWhere(c: Pick<Citation, "locator" | "page">): string {
+  return c.locator?.trim() || `p.${c.page}`;
+}
 
 export function unitForLesson(course: Course, lessonId: string) {
   const lesson = course.lessons[lessonId];

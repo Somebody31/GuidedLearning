@@ -3,13 +3,16 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { env, liveEmbedEnabled, liveLlmEnabled } from "./env";
+import { env, liveEmbedEnabled } from "./env";
 import { authMiddleware } from "./middleware/auth";
 import { coursesRoutes } from "./routes/courses";
 import { sessionsRoutes } from "./routes/sessions";
+import { aiRoutes } from "./routes/ai";
 import { LLM, EMBEDDING } from "./llm/models";
 import { embeddingMode } from "./embed/qwen";
 import { llmMode } from "./llm/client";
+import { liveLlmEnabled, resolveBackend } from "./llm/resolve";
+import { detectBackends } from "./llm/detect";
 import { liveBudgetSnapshot } from "./llm/budget";
 import { store, CN_COURSE_ID } from "./db/store";
 
@@ -27,11 +30,13 @@ app.use(
 
 // Simple status object so we can see if the server is running.
 function healthInfo() {
-  let note = "Offline mock AI (default) — no paid API calls";
-  if (env.USE_LIVE_AI && liveLlmEnabled()) {
-    note = "Live AI on — lessons generate when you open them";
+  const backend = resolveBackend();
+  let note =
+    "Offline mock AI (default). Pick DeepSeek or a local grok/pi/opencode CLI in Settings.";
+  if (liveLlmEnabled()) {
+    note = `Live AI on (${backend}) — lessons generate when you open them`;
   } else if (env.USE_LIVE_AI) {
-    note = "USE_LIVE_AI=true but DEEPSEEK_API_KEY is missing — still mock";
+    note = "USE_LIVE_AI=true but no ready backend — still mock";
   }
 
   return {
@@ -40,11 +45,15 @@ function healthInfo() {
     store: env.DATA_STORE,
     useLiveAi: env.USE_LIVE_AI,
     llm: {
-      provider: LLM.provider,
+      provider: backend === "mock" ? LLM.provider : backend,
       model: LLM.model,
       mode: llmMode(),
+      backend,
       keyConfigured: Boolean(env.DEEPSEEK_API_KEY),
       live: liveLlmEnabled(),
+      available: detectBackends()
+        .filter((b) => b.ready)
+        .map((b) => b.id),
     },
     embedding: {
       provider: EMBEDDING.provider,
@@ -82,6 +91,7 @@ app.use("/v1/*", async (c, next) => {
 });
 app.route("/v1/courses", coursesRoutes);
 app.route("/v1/sessions", sessionsRoutes);
+app.route("/v1/ai", aiRoutes);
 
 app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);

@@ -133,11 +133,11 @@ export default async function AppHomePage() {
               Nothing on the desk yet
             </h2>
             <p className="mx-auto mt-2 max-w-sm text-[14px] text-[var(--text-secondary)]">
-              Upload a textbook or lecture slides. We will draft a path you can
-              confirm, then mark what to study today.
+              Upload a textbook, lecture slides, or a folder of code. We will
+              draft a path you can confirm, then mark what to study today.
             </p>
             <CtaLink href="/app/courses/new" className="mt-6">
-              New course from PDFs
+              New course
             </CtaLink>
           </Plate>
         ) : null}
@@ -190,6 +190,11 @@ export default async function AppHomePage() {
                               Sample
                             </span>
                           ) : null}
+                          {c.kind === "code" ? (
+                            <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] text-[var(--text-tertiary)]">
+                              Code
+                            </span>
+                          ) : null}
                         </div>
                         <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
                           {c.lifecycle === "activated" ? (
@@ -212,7 +217,7 @@ export default async function AppHomePage() {
             <li>
               <Link href="/app/courses/new" className="block h-full min-h-[88px]">
                 <div className="flex h-full min-h-[88px] items-center justify-center rounded-[var(--radius-2xl)] border border-dashed border-[var(--hairline-strong)] px-4 text-[14px] text-[var(--text-tertiary)] transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]">
-                  New course from PDFs
+                  New course
                 </div>
               </Link>
             </li>

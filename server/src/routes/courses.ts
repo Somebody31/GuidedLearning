@@ -1,9 +1,20 @@
 // All course API routes: list, upload PDFs, build map, study, quiz.
 
 import { Hono } from "hono";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, stat } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { env } from "../env";
+import {
+  assertLocalPathAllowed,
+  copyTreeFile,
+  isCodePath,
+  listCodeFiles,
+  MAX_CODE_FILES,
+  MAX_FILE_BYTES,
+  MAX_TREE_BYTES,
+  unzipTo,
+  writeBytes,
+} from "../ingest/code";
 import { store } from "../db/store";
 import { buildSessionPack } from "../services/packer";
 import { kickJobs } from "../jobs/runner";
@@ -48,6 +59,7 @@ coursesRoutes.get("/", (c) => {
       lastStudiedAt: course.lastStudiedAt,
       createdAt: course.createdAt,
       sessionDefaultMinutes: course.sessionDefaultMinutes,
+      kind: course.kind ?? "document",
       lessonCount: Object.keys(course.lessons).length,
       dueCount: countStatus(course.lessons, "due"),
       weakCount: countStatus(course.lessons, "weak"),
@@ -59,12 +71,13 @@ coursesRoutes.get("/", (c) => {
 
 // POST /v1/courses
 coursesRoutes.post("/", async (c) => {
-  const body = (await readJson(c)) as { title?: string };
+  const body = (await readJson(c)) as { title?: string; kind?: string };
   let title = "Untitled course";
   if (typeof body.title === "string" && body.title.trim()) {
     title = body.title.trim().slice(0, 80);
   }
-  const course = store.createCourse(title);
+  const kind = body.kind === "code" ? "code" : "document";
+  const course = store.createCourse(title, kind);
   return c.json({ course }, 201);
 });
 
@@ -113,7 +126,45 @@ coursesRoutes.get("/:id/sources", (c) => {
   return c.json({ sources: course.sources });
 });
 
-// POST /v1/courses/:id/sources  (upload PDF files)
+async function addCodeFile(opts: {
+  courseId: string;
+  relPath: string;
+  bytes: Uint8Array;
+  size: number;
+}) {
+  const course = store.getCourseMutable(opts.courseId);
+  if (!course) throw new Error("Course not found");
+  const sourceId = `src-${crypto.randomUUID().slice(0, 8)}`;
+  const safeName = opts.relPath.replace(/\\/g, "/").replace(/^\/+/, "");
+  const storageKey = `uploads/${course.id}/tree/${safeName}`;
+  await writeBytes(join(env.DATA_DIR, storageKey), opts.bytes);
+  const source = {
+    id: sourceId,
+    name: safeName,
+    pages: 0,
+    status: "queued" as const,
+    storageKey,
+    bytes: opts.size,
+  };
+  course.sources.push(source);
+  const job = store.enqueueJob({
+    type: "parse_source",
+    courseId: course.id,
+    sourceId,
+  });
+  return { source, jobId: job.id };
+}
+
+function isZipName(name: string) {
+  return name.toLowerCase().endsWith(".zip");
+}
+
+function isDocumentName(name: string) {
+  const lower = name.toLowerCase();
+  return lower.endsWith(".pdf") || lower.endsWith(".txt") || lower.endsWith(".md");
+}
+
+// POST /v1/courses/:id/sources  (upload PDFs or a code tree / zip)
 coursesRoutes.post("/:id/sources", async (c) => {
   const course = store.getCourseMutable(c.req.param("id"));
   if (!course) {
@@ -132,10 +183,70 @@ coursesRoutes.post("/:id/sources", async (c) => {
     return c.json({ error: "No files (use field files or file)" }, 400);
   }
 
+  if (course.kind === "code") {
+    const created = [];
+    let treeBytes = 0;
+    for (const file of files) {
+      if (isZipName(file.name)) {
+        if (file.size > MAX_TREE_BYTES) {
+          return c.json({ error: `${file.name} exceeds 20MB` }, 400);
+        }
+        const zipDir = join(env.DATA_DIR, "tmp", course.id, crypto.randomUUID().slice(0, 8));
+        const zipPath = join(zipDir, "upload.zip");
+        await writeBytes(zipPath, new Uint8Array(await file.arrayBuffer()));
+        const unpacked = join(zipDir, "unpacked");
+        await unzipTo(zipPath, unpacked);
+        const listed = await listCodeFiles(unpacked);
+        if (listed.length === 0) {
+          return c.json({ error: "Zip had no readable source files" }, 400);
+        }
+        if (course.sources.length + created.length + listed.length > MAX_CODE_FILES) {
+          return c.json({ error: `Too many files (max ${MAX_CODE_FILES})` }, 400);
+        }
+        for (const item of listed) {
+          const bytes = new Uint8Array(await Bun.file(item.absPath).arrayBuffer());
+          created.push(
+            await addCodeFile({
+              courseId: course.id,
+              relPath: item.relPath,
+              bytes,
+              size: item.bytes,
+            }),
+          );
+        }
+        continue;
+      }
+
+      const rel = file.name.replace(/\\/g, "/");
+      if (!isCodePath(rel)) {
+        return c.json({ error: `${rel} is not a supported source file` }, 400);
+      }
+      if (file.size > MAX_FILE_BYTES) {
+        return c.json({ error: `${rel} exceeds 256KB` }, 400);
+      }
+      treeBytes += file.size;
+      if (treeBytes > MAX_TREE_BYTES || course.sources.length + created.length + 1 > MAX_CODE_FILES) {
+        return c.json({ error: "Folder is too large" }, 400);
+      }
+      created.push(
+        await addCodeFile({
+          courseId: course.id,
+          relPath: rel,
+          bytes: new Uint8Array(await file.arrayBuffer()),
+          size: file.size,
+        }),
+      );
+    }
+    if (created.length === 0) {
+      return c.json({ error: "No usable source files" }, 400);
+    }
+    kickJobs();
+    return c.json({ uploaded: created }, 201);
+  }
+
   const created = [];
   for (const file of files) {
-    const lower = file.name.toLowerCase();
-    if (!lower.endsWith(".pdf") && !lower.endsWith(".txt") && !lower.endsWith(".md")) {
+    if (!isDocumentName(file.name)) {
       return c.json({ error: `${file.name} must be a .pdf, .txt, or .md file` }, 400);
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -143,15 +254,14 @@ coursesRoutes.post("/:id/sources", async (c) => {
     }
 
     const sourceId = `src-${crypto.randomUUID().slice(0, 8)}`;
-    const storageKey = `uploads/${course.id}/${sourceId}-${file.name}`;
+    const storageKey = `uploads/${course.id}/${sourceId}-${basename(file.name)}`;
     const dir = join(env.DATA_DIR, "uploads", course.id);
     await mkdir(dir, { recursive: true });
-    const abs = join(env.DATA_DIR, storageKey);
-    await writeFile(abs, Buffer.from(await file.arrayBuffer()));
+    await writeBytes(join(env.DATA_DIR, storageKey), new Uint8Array(await file.arrayBuffer()));
 
     const source = {
       id: sourceId,
-      name: file.name,
+      name: basename(file.name),
       pages: 0,
       status: "queued" as const,
       storageKey,
@@ -166,6 +276,70 @@ coursesRoutes.post("/:id/sources", async (c) => {
     created.push({ source, jobId: job.id });
   }
 
+  kickJobs();
+  return c.json({ uploaded: created }, 201);
+});
+
+// POST /v1/courses/:id/sources/from-path  (localhost folder copy)
+coursesRoutes.post("/:id/sources/from-path", async (c) => {
+  const course = store.getCourseMutable(c.req.param("id"));
+  if (!course) {
+    return c.json({ error: "Course not found" }, 404);
+  }
+  if (course.kind !== "code") {
+    return c.json({ error: "Folder import is only for code courses" }, 400);
+  }
+  const body = (await readJson(c)) as { path?: string };
+  if (typeof body.path !== "string" || !body.path.trim()) {
+    return c.json({ error: "path is required" }, 400);
+  }
+
+  let root: string;
+  try {
+    root = assertLocalPathAllowed(body.path.trim());
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : "Invalid path" }, 400);
+  }
+
+  let st;
+  try {
+    st = await stat(root);
+  } catch {
+    return c.json({ error: "Folder not found" }, 404);
+  }
+  if (!st.isDirectory()) {
+    return c.json({ error: "path must be a folder" }, 400);
+  }
+
+  const listed = await listCodeFiles(root);
+  if (listed.length === 0) {
+    return c.json({ error: "Folder had no readable source files" }, 400);
+  }
+  if (course.sources.length + listed.length > MAX_CODE_FILES) {
+    return c.json({ error: `Too many files (max ${MAX_CODE_FILES})` }, 400);
+  }
+
+  const created = [];
+  for (const item of listed) {
+    const destKey = `uploads/${course.id}/tree/${item.relPath}`;
+    await copyTreeFile(item.absPath, join(env.DATA_DIR, destKey));
+    const sourceId = `src-${crypto.randomUUID().slice(0, 8)}`;
+    const source = {
+      id: sourceId,
+      name: item.relPath,
+      pages: 0,
+      status: "queued" as const,
+      storageKey: destKey,
+      bytes: item.bytes,
+    };
+    course.sources.push(source);
+    const job = store.enqueueJob({
+      type: "parse_source",
+      courseId: course.id,
+      sourceId,
+    });
+    created.push({ source, jobId: job.id });
+  }
   kickJobs();
   return c.json({ uploaded: created }, 201);
 });
@@ -407,6 +581,7 @@ coursesRoutes.get("/:id/lessons/:lessonId", (c) => {
     unit,
     courseId: course.id,
     courseTitle: course.title,
+    courseKind: course.kind ?? "document",
   });
 });
 

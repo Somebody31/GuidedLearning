@@ -4,6 +4,7 @@
 import type {
   Chunk,
   Citation,
+  CourseKind,
   Lesson,
   QuizQuestion,
   Unit,
@@ -285,29 +286,115 @@ function clusterUnitTitle(firstLesson: string, index: number): string {
   return words || `Unit ${index + 1}`;
 }
 
+function citationFor(
+  chunk: Chunk,
+  index: number,
+  kind: CourseKind = "document",
+): Citation {
+  const locator =
+    kind === "code" ? `${chunk.sourceName}:${chunk.pageStart}` : undefined;
+  return {
+    id: `c-${index + 1}`,
+    sourceId: chunk.sourceId,
+    sourceName: chunk.sourceName,
+    page: chunk.pageStart,
+    locator,
+    excerpt: chunk.text.slice(0, 160),
+    chunkId: chunk.id,
+  };
+}
+
+export function mockDraftCodeGraph(opts: {
+  courseTitle: string;
+  files: { path: string; bytes: number }[];
+}): { units: Unit[]; lessons: Record<string, Lesson> } {
+  const files = [...opts.files].sort((a, b) => scoreCodeFile(b) - scoreCodeFile(a));
+  const picked = files.slice(0, 20);
+  if (picked.length === 0) {
+    return mockDraftGraph({
+      courseTitle: opts.courseTitle,
+      sourceNames: [],
+      pageSamples: [],
+    });
+  }
+
+  const groups = new Map<string, { path: string; bytes: number }[]>();
+  for (const file of picked) {
+    const parts = file.path.split("/").filter(Boolean);
+    const key =
+      parts.length >= 2 ? parts[0]! : parts[0]?.includes(".") ? "Root" : parts[0] || "Code";
+    const list = groups.get(key) ?? [];
+    list.push(file);
+    groups.set(key, list);
+  }
+
+  const units: Unit[] = [];
+  const lessons: Record<string, Lesson> = {};
+  let u = 0;
+  for (const [folder, group] of groups) {
+    const unitId = `u-${u + 1}`;
+    const lessonIds: string[] = [];
+    group.forEach((file, i) => {
+      const id = `l-${u + 1}-${i + 1}`;
+      lessonIds.push(id);
+      lessons[id] = emptyLesson(
+        id,
+        unitId,
+        titleFromCodePath(file.path),
+        u * 180 + 40,
+        i * 160 + 40,
+      );
+    });
+    units.push({
+      id: unitId,
+      title: folder === "Root" ? opts.courseTitle : titleFromCodePath(folder),
+      order: u,
+      lessonIds,
+    });
+    u += 1;
+  }
+  return { units, lessons };
+}
+
+function scoreCodeFile(file: { path: string; bytes: number }): number {
+  const base = file.path.split("/").pop()?.toLowerCase() ?? "";
+  let score = Math.min(file.bytes, 40_000) / 1000;
+  if (/^readme(\.md)?$/.test(base)) score += 100;
+  if (/^(main|index|app|lib)\./.test(base)) score += 80;
+  if (/^(mod|init)\./.test(base)) score += 40;
+  return score;
+}
+
+export function titleFromCodePath(path: string): string {
+  const base = path.split("/").pop() ?? path;
+  const stem = base.replace(/\.[^.]+$/, "");
+  const words = stem
+    .replace(/[-_]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim();
+  if (!words) return path.slice(0, 80);
+  return words.replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 80);
+}
+
 export function mockGenerateLesson(opts: {
   title: string;
   retrieved: { chunk: Chunk; score: number }[];
+  kind?: CourseKind;
 }): {
   objectives: string[];
   sections: { heading: string; body: string }[];
   citations: Citation[];
 } {
+  const kind = opts.kind ?? "document";
   const top = opts.retrieved.slice(0, 3);
-  const citations: Citation[] = top.map((r, i) => ({
-    id: `c-${i + 1}`,
-    sourceId: r.chunk.sourceId,
-    sourceName: r.chunk.sourceName,
-    page: r.chunk.pageStart,
-    excerpt: r.chunk.text.slice(0, 160),
-    chunkId: r.chunk.id,
-  }));
+  const citations: Citation[] = top.map((r, i) => citationFor(r.chunk, i, kind));
 
   const bodies = top.map((r) => r.chunk.text.slice(0, 500));
+  const fromLabel = kind === "code" ? "From your code" : "From your sources";
   const sections =
     bodies.length > 0
       ? bodies.map((body, i) => ({
-          heading: i === 0 ? "From your sources" : `Source note ${i + 1}`,
+          heading: i === 0 ? fromLabel : `Source note ${i + 1}`,
           body:
             body ||
             `${opts.title} — limited source text available offline.`,
@@ -315,16 +402,26 @@ export function mockGenerateLesson(opts: {
       : [
           {
             heading: "Overview",
-            body: `${opts.title}: no retrieved chunks yet. Re-run build after sources parse, or upload text-rich PDFs.`,
+            body:
+              kind === "code"
+                ? `${opts.title}: no retrieved chunks yet. Re-run build after the folder parses.`
+                : `${opts.title}: no retrieved chunks yet. Re-run build after sources parse, or upload text-rich PDFs.`,
           },
         ];
 
   return {
-    objectives: [
-      `Define the main idea of ${opts.title}`,
-      `Relate ${opts.title} to neighboring topics on the path`,
-      "Recall one exam-style pitfall",
-    ],
+    objectives:
+      kind === "code"
+        ? [
+            `Explain what ${opts.title} is for`,
+            `Name one important function or type`,
+            "Recall one pitfall when changing this code",
+          ]
+        : [
+            `Define the main idea of ${opts.title}`,
+            `Relate ${opts.title} to neighboring topics on the path`,
+            "Recall one exam-style pitfall",
+          ],
     sections,
     citations,
   };

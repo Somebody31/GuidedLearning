@@ -12,12 +12,16 @@ export type LessonStatus =
 
 export type CourseLifecycle = "draft" | "draft_saved" | "activated";
 
+export type CourseKind = "document" | "code";
+
 export interface Citation {
   id: string;
   sourceId: string;
   sourceName: string;
   page: number;
+  locator?: string;
   excerpt?: string;
+  chunkId?: string;
 }
 
 export interface QuizOption {
@@ -67,6 +71,7 @@ export interface SourceFile {
 export interface Course {
   id: string;
   title: string;
+  kind: CourseKind;
   lifecycle: CourseLifecycle;
   lastStudiedAt: string | null;
   createdAt: string;
@@ -80,6 +85,7 @@ export interface Course {
 export interface CourseSummary {
   id: string;
   title: string;
+  kind?: CourseKind;
   lifecycle: CourseLifecycle;
   lastStudiedAt: string | null;
   createdAt: string;
@@ -88,6 +94,29 @@ export interface CourseSummary {
   dueCount: number;
   weakCount: number;
   masteredCount: number;
+}
+
+export type AiBackendId = "mock" | "deepseek" | "grok" | "pi" | "opencode";
+
+export interface AiBackendInfo {
+  id: AiBackendId;
+  label: string;
+  installed: boolean;
+  ready: boolean;
+  needsKey: boolean;
+  reason?: string;
+}
+
+export interface AiSnapshot {
+  requested: AiBackendId | "auto";
+  resolved: AiBackendId;
+  live: boolean;
+  mode: "mock" | "live";
+  envBackend: string;
+  envLocked: boolean;
+  backends: AiBackendInfo[];
+  prefs: { backend: AiBackendId | "auto" };
+  allowLocalPath: boolean;
 }
 
 export interface SessionPackItem {

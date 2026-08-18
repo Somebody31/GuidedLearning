@@ -42,6 +42,20 @@ export const env = {
   DEEPSEEK_BASE_URL: readText("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
   DEEPSEEK_MODEL: readText("DEEPSEEK_MODEL", "deepseek-v4-flash"),
 
+  // auto = DeepSeek if keyed, else first ready local CLI, else mock
+  LLM_BACKEND: readText("LLM_BACKEND", "auto"),
+  GROK_BIN: readText("GROK_BIN", "grok"),
+  PI_BIN: readText("PI_BIN", "pi"),
+  OPENCODE_BIN: readText("OPENCODE_BIN", "opencode"),
+  GROK_MODEL: process.env.GROK_MODEL,
+  PI_MODEL: process.env.PI_MODEL,
+  OPENCODE_MODEL: readText("OPENCODE_MODEL", "opencode/deepseek-v4-flash-free"),
+  ALLOW_LOCAL_PATH: readYesNo(
+    "ALLOW_LOCAL_PATH",
+    process.env.NODE_ENV !== "production",
+  ),
+  AGENT_TIMEOUT_MS: readNumber("AGENT_TIMEOUT_MS", 90_000),
+
   EMBEDDING_API_KEY: process.env.EMBEDDING_API_KEY,
   EMBEDDING_BASE_URL: process.env.EMBEDDING_BASE_URL,
   // mock = fake vectors, local = Python sidecar, remote = paid API
@@ -72,9 +86,9 @@ export const env = {
 
 export type Env = typeof env;
 
-// True when we should call DeepSeek.
-export function liveLlmEnabled(): boolean {
-  return env.USE_LIVE_AI && Boolean(env.DEEPSEEK_API_KEY);
+// Kept for embed/health. Live chat routing lives in llm/resolve.ts.
+export function deepseekConfigured(): boolean {
+  return Boolean(env.DEEPSEEK_API_KEY);
 }
 
 // True when we should call a real embedding model.

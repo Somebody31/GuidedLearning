@@ -1,6 +1,13 @@
 // Browser calls same-origin /v1 (Next rewrites to the API). Server-side uses API_URL.
 
-import type { Course, CourseSummary, Lesson, StudySession, Unit } from "./types";
+import type {
+  Course,
+  CourseKind,
+  CourseSummary,
+  Lesson,
+  StudySession,
+  Unit,
+} from "./types";
 
 export const API_URL =
   typeof window === "undefined"
@@ -9,7 +16,7 @@ export const API_URL =
       "http://127.0.0.1:8787")
     : "";
 
-// Seeded sample course. Any other subject is a new course from PDFs.
+// Seeded sample course. Any other subject is a new course from files.
 export const DEMO_COURSE_ID = "cn-kurose";
 
 export function wait(ms: number) {
@@ -69,6 +76,7 @@ export async function getLesson(courseId: string, lessonId: string) {
     unit: Unit | null;
     courseId: string;
     courseTitle: string;
+    courseKind: CourseKind;
   }>(`/v1/courses/${courseId}/lessons/${lessonId}`);
 }
 

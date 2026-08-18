@@ -12,11 +12,14 @@ export type LessonStatus =
 
 export type CourseLifecycle = "draft" | "draft_saved" | "activated";
 
+export type CourseKind = "document" | "code";
+
 export interface Citation {
   id: string;
   sourceId: string;
   sourceName: string;
   page: number;
+  locator?: string;
   excerpt?: string;
   chunkId?: string;
 }
@@ -75,6 +78,7 @@ export interface SourceFile {
 export interface Course {
   id: string;
   title: string;
+  kind: CourseKind;
   lifecycle: CourseLifecycle;
   lastStudiedAt: string | null;
   createdAt: string;

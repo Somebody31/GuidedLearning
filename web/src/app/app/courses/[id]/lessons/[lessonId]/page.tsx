@@ -10,8 +10,9 @@ import { MasteryRing } from "@/components/ui/mastery-ring";
 import { StateBadge } from "@/components/ui/state-badge";
 import { api, getLesson, wait } from "@/lib/api";
 import { applyPrefsAttrs, readPrefs } from "@/lib/prefs";
+import { citationWhere } from "@/lib/course-utils";
 import { cn } from "@/lib/cn";
-import type { Lesson, Unit } from "@/lib/types";
+import type { CourseKind, Lesson, Unit } from "@/lib/types";
 
 export default function LessonPage() {
   const params = useParams();
@@ -20,6 +21,7 @@ export default function LessonPage() {
   const lessonId = String(params.lessonId);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
+  const [courseKind, setCourseKind] = useState<CourseKind>("document");
   const [missing, setMissing] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [paper, setPaper] = useState(false);
@@ -52,6 +54,7 @@ export default function LessonPage() {
           if (stop) return;
           setLesson(data.lesson);
           setUnit(data.unit);
+          setCourseKind(data.courseKind ?? "document");
           if (data.lesson.sections.length > 0 || data.lesson.quizReady) {
             setWaiting(false);
             return;
@@ -163,7 +166,7 @@ export default function LessonPage() {
   if (!lesson || !unit) {
     return (
       <div className="px-6 py-16 text-center text-[14px] text-[var(--text-tertiary)]">
-        {waiting ? "Writing lesson from your PDFs…" : "Loading lesson…"}
+        {waiting ? "Writing lesson from your files…" : "Loading lesson…"}
       </div>
     );
   }
@@ -282,7 +285,9 @@ export default function LessonPage() {
         </p>
         {waiting && lesson.sections.length === 0 ? (
           <p className="mt-4 text-[13px] text-[var(--info)]">
-            Writing this lesson from your PDFs…
+            {courseKind === "code"
+              ? "Writing this lesson from your code…"
+              : "Writing this lesson from your PDFs…"}
           </p>
         ) : null}
 
@@ -315,7 +320,7 @@ export default function LessonPage() {
                   key={c.id}
                   type="button"
                   onClick={() => setSourceOpen(c.id)}
-                  title={`${c.sourceName} · p.${c.page}`}
+                  title={`${c.sourceName} · ${citationWhere(c)}`}
                   className={cn(
                     "inline-flex max-w-full items-center gap-1 rounded-full border px-3 py-1 font-mono text-[12px] tabular transition-colors",
                     paper
@@ -326,7 +331,7 @@ export default function LessonPage() {
                   <span className="min-w-0 max-w-[11rem] truncate sm:max-w-[18rem]">
                     {c.sourceName}
                   </span>
-                  <span className="shrink-0">· p.{c.page}</span>
+                  <span className="shrink-0">· {citationWhere(c)}</span>
                 </button>
               ))}
             </div>
@@ -434,7 +439,7 @@ export default function LessonPage() {
                     {citation.sourceName}
                   </p>
                   <p className="mt-1 tabular text-[12px] text-[var(--text-tertiary)]">
-                    Page {citation.page}
+                    {citation.locator ?? `Page ${citation.page}`}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full border border-[var(--hairline)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
@@ -443,12 +448,16 @@ export default function LessonPage() {
               </div>
               <p className="lesson-serif mt-4 text-[15px] leading-relaxed text-[var(--text-primary)]">
                 {citation.excerpt ??
-                  "Text layer excerpt would appear here from the PDF pipeline. Figures are referenced by page only (no invented diagram vision)."}
+                  (courseKind === "code"
+                    ? "Source excerpt would appear here from the file."
+                    : "Text layer excerpt would appear here from the PDF pipeline. Figures are referenced by page only (no invented diagram vision).")}
               </p>
             </div>
             <p className="mt-4 text-[12px] leading-relaxed text-[var(--text-tertiary)]">
               Grounded snippet from the parse pipeline — not model invention.
-              Full PDF page render lands with the backend.
+              {courseKind === "code"
+                ? " Locator is path:line in the uploaded tree."
+                : " Full PDF page render lands with the backend."}
             </p>
             <Link
               href={`/app/courses/${courseId}/sources`}

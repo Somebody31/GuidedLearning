@@ -1,6 +1,6 @@
 // Ask DeepSeek for a short lesson or quiz. Used only when a student opens a lesson.
 
-import type { Chunk, Citation, QuizQuestion } from "../types";
+import type { Chunk, Citation, CourseKind, QuizQuestion } from "../types";
 import { chatCompletion } from "./client";
 import { env } from "../env";
 
@@ -15,6 +15,7 @@ function clip(s: string, n: number) {
 export async function liveGenerateLesson(opts: {
   title: string;
   retrieved: { chunk: Chunk; score: number }[];
+  kind?: CourseKind;
 }): Promise<{
   objectives: string[];
   sections: { heading: string; body: string }[];
@@ -36,7 +37,9 @@ export async function liveGenerateLesson(opts: {
       {
         role: "system",
         content:
-          "You write brief study notes grounded ONLY in provided excerpts for the named lesson section. Ignore off-topic excerpts. Reply JSON: {objectives:string[2], sections:[{heading,body}] length 1-2, bodies ≤90 words each}. No fluff.",
+          opts.kind === "code"
+            ? "You write brief study notes for a code module, grounded ONLY in the excerpts. Cover purpose, important functions/types, and one pitfall. Reply JSON: {objectives:string[2], sections:[{heading,body}] length 1-2, bodies ≤90 words each}. No fluff."
+            : "You write brief study notes grounded ONLY in provided excerpts for the named lesson section. Ignore off-topic excerpts. Reply JSON: {objectives:string[2], sections:[{heading,body}] length 1-2, bodies ≤90 words each}. No fluff.",
       },
       {
         role: "user",
@@ -55,6 +58,10 @@ export async function liveGenerateLesson(opts: {
     sourceId: r.chunk.sourceId,
     sourceName: r.chunk.sourceName,
     page: r.chunk.pageStart,
+    locator:
+      opts.kind === "code"
+        ? `${r.chunk.sourceName}:${r.chunk.pageStart}`
+        : undefined,
     excerpt: clip(r.chunk.text, 120),
     chunkId: r.chunk.id,
   }));
@@ -96,6 +103,7 @@ export async function liveGenerateLesson(opts: {
 export async function liveGenerateQuiz(opts: {
   title: string;
   sections: { heading: string; body: string }[];
+  kind?: CourseKind;
 }): Promise<QuizQuestion[]> {
   const body = clip(
     opts.sections.map((s) => s.body).join(" "),
@@ -114,7 +122,10 @@ export async function liveGenerateQuiz(opts: {
       },
       {
         role: "user",
-        content: `Lesson “${opts.title}”\nNotes: ${body}\nMake 2 quiz items grounded in the notes.`,
+        content:
+          opts.kind === "code"
+            ? `Module “${opts.title}”\nNotes: ${body}\nMake 2 quiz items about what the code does and a likely pitfall.`
+            : `Lesson “${opts.title}”\nNotes: ${body}\nMake 2 quiz items grounded in the notes.`,
       },
     ],
   });

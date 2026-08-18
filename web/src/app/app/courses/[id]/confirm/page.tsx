@@ -8,6 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { api, getCourse, wait } from "@/lib/api";
+import { courseKindOf } from "@/lib/course-utils";
 import { useCourse } from "@/lib/use-course";
 
 export default function ConfirmCoursePage() {
@@ -148,8 +149,9 @@ export default function ConfirmCoursePage() {
             Building the path
           </h1>
           <p className="mt-2 text-[14px] text-[var(--text-secondary)]">
-            Extracting units and lessons from your PDFs. This page will update
-            when the draft is ready.
+            {courseKindOf(course) === "code"
+              ? "Extracting units and lessons from your code. This page will update when the draft is ready."
+              : "Extracting units and lessons from your PDFs. This page will update when the draft is ready."}
           </p>
         </div>
       </AppShell>

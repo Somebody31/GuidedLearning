@@ -91,6 +91,7 @@ export class MemoryStore {
     this.attemptCounters = new Map(data.attemptCounters ?? []);
     // Jobs are not persisted. Stuck parse rows become retryable.
     for (const course of this.courses.values()) {
+      if (!course.kind) course.kind = "document";
       for (const source of course.sources) {
         if (source.status === "queued" || source.status === "parsing") {
           source.status = "failed";
@@ -155,12 +156,13 @@ export class MemoryStore {
     return structuredClone(course);
   }
 
-  createCourse(title: string): Course {
+  createCourse(title: string, kind: Course["kind"] = "document"): Course {
     const id = `course-${crypto.randomUUID().slice(0, 8)}`;
     const now = new Date().toISOString();
     const course: Course = {
       id,
       title: title.trim() || "Untitled course",
+      kind: kind === "code" ? "code" : "document",
       lifecycle: "draft",
       lastStudiedAt: null,
       createdAt: now,

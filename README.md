@@ -1,6 +1,6 @@
 # GuidedLearning
 
-AI-guided learning platform: upload textbooks and lecture PDFs → build a **Course → Unit → Lesson** path → study with grounded lessons, quizzes, and adaptive spaced review.
+AI-guided learning platform: upload textbooks and lecture PDFs, or a folder of code → build a **Course → Unit → Lesson** path → study with grounded lessons, quizzes, and adaptive spaced review.
 
 ## Quick start — UI
 
@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — start a course from any PDFs, or open the sample at `/app/courses/cn-kurose`.
+Open [http://localhost:3000](http://localhost:3000) — start a course from PDFs or a code folder, or open the sample at `/app/courses/cn-kurose`.
 
 ## Quick start — API (Bun + Hono)
 
@@ -38,11 +38,13 @@ cd server && bun test
 |---|---|
 | Runtime | Bun |
 | HTTP | Hono |
-| LLM | DeepSeek V4 Flash (`deepseek-v4-flash`) |
+| LLM | DeepSeek V4 Flash, or a local CLI already on PATH (`grok`, `pi`, `opencode`) |
 | Embeddings | Qwen3 Embedding |
 | Store | JSON file under `server/data/` (`DATA_STORE=file`) + local uploads. Sample course `cn-kurose` is always seeded. |
 
-**Offline by default:** `USE_LIVE_AI=false` in `server/.env` — full pipeline uses mock embed/LLM so demos cost **zero** API credits. Set `USE_LIVE_AI=true` and keys only when you want live generation. Optional `AUTH_TOKEN` enables Bearer auth.
+**Offline by default:** `USE_LIVE_AI=false` in `server/.env` — full pipeline uses mock embed/LLM so demos cost **zero** API credits. Set `USE_LIVE_AI=true` to auto-pick DeepSeek (if `DEEPSEEK_API_KEY` is set) or the first ready local agent. In Settings you can pin `grok`, `pi`, or `opencode` even without a GuidedLearning key — those CLIs use their own login or a free hosted model. Optional `AUTH_TOKEN` enables Bearer auth.
+
+**Code courses:** New course → Code, then upload a folder, a `.zip`, or (when `ALLOW_LOCAL_PATH=true`) paste a path under your home directory. Caps: 200 files, 256KB each, 20MB total. Ignored: `node_modules`, `.git`, lockfiles, and similar.
 
 The website proxies `/v1` and `/health` to the API. Do **not** set `NEXT_PUBLIC_API_URL` in production — the browser should call same-origin `/v1`. Point Next at the API with `API_URL` (default `http://127.0.0.1:8787`).
 
@@ -64,7 +66,7 @@ Set `CORS_ORIGIN` to the website origin (comma-separated if you still hit the AP
 
 ## Status
 
-- **UI:** talks to the API — any subject from PDFs (desk, upload, confirm path, today, lesson, quiz, sitting, sources, progress, settings, optional placement).
-- **API:** upload/parse/chunk, draft graph, activate, lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI`. Sample course `cn-kurose` is one seeded demo, not the product.
+- **UI:** talks to the API — any subject from PDFs or a code folder (desk, upload, confirm path, today, lesson, quiz, sitting, sources, progress, settings, optional placement).
+- **API:** upload/parse/chunk, draft graph, activate, lessons/quizzes, quiz attempts + SRS, sessions, diagnostic, insights. Live AI gated behind `USE_LIVE_AI` or an explicit backend in Settings. Sample course `cn-kurose` is one seeded demo, not the product.
 
 Design specs stay **local** under `docs/` (gitignores all `.md` except this README).

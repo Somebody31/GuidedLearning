@@ -78,6 +78,7 @@ export async function retrieveChunks(
   query: string,
   chunks: Chunk[],
   k = 4,
+  opts?: { code?: boolean },
 ): Promise<{ chunk: Chunk; score: number }[]> {
   if (chunks.length === 0) return [];
 
@@ -144,6 +145,11 @@ export async function retrieveChunks(
       score += cosine(qVec, chunk.embedding) * 2.5;
     }
 
+    // 4) Code: path and identifier beats a stray mention in another file
+    if (opts?.code) {
+      score += codePathBoost(query, lexicalTokens, chunk);
+    }
+
     scored.push({ chunk, score });
   }
 
@@ -154,4 +160,35 @@ export async function retrieveChunks(
     if (best.length >= k) break;
   }
   return best;
+}
+
+export function codePathBoost(
+  query: string,
+  lexicalTokens: string[],
+  chunk: Chunk,
+): number {
+  const path = chunk.sourceName.replace(/\\/g, "/").toLowerCase();
+  const base = (path.split("/").pop() ?? "").replace(/\.[^.]+$/, "");
+  const q = query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  let extra = 0;
+  if (base && (base === q.replace(/\s+/g, "") || base.replace(/[-_]/g, "") === q.replace(/\s+/g, ""))) {
+    extra += 5;
+  }
+  const pathTokens = tokenize(path.replace(/[/.]/g, " "));
+  if (lexicalTokens.length > 0 && pathTokens.length > 0) {
+    let hits = 0;
+    for (const t of lexicalTokens) {
+      if (pathTokens.includes(t) || base.includes(t)) hits += 1;
+    }
+    extra += (hits / lexicalTokens.length) * 3;
+  }
+  const head = chunk.text.slice(0, 240);
+  for (const t of lexicalTokens) {
+    if (t.length < 3) continue;
+    if (new RegExp(`\\b(function|class|def|type|interface|fn)\\s+${t}\\b`, "i").test(head)) {
+      extra += 2;
+      break;
+    }
+  }
+  return extra;
 }

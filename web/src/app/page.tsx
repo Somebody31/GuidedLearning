@@ -9,7 +9,7 @@ import { DEMO_COURSE_ID } from "@/lib/api";
 export const metadata: Metadata = {
   title: "The next page is already marked",
   description:
-    "Upload textbooks and lecture slides. Confirm the path. Sit down and study what is due today.",
+    "Upload textbooks, lecture slides, or a folder of code. Confirm the path. Sit down and study what is due today.",
 };
 
 export default function MarketingPage() {
@@ -53,13 +53,13 @@ export default function MarketingPage() {
               The next page is already marked.
             </h1>
             <p className="animate-fade-up mt-6 max-w-md text-[16px] leading-relaxed text-[var(--text-secondary)] [animation-delay:140ms]">
-              Upload textbooks and lecture slides. Confirm the path. Sit down
-              and study what is due today — grounded in your files, not a
-              chatbot with a sidebar.
+              Upload textbooks, lecture slides, or a folder of code. Confirm
+              the path. Sit down and study what is due today — grounded in your
+              files, not a chatbot with a sidebar.
             </p>
             <div className="animate-fade-up mt-10 flex flex-wrap items-center gap-3 [animation-delay:200ms]">
               <CtaLink href="/app/courses/new" className="h-12 px-2 pl-5 text-[15px]">
-                Start from your PDFs
+                Start from your files
               </CtaLink>
               <Link
                 href="/app"
@@ -164,7 +164,7 @@ export default function MarketingPage() {
 
         <footer className="mt-24 flex flex-col gap-4 border-t border-[var(--hairline)] pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[12px] text-[var(--text-tertiary)]">
-            Any subject · your PDFs · sample course included
+            Any subject · your files · sample course included
           </p>
           <div className="flex flex-wrap items-center gap-4 text-[12px]">
             <Link

@@ -3,20 +3,23 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { env, liveLlmEnabled } from "../env";
+import { env } from "../env";
+import { liveLlmEnabled } from "../llm/resolve";
 import { store } from "../db/store";
 import { parseDocument } from "../pdf/parse";
 import { chunkAndEmbedPages } from "../rag/chunk";
 import { retrieveChunks } from "../rag/retrieve";
 import {
+  mockDraftCodeGraph,
   mockDraftGraph,
   mockFaithfulness,
   mockGenerateLesson,
   mockGenerateQuiz,
 } from "../llm/mock";
+import { splitCodeToPages } from "../ingest/code";
 import { liveGenerateLesson, liveGenerateQuiz } from "../llm/live";
 import { canSpendLiveCall, liveBudgetSnapshot } from "../llm/budget";
-import type { Job, SourcePage } from "../types";
+import type { Course, Job, Lesson, SourcePage, Unit } from "../types";
 
 const processing = new Set<string>();
 
@@ -100,7 +103,10 @@ async function runParseSource(job: Job) {
 
   const path = join(env.DATA_DIR, source.storageKey);
   const bytes = new Uint8Array(await readFile(path));
-  const pages = await parseDocument(bytes, source.name);
+  const pages =
+    course.kind === "code"
+      ? splitCodeToPages(new TextDecoder().decode(bytes))
+      : await parseDocument(bytes, source.name);
   store.updateJob(job.id, { progress: 0.5 });
 
   const sourcePages: SourcePage[] = pages.map((p) => ({
@@ -137,60 +143,82 @@ async function runDraftGraph(job: Job) {
 
   store.updateJob(job.id, { progress: 0.2 });
   const ready = course.sources.filter((s) => s.status === "ready");
-  // Scan all pages for structural headings (cheap). Front-matter-only
-  // samples used to produce useless graphs on large textbooks.
-  const samples: string[] = [];
-  for (const s of ready) {
-    const pages = store.getPages(s.id);
-    const headingLines: string[] = [];
-    for (const p of pages) {
-      for (const line of p.text.split("\n")) {
-        const t = line.trim();
-        if (!t || t.length > 120) continue;
-        if (
-          /^#{1,3}\s+/.test(t) ||
-          /^(chapter|part|unit)\b/i.test(t) ||
-          /^\d+(\.\d+){0,2}\s+[A-Z]/.test(t) ||
-          /^\d+\s+[A-Z][A-Z\s]{3,}/.test(t)
-        ) {
-          headingLines.push(t);
+
+  if (course.kind !== "code") {
+    // Scan all pages for structural headings (cheap). Front-matter-only
+    // samples used to produce useless graphs on large textbooks.
+    const samples: string[] = [];
+    for (const s of ready) {
+      const pages = store.getPages(s.id);
+      const headingLines: string[] = [];
+      for (const p of pages) {
+        for (const line of p.text.split("\n")) {
+          const t = line.trim();
+          if (!t || t.length > 120) continue;
+          if (
+            /^#{1,3}\s+/.test(t) ||
+            /^(chapter|part|unit)\b/i.test(t) ||
+            /^\d+(\.\d+){0,2}\s+[A-Z]/.test(t) ||
+            /^\d+\s+[A-Z][A-Z\s]{3,}/.test(t)
+          ) {
+            headingLines.push(t);
+          }
+        }
+      }
+      if (headingLines.length >= 6) {
+        samples.push(headingLines.join("\n"));
+      } else {
+        const step = Math.max(1, Math.floor(pages.length / 40));
+        for (let i = 0; i < pages.length; i += step) {
+          samples.push(pages[i]!.text.slice(0, 600));
         }
       }
     }
-    // Prefer extracted headings; fall back to scattered page samples
-    if (headingLines.length >= 6) {
-      samples.push(headingLines.join("\n"));
-    } else {
-      const step = Math.max(1, Math.floor(pages.length / 40));
-      for (let i = 0; i < pages.length; i += step) {
-        samples.push(pages[i]!.text.slice(0, 600));
-      }
-    }
+
+    applyDraft(
+      course,
+      mockDraftGraph({
+        courseTitle: course.title,
+        sourceNames: ready.map((s) => s.name),
+        pageSamples: samples,
+      }),
+      job.id,
+    );
+    return;
   }
 
-  // Always mock graph offline (live path reserved for later opt-in)
-  const draft = mockDraftGraph({
-    courseTitle: course.title,
-    sourceNames: ready.map((s) => s.name),
-    pageSamples: samples,
-  });
+  applyDraft(
+    course,
+    mockDraftCodeGraph({
+      courseTitle: course.title,
+      files: ready.map((s) => ({
+        path: s.name,
+        bytes: s.bytes ?? 0,
+      })),
+    }),
+    job.id,
+  );
+}
 
-  store.updateJob(job.id, { progress: 0.7 });
+function applyDraft(
+  course: Course,
+  draft: { units: Unit[]; lessons: Record<string, Lesson> },
+  jobId: string,
+) {
+  store.updateJob(jobId, { progress: 0.7 });
   course.units = draft.units;
   course.lessons = draft.lessons;
   course.lifecycle = "draft_saved";
   course.graphVersion += 1;
-
-  store.updateJob(job.id, {
+  store.updateJob(jobId, {
     status: "succeeded",
     progress: 1,
     result: {
-      units: course.units.length,
-      lessons: Object.keys(course.lessons).length,
+      units: draft.units.length,
+      lessons: Object.keys(draft.lessons).length,
       mode: "mock",
     },
   });
-  // Content generation waits for activate (confirm → activate → generate).
 }
 
 async function runGenerateLesson(job: Job) {
@@ -227,20 +255,34 @@ async function runGenerateLesson(job: Job) {
 
   const chunks = store.getChunks(course.id);
   // Title alone is best for section-id match; objectives may be empty/stale.
-  const retrieved = await retrieveChunks(lesson.title, chunks, 4);
+  const retrieved = await retrieveChunks(lesson.title, chunks, 4, {
+    code: course.kind === "code",
+  });
 
   let mode: "mock" | "live" = "mock";
   let gen;
   if (liveLlmEnabled() && canSpendLiveCall()) {
     try {
-      gen = await liveGenerateLesson({ title: lesson.title, retrieved });
+      gen = await liveGenerateLesson({
+        title: lesson.title,
+        retrieved,
+        kind: course.kind,
+      });
       mode = "live";
     } catch (err) {
       console.warn("live lesson failed, using mock:", err);
-      gen = mockGenerateLesson({ title: lesson.title, retrieved });
+      gen = mockGenerateLesson({
+        title: lesson.title,
+        retrieved,
+        kind: course.kind,
+      });
     }
   } else {
-    gen = mockGenerateLesson({ title: lesson.title, retrieved });
+    gen = mockGenerateLesson({
+      title: lesson.title,
+      retrieved,
+      kind: course.kind,
+    });
   }
 
   lesson.objectives = gen.objectives;
@@ -304,6 +346,7 @@ async function runGenerateQuiz(job: Job) {
       lesson.quiz = await liveGenerateQuiz({
         title: lesson.title,
         sections: lesson.sections,
+        kind: course.kind,
       });
       mode = "live";
     } catch (err) {

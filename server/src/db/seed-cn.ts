@@ -8,6 +8,7 @@ export function createCnSeedCourse(): Course {
   return {
     id: CN_COURSE_ID,
     title: "Computer Networks",
+    kind: "document",
     lifecycle: "activated",
     lastStudiedAt: "2026-07-30T18:40:00.000Z",
     createdAt: "2026-07-01T10:00:00.000Z",
